@@ -7,6 +7,8 @@ import { GyroCamera } from "./GyroCamera";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { useVariables } from "@/lib/modules/useVariables";
 import type { VariablesSchema } from "@/types/module";
+import { VirtualCursor } from "./VirtualCursor";
+import { useVirtualCursor } from "./useVirtualCursor";
 import styles from "./Scene.module.css";
 
 const demoSchema: VariablesSchema = {
@@ -38,6 +40,7 @@ export function Scene() {
   const height = Number(values.height);
   const wireframe = Boolean(values.wireframe);
   const gyroActive = permission === "granted";
+  const { position: cursorPos } = useVirtualCursor(gyroActive);
 
   return (
     <div className={styles.container}>
@@ -48,7 +51,7 @@ export function Scene() {
         onChange={setValue}
       />
 
-      {permission !== "granted" && permission !== "unsupported" && (
+      {permission === "prompt" && (
         <button className={styles.gyroButton} onClick={requestPermission}>
           Activar giroscopio
         </button>
@@ -56,6 +59,12 @@ export function Scene() {
 
       {permission === "denied" && (
         <p className={styles.gyroNote}>Permiso de giroscopio denegado.</p>
+      )}
+
+      {permission === "unsupported" && (
+        <p className={styles.gyroNote}>
+          Sin giroscopio disponible — usa el mouse para mover la cámara.
+        </p>
       )}
 
       <Canvas camera={{ position: [4, 3, 6], fov: 50 }}>
@@ -75,6 +84,7 @@ export function Scene() {
         <GyroCamera orientation={orientation} enabled={gyroActive} />
         {!gyroActive && <OrbitControls />}
       </Canvas>
+      <VirtualCursor position={cursorPos} visible={gyroActive} />
     </div>
   );
 }
