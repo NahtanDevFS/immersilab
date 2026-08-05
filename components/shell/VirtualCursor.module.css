@@ -1,5 +1,7 @@
 .cursor {
   position: fixed;
+  top: 0;
+  left: 0;
   z-index: 100;
   width: 22px;
   height: 22px;
@@ -9,7 +11,6 @@
   border-radius: 50%;
   background: rgba(46, 116, 181, 0.25);
   pointer-events: none;
-  transition: transform 0.05s linear;
 }
 
 .dot {
