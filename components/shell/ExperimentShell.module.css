@@ -1,0 +1,38 @@
+.container {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.gyroButton {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--lab-accent);
+  color: #04342c;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gyroNote {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--lab-danger);
+  background: rgba(19, 27, 46, 0.9);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+}

@@ -1,0 +1,49 @@
+.panel {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  min-width: 160px;
+  padding: 0.7rem 0.85rem;
+  background: rgba(19, 27, 46, 0.9);
+  border: 0.5px solid var(--lab-panel-border);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+}
+
+.title {
+  margin: 0 0 0.4rem 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--lab-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.list {
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: var(--lab-text-muted);
+}
+
+.value {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  color: var(--lab-accent);
+}
+
+.sparkline {
+  display: block;
+  margin-top: 0.5rem;
+}

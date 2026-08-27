@@ -1,0 +1,104 @@
+"use client";
+
+import { useEffect, useMemo } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { Header } from "./Header";
+import { LabBackground } from "./LabBackground";
+import { VariablesPanel } from "./VariablesPanel";
+import { ResultPanel } from "./ResultPanel";
+import { GyroCamera } from "./GyroCamera";
+import { useDeviceOrientation } from "./useDeviceOrientation";
+import { useVariables } from "@/lib/modules/useVariables";
+import { VirtualCursor } from "./VirtualCursor";
+import { useVirtualCursor } from "./useVirtualCursor";
+import type { ExperimentDefinition } from "@/types/module";
+import styles from "./ExperimentShell.module.css";
+
+interface Props {
+  experiment: ExperimentDefinition;
+  disciplineName: string;
+  moduleName: string;
+}
+
+/**
+ * Shell genérico del laboratorio: es la pieza que le da a TODOS los
+ * experimentos el mismo diseño (fondo, header con logo, panel de variables,
+ * panel de resultados, cámara). No conoce ninguna disciplina — recibe la
+ * definición del experimento como prop.
+ *
+ * Para agregar un experimento nuevo (colisiones, péndulo, etc.) no hay que
+ * tocar este archivo: solo crear su ExperimentDefinition y usarla acá.
+ */
+export function ExperimentShell({
+  experiment,
+  disciplineName,
+  moduleName,
+}: Props) {
+  const { values, setValue } = useVariables(experiment.variablesSchema);
+  const { orientation, permission, requestPermission } = useDeviceOrientation();
+
+  const gyroActive = permission === "granted";
+  const { position: cursorPos } = useVirtualCursor(gyroActive);
+
+  // Una única instancia del motor durante toda la vida del componente.
+  const engine = useMemo(() => experiment.createEngine(), [experiment]);
+
+  useEffect(() => {
+    engine.init(values);
+    // Solo se corre al montar: re-inicializar en cada cambio de variable
+    // borraría el estado en curso del experimento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine]);
+
+  const { SceneComponent, ControlsComponent } = experiment;
+
+  return (
+    <div className={styles.container}>
+      <Header
+        disciplineName={disciplineName}
+        moduleName={moduleName}
+        experimentName={experiment.name}
+      />
+
+      <VariablesPanel
+        title="Variables"
+        schema={experiment.variablesSchema}
+        values={values}
+        onChange={setValue}
+      />
+
+      <ResultPanel engine={engine} />
+
+      {ControlsComponent && <ControlsComponent engine={engine} />}
+
+      {permission === "prompt" && (
+        <button className={styles.gyroButton} onClick={requestPermission}>
+          Activar giroscopio
+        </button>
+      )}
+
+      {permission === "denied" && (
+        <p className={styles.gyroNote}>Permiso de giroscopio denegado.</p>
+      )}
+
+      {permission === "unsupported" && (
+        <p className={styles.gyroNote}>
+          Sin giroscopio disponible — usa el mouse para mover la cámara.
+        </p>
+      )}
+
+      <Canvas shadows camera={{ position: [8, 5, 10], fov: 50 }}>
+        <ambientLight intensity={0.55} />
+        <directionalLight position={[10, 15, 8]} intensity={1.1} castShadow />
+
+        <LabBackground />
+        <SceneComponent engine={engine} variables={values} />
+
+        <GyroCamera orientation={orientation} enabled={gyroActive} />
+        {!gyroActive && <OrbitControls target={[5, 1, 0]} />}
+      </Canvas>
+      <VirtualCursor position={cursorPos} visible={gyroActive} />
+    </div>
+  );
+}

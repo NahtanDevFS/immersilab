@@ -51,6 +51,13 @@ export interface ExperimentEngine {
 
   /** Retorna el contexto actual, usado para renderizar la escena y para la IA. */
   getState: () => AIContext;
+
+  /**
+   * Opcional: serie de puntos (x,y) para graficar (ej. altura vs. tiempo).
+   * El shell la usa para dibujar una mini-gráfica genérica en el panel de
+   * resultados, sin necesidad de conocer la disciplina del experimento.
+   */
+  getSeries?: () => Array<{ x: number; y: number }>;
 }
 
 // Metadata + definición completa de un experimento, tal como se registra
@@ -62,8 +69,18 @@ export interface ExperimentDefinition {
   variablesSchema: VariablesSchema;
   conceptTags?: string[];
   // Componente React que dibuja la escena 3D de este experimento.
-  // Recibe el estado actual del engine y renderiza con React Three Fiber.
-  SceneComponent: React.ComponentType<{ engine: ExperimentEngine }>;
+  // Recibe el motor y las variables actuales (para alimentar engine.update
+  // en cada frame) y renderiza con React Three Fiber.
+  SceneComponent: React.ComponentType<{
+    engine: ExperimentEngine;
+    variables: VariablesState;
+  }>;
+  /**
+   * Opcional: panel de acciones propias del experimento (ej. "Lanzar" en
+   * tiro parabólico), renderizado como overlay HTML fuera del Canvas.
+   * Se omite si el experimento no necesita acciones además de sus variables.
+   */
+  ControlsComponent?: React.ComponentType<{ engine: ExperimentEngine }>;
   // Factoría que crea una nueva instancia del motor de este experimento.
   createEngine: () => ExperimentEngine;
 }

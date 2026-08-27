@@ -1,13 +1,20 @@
+/*
+ * Tokens de diseño de ImmersiLab.
+ * Todos los componentes del shell (Header, VariablesPanel, ResultPanel,
+ * ExperimentShell) usan estas variables — cambiar un color acá lo cambia
+ * en todo el laboratorio, sin tocar cada componente.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --lab-bg: #0b1220; /* fondo general */
+  --lab-panel: #131b2e; /* tarjetas / paneles flotantes */
+  --lab-panel-border: #26344e;
+  --lab-text: #e7ecf5;
+  --lab-text-muted: #93a1be;
+  --lab-accent: #2dd4bf; /* teal — datos, variables, elementos interactivos */
+  --lab-accent-warm: #f2a65a; /* ámbar — acción principal, resultados */
+  --lab-danger: #e24b4a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-display), system-ui, sans-serif;
 }
 
 html {
@@ -24,9 +31,9 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--lab-text);
+  background: var(--lab-bg);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,8 +49,6 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+html {
+  color-scheme: dark;
 }
