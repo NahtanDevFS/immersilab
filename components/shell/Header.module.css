@@ -33,3 +33,17 @@
   color: var(--lab-text-muted);
   line-height: 1.2;
 }
+
+.backLink {
+  margin-left: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--lab-bg);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  /* El header entero tiene pointer-events:none para no tapar el arrastre
+     del giroscopio/cursor — este link necesita revertir eso puntualmente. */
+  pointer-events: auto;
+}

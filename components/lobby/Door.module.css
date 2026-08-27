@@ -1,0 +1,12 @@
+.label {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(19, 27, 46, 0.9);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}

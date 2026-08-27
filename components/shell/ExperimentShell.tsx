@@ -62,9 +62,8 @@ export function ExperimentShell({
     <OrientationGate>
       <div className={styles.container}>
         <Header
-          disciplineName={disciplineName}
-          moduleName={moduleName}
-          experimentName={experiment.name}
+          subtitle={`${disciplineName} / ${moduleName} / ${experiment.name}`}
+          showBackLink
         />
 
         <VariablesPanel

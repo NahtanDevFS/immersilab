@@ -1,19 +1,20 @@
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./Header.module.css";
 
 interface Props {
-  disciplineName: string;
-  moduleName: string;
-  experimentName: string;
+  /** Texto secundario debajo de "ImmersiLab" (ruta del experimento, o una guía). */
+  subtitle?: string;
+  /** Muestra un link para volver al lobby. */
+  showBackLink?: boolean;
 }
 
 /**
- * Encabezado compartido por todos los experimentos. Muestra el logo de la
- * universidad, el nombre del laboratorio, y la "ruta" del experimento
- * actual (disciplina / módulo / experimento) para que el estudiante siempre
- * sepa dónde está dentro del catálogo.
+ * Encabezado compartido por el lobby y todos los experimentos. Muestra el
+ * logo de la universidad, el nombre del laboratorio, y opcionalmente un
+ * subtítulo y un link de vuelta al lobby.
  */
-export function Header({ disciplineName, moduleName, experimentName }: Props) {
+export function Header({ subtitle, showBackLink }: Props) {
   return (
     <header className={styles.header}>
       <Image
@@ -25,10 +26,13 @@ export function Header({ disciplineName, moduleName, experimentName }: Props) {
       />
       <div>
         <p className={styles.wordmark}>ImmersiLab</p>
-        <p className={styles.breadcrumb}>
-          {disciplineName} / {moduleName} / {experimentName}
-        </p>
+        {subtitle && <p className={styles.breadcrumb}>{subtitle}</p>}
       </div>
+      {showBackLink && (
+        <Link href="/lab" className={styles.backLink}>
+          ← Lobby
+        </Link>
+      )}
     </header>
   );
 }
