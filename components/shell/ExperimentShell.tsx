@@ -8,7 +8,11 @@ import { LabBackground } from "./LabBackground";
 import { VariablesPanel } from "./VariablesPanel";
 import { ResultPanel } from "./ResultPanel";
 import { GyroCamera } from "./GyroCamera";
+import { MovementController } from "./MovementController";
+import { GamepadStatus } from "./GamepadStatus";
+import { OrientationGate } from "./OrientationGate";
 import { useDeviceOrientation } from "./useDeviceOrientation";
+import { useGamepadVariableControl } from "./useGamepadVariableControl";
 import { useVariables } from "@/lib/modules/useVariables";
 import { VirtualCursor } from "./VirtualCursor";
 import { useVirtualCursor } from "./useVirtualCursor";
@@ -41,6 +45,14 @@ export function ExperimentShell({
   const gyroActive = permission === "granted";
   const { position: cursorPos } = useVirtualCursor(gyroActive);
 
+  // El control (gamepad) ajusta variables en cuanto detecta un control
+  // conectado, sea en teléfono o en escritorio con el gamepad enchufado.
+  const { selectedKey } = useGamepadVariableControl({
+    schema: experiment.variablesSchema,
+    values,
+    onChange: setValue,
+  });
+
   // Una única instancia del motor durante toda la vida del componente.
   const engine = useMemo(() => experiment.createEngine(), [experiment]);
 
@@ -54,51 +66,57 @@ export function ExperimentShell({
   const { SceneComponent, ControlsComponent } = experiment;
 
   return (
-    <div className={styles.container}>
-      <Header
-        disciplineName={disciplineName}
-        moduleName={moduleName}
-        experimentName={experiment.name}
-      />
+    <OrientationGate>
+      <div className={styles.container}>
+        <Header
+          disciplineName={disciplineName}
+          moduleName={moduleName}
+          experimentName={experiment.name}
+        />
 
-      <VariablesPanel
-        title="Variables"
-        schema={experiment.variablesSchema}
-        values={values}
-        onChange={setValue}
-      />
+        <VariablesPanel
+          title="Variables"
+          schema={experiment.variablesSchema}
+          values={values}
+          onChange={setValue}
+          selectedKey={selectedKey}
+        />
 
-      <ResultPanel engine={engine} />
+        <ResultPanel engine={engine} />
 
-      {ControlsComponent && <ControlsComponent engine={engine} />}
+        {ControlsComponent && <ControlsComponent engine={engine} />}
 
-      {permission === "prompt" && (
-        <button className={styles.gyroButton} onClick={requestPermission}>
-          Activar giroscopio
-        </button>
-      )}
+        {gyroActive && <GamepadStatus />}
 
-      {permission === "denied" && (
-        <p className={styles.gyroNote}>Permiso de giroscopio denegado.</p>
-      )}
+        {permission === "prompt" && (
+          <button className={styles.gyroButton} onClick={requestPermission}>
+            Activar giroscopio
+          </button>
+        )}
 
-      {permission === "unsupported" && (
-        <p className={styles.gyroNote}>
-          Sin giroscopio disponible — usa el mouse para mover la cámara.
-        </p>
-      )}
+        {permission === "denied" && (
+          <p className={styles.gyroNote}>Permiso de giroscopio denegado.</p>
+        )}
 
-      <Canvas shadows camera={{ position: [8, 5, 10], fov: 50 }}>
-        <ambientLight intensity={0.55} />
-        <directionalLight position={[10, 15, 8]} intensity={1.1} castShadow />
+        {permission === "unsupported" && (
+          <p className={styles.gyroNote}>
+            Sin giroscopio disponible — usa el mouse para mover la cámara.
+          </p>
+        )}
 
-        <LabBackground />
-        <SceneComponent engine={engine} variables={values} />
+        <Canvas shadows camera={{ position: [8, 5, 10], fov: 50 }}>
+          <ambientLight intensity={0.55} />
+          <directionalLight position={[10, 15, 8]} intensity={1.1} castShadow />
 
-        <GyroCamera orientation={orientation} enabled={gyroActive} />
-        {!gyroActive && <OrbitControls target={[5, 1, 0]} />}
-      </Canvas>
-      <VirtualCursor position={cursorPos} visible={gyroActive} />
-    </div>
+          <LabBackground />
+          <SceneComponent engine={engine} variables={values} />
+
+          <GyroCamera orientation={orientation} enabled={gyroActive} />
+          {gyroActive && <MovementController />}
+          {!gyroActive && <OrbitControls target={[5, 1, 0]} />}
+        </Canvas>
+        <VirtualCursor position={cursorPos} visible={gyroActive} />
+      </div>
+    </OrientationGate>
   );
 }

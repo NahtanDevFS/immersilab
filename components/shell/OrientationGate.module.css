@@ -1,0 +1,44 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--lab-bg);
+  font-family: var(--font-sans);
+  text-align: center;
+  padding: 1rem;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  color: var(--lab-accent);
+  animation: rotateHint 1.6s ease-in-out infinite;
+}
+
+.text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--lab-text);
+}
+
+.subtext {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--lab-text-muted);
+}
+
+@keyframes rotateHint {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(90deg);
+  }
+}

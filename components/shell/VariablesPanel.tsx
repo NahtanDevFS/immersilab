@@ -8,6 +8,8 @@ interface Props {
   schema: VariablesSchema;
   values: VariablesState;
   onChange: (key: string, value: number | boolean | string) => void;
+  /** Clave de la variable resaltada (ej. seleccionada con el gamepad). */
+  selectedKey?: string;
 }
 
 /**
@@ -16,7 +18,13 @@ interface Props {
  * Agregar un experimento nuevo (de física, cálculo, redes...) no requiere
  * tocar este componente.
  */
-export function VariablesPanel({ title, schema, values, onChange }: Props) {
+export function VariablesPanel({
+  title,
+  schema,
+  values,
+  onChange,
+  selectedKey,
+}: Props) {
   return (
     <div className={styles.panel}>
       <h2 className={styles.title}>{title}</h2>
@@ -26,7 +34,11 @@ export function VariablesPanel({ title, schema, values, onChange }: Props) {
 
         if (def.type === "number") {
           return (
-            <div key={key} className={styles.field}>
+            <div
+              key={key}
+              className={styles.field}
+              data-selected={key === selectedKey}
+            >
               <label className={styles.label} htmlFor={key}>
                 <span>{def.label}</span>
                 <span className={styles.value}>

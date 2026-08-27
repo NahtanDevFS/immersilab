@@ -22,12 +22,21 @@
 
 .field {
   margin-bottom: 0.7rem;
+  padding: 0.3rem;
+  margin-left: -0.3rem;
+  margin-right: -0.3rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.field[data-selected="true"] {
+  background: rgba(45, 212, 191, 0.12);
+  outline: 1px solid var(--lab-accent);
 }
 
 .field:last-child {
   margin-bottom: 0;
 }
-
 .label {
   display: flex;
   justify-content: space-between;
