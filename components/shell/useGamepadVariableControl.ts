@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { VariablesSchema, VariablesState } from "@/types/module";
@@ -24,7 +24,7 @@ interface Options {
  *
  * Solo actúa sobre variables tipo "number" — boolean/select quedan para
  * cuando se necesiten (probablemente con un botón de "toggle").
- */
+ 
 export function useGamepadVariableControl({
   schema,
   values,
@@ -112,4 +112,4 @@ export function useGamepadVariableControl({
   }, [numericKeys, schema]);
 
   return { selectedKey: numericKeys[selectedIndex] };
-}
+}*/

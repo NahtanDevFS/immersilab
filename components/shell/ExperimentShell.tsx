@@ -12,7 +12,6 @@ import { MovementController } from "./MovementController";
 import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
 import { useDeviceOrientation } from "./useDeviceOrientation";
-import { useGamepadVariableControl } from "./useGamepadVariableControl";
 import { useVariables } from "@/lib/modules/useVariables";
 import { VirtualCursor } from "./VirtualCursor";
 import { useVirtualCursor } from "./useVirtualCursor";
@@ -43,15 +42,9 @@ export function ExperimentShell({
   const { orientation, permission, requestPermission } = useDeviceOrientation();
 
   const gyroActive = permission === "granted";
-  const { position: cursorPos } = useVirtualCursor(gyroActive);
-
-  // El control (gamepad) ajusta variables en cuanto detecta un control
-  // conectado, sea en teléfono o en escritorio con el gamepad enchufado.
-  const { selectedKey } = useGamepadVariableControl({
-    schema: experiment.variablesSchema,
-    values,
-    onChange: setValue,
-  });
+  // hoveredKey: qué slider está bajo el cursor ahora mismo (con dedo o con
+  // el stick derecho del gamepad) — se usa para resaltarlo en el panel.
+  const { position: cursorPos, hoveredKey } = useVirtualCursor(gyroActive);
 
   // Una única instancia del motor durante toda la vida del componente.
   const engine = useMemo(() => experiment.createEngine(), [experiment]);
@@ -79,7 +72,7 @@ export function ExperimentShell({
           schema={experiment.variablesSchema}
           values={values}
           onChange={setValue}
-          selectedKey={selectedKey}
+          selectedKey={hoveredKey ?? undefined}
         />
 
         <ResultPanel engine={engine} />
