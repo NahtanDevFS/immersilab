@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import styles from "./Door.module.css";
 
@@ -15,6 +15,15 @@ const GLOW_START_DISTANCE = 7;
 const DOOR_WIDTH = 1.8;
 const DOOR_HEIGHT = 2.6;
 
+// Ajustables a ojo una vez que se vea el modelo real en pantalla — el
+// tamaño y la orientación exactos del .glb de Kenney no se pueden saber
+// sin abrirlo primero, así que estos valores son un punto de partida.
+const MODEL_SCALE = 2.7;
+const MODEL_ROTATION_Y = 0;
+const MODEL_OFFSET_X = 0.65; // corrige que el pivot del modelo no esté centrado
+
+useGLTF.preload("/models/doorway-front.glb");
+
 interface Props {
   href: string;
   name: string;
@@ -25,12 +34,21 @@ interface Props {
  * Puerta del lobby. No hace falta tocarla ni clickearla: cada frame se
  * mide la distancia (en el plano del piso) entre la cámara y la puerta, y
  * al cruzar TRIGGER_RADIUS navega al experimento — caminar hacia la puerta
- * es la única acción necesaria. El portal se ilumina progresivamente a
- * medida que el jugador se acerca, como feedback visual.
+ * es la única acción necesaria.
+ *
+ * El modelo 3D es "Doorway Front" de Kenney (CC0, poly.pizza). Encima se
+ * superpone un plano semitransparente que se ilumina progresivamente al
+ * acercarse — es la única señal de "esto es interactivo", ya que no hay
+ * botón ni cursor involucrados.
  */
 export function Door({ href, name, position }: Props) {
   const router = useRouter();
   const { camera } = useThree();
+  const { scene } = useGLTF("/models/doorway-front.glb");
+  // Clonado por instancia: si el mismo modelo se usa en más de una puerta,
+  // reusar el objeto original haría que solo se vea en un lugar a la vez.
+  const model = useMemo(() => scene.clone(), [scene]);
+
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
   const triggered = useRef(false);
   const doorPos = useRef(new THREE.Vector3(...position));
@@ -44,7 +62,7 @@ export function Door({ href, name, position }: Props) {
 
     if (materialRef.current) {
       const proximity = 1 - Math.min(1, distance / GLOW_START_DISTANCE);
-      materialRef.current.emissiveIntensity = 0.25 + proximity * 1.1;
+      materialRef.current.emissiveIntensity = 0.15 + proximity * 0.9;
     }
 
     if (distance < TRIGGER_RADIUS) {
@@ -57,28 +75,24 @@ export function Door({ href, name, position }: Props) {
 
   return (
     <group position={[x, y, z]}>
-      {/* Marco */}
-      <mesh position={[-DOOR_WIDTH / 2 - 0.1, DOOR_HEIGHT / 2, 0]}>
-        <boxGeometry args={[0.2, DOOR_HEIGHT + 0.2, 0.2]} />
-        <meshStandardMaterial color="#26344e" />
-      </mesh>
-      <mesh position={[DOOR_WIDTH / 2 + 0.1, DOOR_HEIGHT / 2, 0]}>
-        <boxGeometry args={[0.2, DOOR_HEIGHT + 0.2, 0.2]} />
-        <meshStandardMaterial color="#26344e" />
-      </mesh>
-      <mesh position={[0, DOOR_HEIGHT + 0.1, 0]}>
-        <boxGeometry args={[DOOR_WIDTH + 0.4, 0.2, 0.2]} />
-        <meshStandardMaterial color="#26344e" />
-      </mesh>
+      <primitive
+        object={model}
+        position={[MODEL_OFFSET_X, 0, 0]}
+        scale={MODEL_SCALE}
+        rotation={[0, MODEL_ROTATION_Y, 0]}
+      />
 
-      {/* Superficie del portal — se ilumina al acercarse */}
-      <mesh position={[0, DOOR_HEIGHT / 2, 0.05]}>
-        <planeGeometry args={[DOOR_WIDTH, DOOR_HEIGHT]} />
+      {/* Brillo del portal — semitransparente para que el modelo de la
+          puerta se siga viendo debajo. */}
+      <mesh position={[0, DOOR_HEIGHT / 2, 0.03]}>
+        <planeGeometry args={[DOOR_WIDTH * 0.85, DOOR_HEIGHT * 0.85]} />
         <meshStandardMaterial
           ref={materialRef}
           color="#0f2f2b"
           emissive="#2dd4bf"
-          emissiveIntensity={0.25}
+          emissiveIntensity={0.15}
+          transparent
+          opacity={0.55}
         />
       </mesh>
 

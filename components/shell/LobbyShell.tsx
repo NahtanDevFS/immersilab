@@ -10,6 +10,9 @@ import { OrientationGate } from "./OrientationGate";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { LobbyScene } from "@/components/lobby/LobbyScene";
 import styles from "./ExperimentShell.module.css";
+import { Suspense } from "react";
+
+
 
 /**
  * Shell del lobby: la "sala de espera" con una puerta por experimento.
@@ -50,7 +53,9 @@ export function LobbyShell() {
           <ambientLight intensity={0.5} />
           <directionalLight position={[0, 4.5, 0]} intensity={0.6} />
 
-          <LobbyScene />
+                    <Suspense fallback={null}>
+            <LobbyScene />
+          </Suspense> 
 
           <GyroCamera orientation={orientation} enabled={gyroActive} />
           {gyroActive && <MovementController />}
