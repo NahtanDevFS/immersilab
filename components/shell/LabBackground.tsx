@@ -1,12 +1,14 @@
 "use client";
 
-import { Sky } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
+import { useTiledPbrTexture } from "./useTiledPbrTexture";
 
-// Colores tomados de los tokens de diseño (ver app/globals.css), en formato
-// que Three.js acepta directamente.
-const GROUND_COLOR = "#3a4a5e";
 const MOUNTAIN_COLOR = "#1c2740";
-const FOG_COLOR = "#16233a";
+// Tono cálido para que combine con el horizonte del HDRI (antes era un
+// azul frío, pensado para el <Sky> procedural que ya no usamos) — ajustable
+// a ojo una vez que se vea el HDRI real, no hay forma de saber el tono
+// exacto del horizonte sin probarlo.
+const FOG_COLOR = "#c9a888";
 
 interface MountainProps {
   position: [number, number, number];
@@ -17,39 +19,51 @@ interface MountainProps {
 function Mountain({ position, radius, height }: MountainProps) {
   return (
     <mesh position={position}>
-      <coneGeometry args={[radius, height, 4]} />
+      {/* 8 caras en vez de 4: con 4 se veía literalmente como una
+          pirámide de base cuadrada — con más caras se lee como una
+          silueta de montaña, no como una figura geométrica. */}
+      <coneGeometry args={[radius, height, 8]} />
       <meshBasicMaterial color={MOUNTAIN_COLOR} fog />
     </mesh>
   );
 }
 
 /**
- * Fondo visual compartido por todos los experimentos: cielo con niebla y
- * una silueta de montañas de referencia, en vez del piso gris plano
- * original. Es liviano a propósito (sin props/modelos externos) — el
- * ambiente con assets reales (Poly Pizza/Poly Haven) es la Fase 7 del plan.
+ * Fondo visual compartido por todos los experimentos: cielo real (HDRI de
+ * Poly Haven, CC0) con niebla, pasto real y una silueta de montañas de
+ * referencia.
+ *
+ * El HDRI reemplaza al <Sky> procedural que había antes: además de verse
+ * mejor, drei lo usa automáticamente también como iluminación ambiente de
+ * toda la escena (reflejos y tono de luz más realistas), no solo como
+ * fondo visual.
+ *
+ * Las montañas se quedan con color plano a propósito: están tapadas por
+ * la niebla y son de fondo — texturarlas de más no se notaría y no vale
+ * el peso extra de descarga.
  *
  * Debe renderizarse DENTRO de un <Canvas> de React Three Fiber, antes del
  * SceneComponent de cada experimento (para que quede detrás).
  */
 export function LabBackground() {
+  // Leafy Grass (Poly Haven) es ~2m de ancho real → repite 75 veces en un
+  // piso de 150m.
+  const groundTex = useTiledPbrTexture("/textures/grass/leafy_grass", 75, 75);
+
   return (
     <>
       <fog attach="fog" args={[FOG_COLOR, 25, 90]} />
 
-      <Sky
-        distance={450000}
-        sunPosition={[-6, 0.6, -10]}
-        turbidity={6}
-        rayleigh={2.5}
-        mieCoefficient={0.01}
-        mieDirectionalG={0.9}
+      <Environment
+        files="/textures/sky/qwantani_dusk_2_puresky.hdr"
+        background
+        environmentIntensity={0.2}
       />
 
       {/* Piso */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[150, 150]} />
-        <meshStandardMaterial color={GROUND_COLOR} />
+        <meshStandardMaterial {...groundTex} />
       </mesh>
 
       {/* Montañas: siluetas simples y lejanas, solo como referencia visual

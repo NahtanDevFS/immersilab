@@ -31,14 +31,22 @@ const variablesSchema: VariablesSchema = {
     step: 0.1,
     default: 9.81,
   },
+    drag: {
+    type: "number",
+    label: "Resistencia del aire",
+    unit: "1/s",
+    min: 0,
+    max: 1,
+    step: 0.01,
+    default: 0,
+  },
 };
 
 export const tiroParabolicoExperiment: ExperimentDefinition = {
   slug: "tiro-parabolico",
   name: "Tiro parabólico",
   description:
-    "Lanza un proyectil ajustando ángulo, velocidad inicial y gravedad.",
-  variablesSchema,
+    "Lanza un proyectil ajustando ángulo, velocidad inicial, gravedad y resistencia del aire.",  variablesSchema,
   conceptTags: ["cinemática", "movimiento parabólico", "gravedad"],
   SceneComponent: ProjectileScene,
   ControlsComponent: ProjectileControls,

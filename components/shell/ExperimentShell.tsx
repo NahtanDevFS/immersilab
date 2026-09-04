@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Header } from "./Header";
@@ -96,11 +96,15 @@ export function ExperimentShell({
           </p>
         )}
 
-        <Canvas shadows camera={{ position: [8, 5, 10], fov: 50 }}>
-          <ambientLight intensity={0.55} />
-          <directionalLight position={[10, 15, 8]} intensity={1.1} castShadow />
+                <Canvas shadows camera={{ position: [8, 5, 10], fov: 50 }}>
+          {/* La luz ambiente principal ahora la aporta el HDRI de
+              LabBackground — esta directional solo queda para que el
+              cañón/proyectil tiren sombra sobre el pasto. */}
+          <directionalLight position={[10, 15, 8]} intensity={0.6} castShadow />
 
-          <LabBackground />
+           <Suspense fallback={null}>
+            <LabBackground />
+          </Suspense>
           <SceneComponent engine={engine} variables={values} />
 
           <GyroCamera orientation={orientation} enabled={gyroActive} />

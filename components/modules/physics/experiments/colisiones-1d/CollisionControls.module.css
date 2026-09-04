@@ -1,0 +1,35 @@
+.actions {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fireButton,
+.resetButton {
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fireButton {
+  background: var(--lab-accent-warm);
+  color: #412402;
+}
+
+.fireButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resetButton {
+  background: transparent;
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+}

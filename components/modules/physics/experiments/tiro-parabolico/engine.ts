@@ -26,16 +26,24 @@ export interface ProjectileEngine extends ExperimentEngine {
 }
 
 /**
- * Motor de tiro parabólico.
+ * Motor de tiro parabólico, con resistencia del aire opcional (arrastre
+ * lineal).
  *
- * Física: caída libre con velocidad inicial en ángulo.
+ * Física:
  *   vx0 = v0 * cos(angulo)
  *   vy0 = v0 * sin(angulo)
- *   cada paso: vy -= g * dt ; x += vx * dt ; y += vy * dt
+ *   cada paso: ax = -k*vx ; ay = -g - k*vy ; vx += ax*dt ; vy += ay*dt
+ *              x += vx*dt ; y += vy*dt
+ *
+ * "k" (drag) es el coeficiente de arrastre — con k=0 se recupera el caso
+ * ideal sin aire. No es un modelo aerodinámico real (no depende de la
+ * forma/área del proyectil), es una aproximación didáctica: a mayor "k",
+ * más frena la velocidad con el tiempo.
  *
  * Se integra con un delta de tiempo FIJO que nos da el shell
  * (useFixedTimestep), no con el framerate real del navegador.
  */
+
 export function createProjectileEngine(): ProjectileEngine {
   let lastVariables: VariablesState = {};
   let time = 0;
@@ -71,11 +79,15 @@ export function createProjectileEngine(): ProjectileEngine {
       lastVariables = variables;
       if (runtime.phase !== "flying") return;
 
-      const g = Number(variables.gravity ?? 9.81);
+            const g = Number(variables.gravity ?? 9.81);
+      const k = Number(variables.drag ?? 0);
 
       // Symplectic Euler: actualiza velocidad primero, luego posición.
       // Es estable para este tipo de simulación con paso fijo pequeño.
-      velocity.y -= g * dt;
+      const ax = -k * velocity.x;
+      const ay = -g - k * velocity.y;
+      velocity.x += ax * dt;
+      velocity.y += ay * dt;
       runtime.position.x += velocity.x * dt;
       runtime.position.y += velocity.y * dt;
       time += dt;

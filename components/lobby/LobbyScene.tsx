@@ -1,53 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
 import * as THREE from "three";
-import { useTexture } from "@react-three/drei";
+import { useTiledPbrTexture } from "../shell/useTiledPbrTexture";
 import { Door } from "./Door";
 import { lobbyDoors } from "./catalog";
 
 const ROOM_HALF_WIDTH = 10;
 const ROOM_HALF_DEPTH = 10;
 const ROOM_HEIGHT = 5;
-
-/**
- * Carga un set diff/normal/roughness (convención de Poly Haven) y lo
- * configura para repetirse (tiling) según el tamaño real de la superficie
- * en metros — repeatCount = tamaño_superficie / tamaño_físico_textura,
- * usando el dato "wide" que Poly Haven publica en cada textura.
- */
-function useTiledPbrTexture(
-  basePath: string,
-  repeatX: number,
-  repeatY: number,
-) {
-  const [map, normalMap, roughnessMap] = useTexture([
-    `${basePath}_diff.jpg`,
-    `${basePath}_nor_gl.jpg`,
-    `${basePath}_rough.jpg`,
-  ]);
-
-  // La configuración de una textura es un efecto secundario sobre un
-  // objeto que ya existe (no algo que se calcule) — por eso va en un
-  // useEffect y no mutando directo el resultado de useTexture.
-  useEffect(() => {
-    [map, normalMap, roughnessMap].forEach((tex) => {
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(repeatX, repeatY);
-    });
-    // Estas 3 propiedades (colorSpace) son configuración de WebGL sobre un
-    // objeto de Three.js, no estado de React — mutarlas acá es el uso
-    // normal de la librería, por eso se desactiva puntualmente esta regla
-    // (pensada para prevenir mutar VALORES DE REACT, no config de WebGL).
-    /* eslint-disable react-hooks/immutability */
-    map.colorSpace = THREE.SRGBColorSpace;
-    normalMap.colorSpace = THREE.NoColorSpace;
-    roughnessMap.colorSpace = THREE.NoColorSpace;
-    /* eslint-enable react-hooks/immutability */
-  }, [map, normalMap, roughnessMap, repeatX, repeatY]);
-
-  return { map, normalMap, roughnessMap };
-}
 
 /**
  * Escena 3D del lobby: una sala cerrada (piso, techo, 4 paredes) con
