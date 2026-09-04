@@ -3,18 +3,17 @@
 import { useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { readPad } from "./gamepad";
 
-const DEADZONE = 0.15;
 const SPEED = 4; // metros por segundo, caminando
 
-function applyDeadzone(value: number) {
-  return Math.abs(value) < DEADZONE ? 0 : value;
-}
-
 /**
- * Movimiento en el plano horizontal usando el stick izquierdo de un gamepad
- * conectado (Gamepad API — funciona con un control emparejado por
- * Bluetooth/USB, como un DualSense de PS5).
+ * Movimiento en el plano horizontal usando el stick izquierdo del control.
+ *
+ * Funciona igual por USB y por Bluetooth: la Gamepad API no los distingue.
+ * La deteccion del control y la resolucion de que eje es cual vive en
+ * ./gamepad.ts, que ademas maneja los controles USB genericos que el
+ * navegador reporta con mapeo no estandar.
  *
  * Es un reemplazo temporal para pruebas: cuando el control físico del grupo
  * (ESP32, Fase 8 del plan) esté listo, se conecta como otra fuente de input
@@ -30,15 +29,12 @@ export function MovementController() {
   const right = useRef(new THREE.Vector3());
 
   useFrame((_, delta) => {
-    const pads = navigator.getGamepads?.() ?? [];
-    const pad = Array.from(pads).find((p) => p !== null);
+    const pad = readPad();
     if (!pad) return;
 
-    // Mapeo "standard" de la Gamepad API: axes[0]/[1] son el stick
-    // izquierdo (horizontal/vertical). axes[1] negativo = stick hacia
-    // arriba = adelante.
-    const moveX = applyDeadzone(pad.axes[0] ?? 0);
-    const moveY = applyDeadzone(pad.axes[1] ?? 0);
+    // Eje Y negativo = stick hacia arriba = caminar hacia adelante.
+    const moveX = pad.left.x;
+    const moveY = pad.left.y;
     if (moveX === 0 && moveY === 0) return;
 
     camera.getWorldDirection(forward.current);

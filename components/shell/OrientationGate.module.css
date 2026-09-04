@@ -42,3 +42,32 @@
     transform: rotate(90deg);
   }
 }
+/* Pantalla de "tocá para entrar". Es un <button>, así que hay que sacarle
+   los estilos nativos y estirarlo a toda la pantalla. */
+.fsOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  border: none;
+  background: var(--lab-bg);
+  font-family: var(--font-sans);
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fsIcon {
+  width: 44px;
+  height: 44px;
+  color: var(--lab-accent);
+}
+
+.fsOverlay .subtext {
+  max-width: 30ch;
+}

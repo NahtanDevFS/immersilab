@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { readPad } from "./gamepad";
 
 export interface CursorPosition {
   x: number;
@@ -14,8 +15,7 @@ const TAP_MAX_DURATION = 300;
 /** Multiplicador de sensibilidad del trackpad táctil. */
 const SENSITIVITY = 1.6;
 
-/** Umbral y velocidad del cursor cuando lo mueve el stick derecho. */
-const STICK_DEADZONE = 0.15;
+/** Velocidad del cursor cuando lo mueve el stick derecho. */
 const CURSOR_SPEED = 900; // px/segundo con el stick a fondo
 
 /**
@@ -151,14 +151,11 @@ export function useVirtualCursor(enabled: boolean) {
       const dt = lastTime !== null ? (time - lastTime) / 1000 : 0;
       lastTime = time;
 
-      const pads = navigator.getGamepads?.() ?? [];
-      const pad = Array.from(pads).find((p) => p !== null);
+      const pad = readPad();
       if (!pad) return;
 
-      const stickX = pad.axes[2] ?? 0;
-      const stickY = pad.axes[3] ?? 0;
-      const mx = Math.abs(stickX) > STICK_DEADZONE ? stickX : 0;
-      const my = Math.abs(stickY) > STICK_DEADZONE ? stickY : 0;
+      const mx = pad.right.x;
+      const my = pad.right.y;
 
       if (mx !== 0 || my !== 0) {
         setPosition((prev) => ({
@@ -187,7 +184,7 @@ export function useVirtualCursor(enabled: boolean) {
         setHoveredKey(key);
       }
 
-      const xPressed = pad.buttons[0]?.pressed ?? false;
+      const xPressed = pad.action;
 
       if (xPressed && !wasXPressed) {
         // Botón recién presionado: agarra el slider, o clickea directo

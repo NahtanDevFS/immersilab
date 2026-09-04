@@ -45,7 +45,10 @@ export function Door({ href, name, position, rotationY = 0 }: Props) {
 
     if (materialRef.current) {
       const proximity = 1 - Math.min(1, distance / GLOW_START_DISTANCE);
-      materialRef.current.emissiveIntensity = 0.15 + proximity * 0.9;
+      // Rango 0.5 → 3.0 en vez de 0.15 → 1.05. Con toneMapped={false} en el
+      // material, todo lo que supera 1 cruza el umbral del bloom: acercarse
+      // a la puerta no le cambia el color, la hace irradiar de verdad.
+      materialRef.current.emissiveIntensity = 0.5 + proximity * 2.5;
     }
 
     if (distance < TRIGGER_RADIUS) {
@@ -71,9 +74,10 @@ export function Door({ href, name, position, rotationY = 0 }: Props) {
           ref={materialRef}
           color="#0f2f2b"
           emissive="#2dd4bf"
-          emissiveIntensity={0.15}
+          emissiveIntensity={0.5}
+          toneMapped={false}
           transparent
-          opacity={0.55}
+          opacity={0.6}
         />
       </mesh>
 

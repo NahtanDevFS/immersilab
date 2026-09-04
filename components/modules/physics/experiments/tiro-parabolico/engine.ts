@@ -23,6 +23,16 @@ export interface ProjectileRuntime {
 export interface ProjectileEngine extends ExperimentEngine {
   fire: () => void;
   getRuntime: () => ProjectileRuntime;
+  /**
+   * Dónde arranca el disparo, en coordenadas del mundo. Lo fija la escena
+   * con la posición de la BOCA del cañón, que se mueve al cambiar el ángulo.
+   *
+   * Sin esto la física salía del origen mientras el cañón disparaba desde
+   * dos metros más arriba y adelante, y la bola no coincidía con el tubo.
+   * Además ahora la altura de la boca cuenta de verdad: por eso el alcance a
+   * 45° no es exactamente el del caso ideal, y está bien que así sea.
+   */
+  setLaunch: (x: number, y: number) => void;
 }
 
 /**
@@ -48,10 +58,11 @@ export function createProjectileEngine(): ProjectileEngine {
   let lastVariables: VariablesState = {};
   let time = 0;
   let velocity = { x: 0, y: 0 };
+  const launch = { x: 0, y: 0 };
 
   const runtime: ProjectileRuntime = {
     phase: "idle",
-    position: { x: 0, y: GROUND_Y },
+    position: { x: launch.x, y: launch.y },
     trail: [],
     range: 0,
     maxHeight: 0,
@@ -62,7 +73,7 @@ export function createProjectileEngine(): ProjectileEngine {
     time = 0;
     velocity = { x: 0, y: 0 };
     runtime.phase = "idle";
-    runtime.position = { x: 0, y: GROUND_Y };
+    runtime.position = { x: launch.x, y: launch.y };
     runtime.trail = [];
     runtime.range = 0;
     runtime.maxHeight = 0;
@@ -101,7 +112,8 @@ export function createProjectileEngine(): ProjectileEngine {
       if (runtime.position.y <= GROUND_Y && velocity.y < 0) {
         runtime.position.y = GROUND_Y;
         runtime.phase = "landed";
-        runtime.range = runtime.position.x;
+        // Distancia recorrida desde la boca, no desde el origen del mundo.
+        runtime.range = runtime.position.x - launch.x;
         runtime.flightTime = time;
       }
     },
@@ -145,6 +157,17 @@ export function createProjectileEngine(): ProjectileEngine {
 
     getRuntime() {
       return runtime;
+    },
+
+    setLaunch(x, y) {
+      launch.x = x;
+      launch.y = y;
+      // Reposicionar el proyectil en reposo hace que siga la boca del cañón
+      // mientras se mueve el slider de ángulo, antes de disparar.
+      if (runtime.phase === "idle") {
+        runtime.position.x = x;
+        runtime.position.y = y;
+      }
     },
   };
 }

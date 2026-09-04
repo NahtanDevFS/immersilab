@@ -18,3 +18,34 @@
   color: var(--lab-accent);
   border-color: var(--lab-accent);
 }
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 90vw;
+}
+
+.name {
+  white-space: nowrap;
+}
+
+/* Aviso de mapeo no estándar: los ejes pueden venir en otro orden y los
+   sticks hacer cosas raras. Ámbar, no rojo — funciona, solo hay que
+   revisarlo. */
+.warn {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(242, 166, 90, 0.18);
+  color: var(--lab-accent-warm);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.raw {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: var(--lab-text-muted);
+  white-space: nowrap;
+}

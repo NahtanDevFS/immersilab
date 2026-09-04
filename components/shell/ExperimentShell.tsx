@@ -2,9 +2,13 @@
 
 import { Suspense, useEffect, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, ContactShadows } from "@react-three/drei";
 import { Header } from "./Header";
 import { LabBackground } from "./LabBackground";
+import { LabLighting } from "./LabLighting";
+import { PostFX } from "./PostFX";
+import { LoadingOverlay } from "./LoadingOverlay";
+import { useQualityTier } from "./useQualityTier";
 import { VariablesPanel } from "./VariablesPanel";
 import { ResultPanel } from "./ResultPanel";
 import { GyroCamera } from "./GyroCamera";
@@ -40,6 +44,7 @@ export function ExperimentShell({
 }: Props) {
   const { values, setValue } = useVariables(experiment.variablesSchema);
   const { orientation, permission, requestPermission } = useDeviceOrientation();
+  const quality = useQualityTier();
 
   const gyroActive = permission === "granted";
   // hoveredKey: qué slider está bajo el cursor ahora mismo (con dedo o con
@@ -96,22 +101,52 @@ export function ExperimentShell({
           </p>
         )}
 
-                <Canvas shadows camera={{ position: [8, 5, 10], fov: 50 }}>
-          {/* La luz ambiente principal ahora la aporta el HDRI de
-              LabBackground — esta directional solo queda para que el
-              cañón/proyectil tiren sombra sobre el pasto. */}
-          <directionalLight position={[10, 15, 8]} intensity={0.6} castShadow />
+        <Canvas
+          shadows={quality === "high" ? "soft" : true}
+          dpr={[1, quality === "high" ? 2 : 1.5]}
+          camera={{
+            position: [8, 5, 10],
+            fov: 50,
+            // near alto y far ajustado al tamaño real de la escena: es lo
+            // que quita el parpadeo entre caras coplanares del cañón.
+            // Subir `near` de 0.1 a 0.5 multiplica por 5 la precisión de
+            // profundidad útil, y no se pierde nada porque la cámara nunca
+            // se acerca tanto a un objeto.
+            near: 0.5,
+            far: 400,
+          }}
+        >
+          {/* El ambiente lo aporta el HDRI de LabBackground; LabLighting
+              agrega la luz principal en ángulo (la única con castShadow) y
+              un contraluz que despega los props del pasto. */}
+          <LabLighting variant="outdoor" quality={quality} shadowRadius={18} />
 
-           <Suspense fallback={null}>
-            <LabBackground />
+          <Suspense fallback={null}>
+            <LabBackground quality={quality} />
           </Suspense>
           <SceneComponent engine={engine} variables={values} />
+
+          {/* Sombra de contacto: sin esto los objetos se ven "flotando"
+              sobre el pasto aunque tengan sombra proyectada. Es la mejora
+              más barata que hay para asentar algo en el suelo. */}
+          <ContactShadows
+            position={[5, 0.01, 0]}
+            scale={26}
+            blur={2.4}
+            opacity={0.5}
+            far={9}
+            resolution={quality === "high" ? 512 : 256}
+          />
 
           <GyroCamera orientation={orientation} enabled={gyroActive} />
           {gyroActive && <MovementController />}
           {!gyroActive && <OrbitControls target={[5, 1, 0]} />}
+
+          <PostFX quality={quality} />
         </Canvas>
         <VirtualCursor position={cursorPos} visible={gyroActive} />
+
+        <LoadingOverlay label={experiment.name} />
       </div>
     </OrientationGate>
   );

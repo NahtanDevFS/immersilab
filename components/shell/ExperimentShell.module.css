@@ -1,13 +1,21 @@
 .container {
   position: relative;
+  /* 100vh en un celular NO descuenta la barra de direcciones ni la de
+     navegacion, asi que el fondo del layout cae por debajo de la pantalla y
+     los botones de ahi ("Lanzar", "Activar giroscopio") quedan tapados o
+     fuera de alcance. dvh si las descuenta y se reajusta cuando aparecen o
+     desaparecen. El 100vh queda de respaldo para navegadores viejos. */
   height: 100vh;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
 }
 
 .gyroButton {
   position: absolute;
-  bottom: 1.5rem;
+  /* safe-area: en celulares con muesca o barra gestual, un bottom fijo deja
+     el boton debajo de la barra del sistema y no se puede tocar. */
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -24,7 +32,7 @@
 
 .gyroNote {
   position: absolute;
-  bottom: 1.5rem;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
