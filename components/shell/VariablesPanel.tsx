@@ -10,6 +10,12 @@ interface Props {
   onChange: (key: string, value: number | boolean | string) => void;
   /** Clave de la variable resaltada (ej. seleccionada con el gamepad). */
   selectedKey?: string;
+  /**
+   * "overlay" (por defecto): flotando en una esquina de la pantalla, para
+   * mouse y pantalla plana. "hud": sin posicionamiento propio, porque lo
+   * coloca `VariablesHud3D` como objeto dentro de la escena para el visor.
+   */
+  variant?: "overlay" | "hud";
 }
 
 /**
@@ -24,9 +30,12 @@ export function VariablesPanel({
   values,
   onChange,
   selectedKey,
+  variant = "overlay",
 }: Props) {
   return (
-    <div className={styles.panel}>
+    <div
+      className={variant === "hud" ? `${styles.panel} ${styles.hud}` : styles.panel}
+    >
       <h2 className={styles.title}>{title}</h2>
 
       {Object.entries(schema).map(([key, def]) => {

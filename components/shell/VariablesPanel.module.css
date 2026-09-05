@@ -99,3 +99,31 @@
   border-radius: 6px;
   font-size: 0.78rem;
 }
+/*
+ * Variante para el panel dentro de la escena (VariablesHud3D). Se le quita el
+ * posicionamiento fijo: adentro de un <Html transform> la posición la da la
+ * transformación 3D, y un `position: absolute` con `top/left` lo mandaría a
+ * la esquina de ESE contenedor, no a donde está el objeto.
+ *
+ * Además va más ancho y con la tipografía más grande: a un metro de
+ * distancia y a través de las lentes de un visor barato, el texto del panel
+ * de escritorio es ilegible.
+ */
+.hud {
+  position: static;
+  width: 20rem;
+  max-height: none;
+  font-size: 1.15rem;
+}
+
+.hud .title {
+  font-size: 0.85rem;
+}
+
+.hud .label {
+  font-size: 0.95rem;
+}
+
+.hud .slider {
+  height: 1.6rem;
+}

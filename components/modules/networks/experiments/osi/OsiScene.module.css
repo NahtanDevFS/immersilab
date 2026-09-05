@@ -1,0 +1,46 @@
+/* Etiquetas dentro de la escena. Sin pointer-events: son informativas y no
+   deben robarle el clic a nada. */
+.layer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.85);
+  border: 0.5px solid var(--lab-panel-border);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.osi {
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.header {
+  color: var(--lab-accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+}
+
+.pdu {
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+}
+
+.host {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.9);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-accent);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}

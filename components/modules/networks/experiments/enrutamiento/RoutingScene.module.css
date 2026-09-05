@@ -1,0 +1,33 @@
+/* Etiquetas dentro de la escena. `pointer-events: none` en las de enlace: son
+   informativas, y si capturaran el puntero taparían el clic sobre el router
+   que está justo detrás. */
+.linkLabel {
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.8);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6rem;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nodeLabel {
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.85);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nodeLabel[data-edge="true"] {
+  color: var(--lab-accent);
+}

@@ -61,6 +61,11 @@ export const colisiones1DExperiment: ExperimentDefinition = {
     "coeficiente de restitución",
     "energía cinética",
   ],
+  briefing: {
+    what: "Cuando dos cuerpos chocan, la cantidad de movimiento total (masa por velocidad, sumando los dos) es la misma antes y después. La energía, en cambio, se puede perder en el golpe.",
+    how: "Dale masa y velocidad a cada carrito y soltalos. El coeficiente de restitución es qué tan rebotón es el choque: en uno rebotan como bolas de billar, en cero quedan pegados.",
+    goal: "Comprobá que la cantidad de movimiento total no cambia, pongas el coeficiente que pongas, y mirá cómo la energía sí baja apenas el choque deja de ser perfectamente elástico.",
+  },
   SceneComponent: CollisionScene,
   ControlsComponent: CollisionControls,
   createEngine: createCollisionEngine,

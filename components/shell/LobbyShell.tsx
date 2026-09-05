@@ -25,7 +25,8 @@ import styles from "./ExperimentShell.module.css";
  * caminando a través de la puerta.
  */
 export function LobbyShell() {
-  const { orientation, permission, requestPermission } = useDeviceOrientation();
+  const { orientation, permission, requestPermission, insecure } =
+    useDeviceOrientation();
   const gyroActive = permission === "granted";
   const quality = useQualityTier();
 
@@ -36,6 +37,11 @@ export function LobbyShell() {
 
         {gyroActive && <GamepadStatus />}
 
+        {/* El botón aparece SIEMPRE que el sensor todavía no entregó datos.
+            En Android el enganche automático lo pone en "granted" en
+            milisegundos, así que casi nunca se llega a ver; en iOS, donde
+            hace falta el gesto, es imprescindible. Ocultarlo por "ya aceptó
+            antes" dejaba el juego sin giroscopio y sin forma de activarlo. */}
         {permission === "prompt" && (
           <button className={styles.gyroButton} onClick={requestPermission}>
             Activar giroscopio
@@ -48,7 +54,12 @@ export function LobbyShell() {
 
         {permission === "unsupported" && (
           <p className={styles.gyroNote}>
-            Sin giroscopio disponible — usa el mouse para mover la cámara.
+            {insecure
+              ? // Este caso confunde muchísimo si no se dice: el teléfono
+                // TIENE giroscopio, pero el navegador no lo entrega fuera de
+                // HTTPS o localhost, y no avisa de ninguna forma.
+                "El navegador bloquea el giroscopio fuera de HTTPS — abrí el laboratorio por https:// o desde localhost."
+              : "Sin giroscopio disponible — usa el mouse para mover la cámara."}
           </p>
         )}
 

@@ -1,0 +1,91 @@
+.actions {
+  position: absolute;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  right: calc(0.75rem + env(safe-area-inset-right));
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fireButton,
+.resetButton {
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fireButton {
+  background: var(--lab-accent-warm);
+  color: #412402;
+}
+
+.fireButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resetButton {
+  background: transparent;
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+}
+/* Pantalla del receptor. Monoespaciada para que el mensaje roto se lea como
+   lo que es —una tira de bytes— y para que no baile de ancho al cambiar. */
+.readout {
+  align-self: center;
+  /* Acotado: con un texto largo (la explicación de un error, por ejemplo) la
+     píldora se estiraba hasta el centro de la pantalla y chocaba con el aviso
+     del giroscopio, que vive justo ahí. */
+  max-width: 26rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: rgba(19, 27, 46, 0.9);
+  backdrop-filter: blur(6px);
+  color: var(--lab-accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los saltos disponibles, como botones. Se envuelven en varias filas: con
+   nueve routers puede haber hasta cuatro opciones y en horizontal no entran
+   en la pantalla de un celular. */
+.hops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  max-width: 60vw;
+}
+
+.hop {
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--lab-accent);
+  color: #04302b;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary {
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: transparent;
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  cursor: pointer;
+}

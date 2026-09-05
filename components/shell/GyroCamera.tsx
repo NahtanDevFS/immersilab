@@ -7,6 +7,19 @@ import type { OrientationState } from "./useDeviceOrientation";
 
 const DEG = Math.PI / 180;
 
+/**
+ * Altura de los ojos, en metros, al entrar en modo visor.
+ *
+ * El giroscopio solo controla hacia dónde MIRÁS, no dónde estás parado: la
+ * posición la deja donde la haya dejado la cámara de la escena. En los
+ * experimentos esa cámara está pensada para mirar desde afuera (a 5 m de
+ * alto y en diagonal), y al ponerse el visor eso se siente como estar
+ * flotando o, si la escena la baja, como mirar desde la cintura. Fijarla a
+ * una altura de persona parada es lo que hace que la escala del cañón, de
+ * los bloques y del pasillo se sienta real.
+ */
+const EYE_HEIGHT = 1.7;
+
 interface Props {
   orientation: OrientationState;
   enabled: boolean;
@@ -47,8 +60,24 @@ export function GyroCamera({ orientation, enabled }: Props) {
     return () => screen.orientation?.removeEventListener("change", updateAngle);
   }, []);
 
+  // Se corrige UNA vez al entrar en modo visor y después el jugador manda:
+  // si se forzara en cada frame, cualquier experimento que quiera mover la
+  // cámara en vertical quedaría clavado sin explicación.
+  const planted = useRef(false);
+  useEffect(() => {
+    if (!enabled) planted.current = false;
+  }, [enabled]);
+
   useFrame(() => {
     if (!enabled) return;
+
+    if (!planted.current) {
+      planted.current = true;
+      // `setY` y no `position.y =`: asignarle un campo a un objeto que
+      // devuelve un hook (`useThree`) es justo lo que marca el compilador de
+      // React. El método hace lo mismo y es la vía que three espera.
+      camera.position.setY(EYE_HEIGHT);
+    }
 
     const { alpha, beta, gamma } = orientation;
 

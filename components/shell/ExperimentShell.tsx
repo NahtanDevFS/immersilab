@@ -10,7 +10,9 @@ import { PostFX } from "./PostFX";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { useQualityTier } from "./useQualityTier";
 import { VariablesPanel } from "./VariablesPanel";
+import { VariablesHud3D } from "./VariablesHud3D";
 import { ResultPanel } from "./ResultPanel";
+import { BriefingPanel } from "./BriefingPanel";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
 import { GamepadStatus } from "./GamepadStatus";
@@ -43,7 +45,8 @@ export function ExperimentShell({
   moduleName,
 }: Props) {
   const { values, setValue } = useVariables(experiment.variablesSchema);
-  const { orientation, permission, requestPermission } = useDeviceOrientation();
+  const { orientation, permission, requestPermission, insecure } =
+    useDeviceOrientation();
   const quality = useQualityTier();
 
   const gyroActive = permission === "granted";
@@ -71,20 +74,37 @@ export function ExperimentShell({
           showBackLink
         />
 
-        <VariablesPanel
-          title="Variables"
-          schema={experiment.variablesSchema}
-          values={values}
-          onChange={setValue}
-          selectedKey={hoveredKey ?? undefined}
-        />
+        {/* En modo visor el panel NO va pegado a la pantalla: se dibuja
+            dentro del Canvas, a distancia de lectura (VariablesHud3D). Con
+            mouse, en cambio, la esquina es lo cómodo. */}
+        {!gyroActive && (
+          <VariablesPanel
+            title="Variables"
+            schema={experiment.variablesSchema}
+            values={values}
+            onChange={setValue}
+            selectedKey={hoveredKey ?? undefined}
+          />
+        )}
 
         <ResultPanel engine={engine} />
+
+        {experiment.briefing && (
+          <BriefingPanel
+            experimentName={experiment.name}
+            briefing={experiment.briefing}
+          />
+        )}
 
         {ControlsComponent && <ControlsComponent engine={engine} />}
 
         {gyroActive && <GamepadStatus />}
 
+        {/* El botón aparece SIEMPRE que el sensor todavía no entregó datos.
+            En Android el enganche automático lo pone en "granted" en
+            milisegundos, así que casi nunca se llega a ver; en iOS, donde
+            hace falta el gesto, es imprescindible. Ocultarlo por "ya aceptó
+            antes" dejaba el juego sin giroscopio y sin forma de activarlo. */}
         {permission === "prompt" && (
           <button className={styles.gyroButton} onClick={requestPermission}>
             Activar giroscopio
@@ -97,7 +117,12 @@ export function ExperimentShell({
 
         {permission === "unsupported" && (
           <p className={styles.gyroNote}>
-            Sin giroscopio disponible — usa el mouse para mover la cámara.
+            {insecure
+              ? // Este caso confunde muchísimo si no se dice: el teléfono
+                // TIENE giroscopio, pero el navegador no lo entrega fuera de
+                // HTTPS o localhost, y no avisa de ninguna forma.
+                "El navegador bloquea el giroscopio fuera de HTTPS — abrí el laboratorio por https:// o desde localhost."
+              : "Sin giroscopio disponible — usa el mouse para mover la cámara."}
           </p>
         )}
 
@@ -125,6 +150,15 @@ export function ExperimentShell({
             <LabBackground quality={quality} />
           </Suspense>
           <SceneComponent engine={engine} variables={values} />
+
+          {gyroActive && (
+            <VariablesHud3D
+              schema={experiment.variablesSchema}
+              values={values}
+              onChange={setValue}
+              selectedKey={hoveredKey ?? undefined}
+            />
+          )}
 
           {/* Sombra de contacto: sin esto los objetos se ven "flotando"
               sobre el pasto aunque tengan sombra proyectada. Es la mejora

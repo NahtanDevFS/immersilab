@@ -3,7 +3,7 @@
 > Laboratorio inmersivo para enseñar Cálculo, Física y Redes/Telecomunicaciones,
 > con tutor por voz, pensado para visor 360 (celular + Cardboard/VR-box).
 >
-> Documento vivo. Última revisión: 2026-09-03.
+> Documento vivo. Última revisión: 2026-09-04.
 
 ---
 
@@ -15,20 +15,33 @@ Lo que **ya funciona**:
 |---|---|---|
 | Contrato de módulos | `types/module.ts` | Sólido. El shell no conoce ninguna disciplina. |
 | Shell de experimento | `components/shell/ExperimentShell.tsx` | Funciona; genérico. |
-| Lobby 3D con puertas | `components/lobby/` | Funciona; navegación por proximidad. |
+| Lobby 3D con puertas | `components/lobby/` | Pasillo con puertas enfrentadas; navegación por proximidad. |
+| Colisiones del jugador | `lib/collision/` | Recinto del pasillo + cajas por objeto. |
+| Voz que explica el experimento | `lib/narration/`, `components/shell/BriefingPanel.tsx` | Web Speech API; texto + audio. |
 | Giroscopio + gate horizontal | `useDeviceOrientation.ts`, `OrientationGate.tsx` | Funciona. |
 | Caminar con gamepad | `MovementController.tsx` | Stick izquierdo, relativo a la cámara. |
 | Cursor virtual + sliders | `useVirtualCursor.ts` | Stick derecho + botón X (índice 0). |
+| Panel de variables en 3D | `components/shell/VariablesHud3D.tsx` | Modo visor: el panel vive en la escena, no en la esquina de la pantalla. |
 | Timestep fijo 1/60s | `lib/physics-engine/useFixedTimestep.ts` | Funciona. |
 | Física: tiro parabólico | `.../tiro-parabolico/` | Funciona. |
 | Física: colisiones 1D | `.../colisiones-1d/` | Funciona. |
+| Redes: constelación QAM (R2) | `.../networks/experiments/qam/` | Funciona. |
+| Redes: enrutamiento (R4) | `.../networks/experiments/enrutamiento/` | Funciona. |
+| Redes: OSI y TCP/IP (R5) | `.../networks/experiments/osi/` | Funciona. |
+| Física: tubo de Venturi (fluidos) | `.../physics/experiments/venturi/` | Funciona. |
+| Cálculo: suma de Riemann (C2) | `.../calculus/experiments/suma-riemann/` | Funciona. |
+| Cálculo: sólidos de revolución (C3) | `.../calculus/experiments/solidos-revolucion/` | Funciona. |
+| Cálculo: derivada (C1) | `.../calculus/experiments/derivada-pico/` | Funciona. |
+| Catálogo de funciones y pistas | `components/modules/calculus/shared/` | Compartido por los experimentos de cálculo. |
 | Texturas PBR con tiling | `useTiledPbrTexture.ts` | Funciona; convención Poly Haven. |
 
 Lo que **falta**:
 
-- Módulos de Cálculo y Redes: cero. Solo hay Física.
+- Módulo de Cálculo: C2, C1 y C3 hechos; falta C4 (Taylor).
+- Módulo de Redes: R2 (QAM), R4 (enrutamiento) y R5 (OSI/TCP-IP) hechos; faltan R1, R3 y R6.
 - Tutor de IA: `AIContext` está definido en `types/module.ts` pero nadie lo consume.
-- Voz: no existe (ni entrada ni salida).
+- Voz: hay SALIDA (la explicación de cada experimento, `briefing`). Falta la
+  entrada (hablarle al tutor) y que el tutor responda.
 - Supabase: instalado (`lib/supabase/`) pero sin esquema ni uso.
 - Capa de "juego": no hay objetivos, puntaje, ni progreso.
 - Calidad visual: ver sección 2.
@@ -707,8 +720,8 @@ actuales de los sliders.
 Esto es lo que convierte el proyecto en un sistema educativo evaluable, no en una
 demo suelta.
 
-### Fase D — Módulo de Cálculo
-C2 (Riemann) → C1 (derivada) → C3 (sólidos de revolución) → C4 (Taylor).
+### Fase D — Módulo de Cálculo *(en curso)*
+C2 (Riemann) ✅ → C1 (derivada) ✅ → C3 (sólidos de revolución) ✅ → C4 (Taylor).
 Ese orden: C2 es el más simple y valida el patrón; C3 es el más impresionante y
 conviene tenerlo listo con tiempo de sobra.
 

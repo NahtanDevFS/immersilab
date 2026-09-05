@@ -48,6 +48,11 @@ export const tiroParabolicoExperiment: ExperimentDefinition = {
   description:
     "Lanza un proyectil ajustando ángulo, velocidad inicial, gravedad y resistencia del aire.",  variablesSchema,
   conceptTags: ["cinemática", "movimiento parabólico", "gravedad"],
+  briefing: {
+    what: "Un proyectil lanzado al aire sigue una parábola: avanza en horizontal a velocidad constante mientras la gravedad lo frena y lo trae de vuelta hacia abajo. Los dos movimientos son independientes y pasan al mismo tiempo.",
+    how: "Ajustá el ángulo del cañón y la velocidad de salida, y disparalo. La gravedad y la resistencia del aire también se pueden cambiar, para ver qué pasa en la Luna o con aire espeso.",
+    goal: "Buscá con qué ángulo llega más lejos a una misma velocidad. Sin resistencia del aire el máximo está cerca de los cuarenta y cinco grados; probá si con aire sigue siendo así.",
+  },
   SceneComponent: ProjectileScene,
   ControlsComponent: ProjectileControls,
   createEngine: createProjectileEngine,

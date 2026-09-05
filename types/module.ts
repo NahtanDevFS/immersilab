@@ -60,6 +60,27 @@ export interface ExperimentEngine {
   getSeries?: () => Array<{ x: number; y: number }>;
 }
 
+/**
+ * Explicación del experimento para el alumno que lo abre por primera vez.
+ *
+ * La lee la voz del laboratorio y se muestra como tarjeta (BriefingPanel).
+ * Son tres campos y no un párrafo suelto a propósito: obliga a responder las
+ * tres preguntas que alguien que nunca oyó hablar del tema necesita —
+ * qué es, qué tengo que hacer, y cómo sé si me fue bien. Un texto libre
+ * termina siendo siempre solo la primera.
+ *
+ * Se escriben en segunda persona y sin fórmulas: la fórmula ya está en la
+ * pantalla, lo que falta es qué significa.
+ */
+export interface ExperimentBriefing {
+  /** Qué concepto es y para qué sirve, en una o dos frases. */
+  what: string;
+  /** Qué tiene que hacer el alumno con los controles. */
+  how: string;
+  /** El reto concreto y qué mirar para saber si lo logró. */
+  goal: string;
+}
+
 // Metadata + definición completa de un experimento, tal como se registra
 // en el catálogo de un módulo.
 export interface ExperimentDefinition {
@@ -68,6 +89,12 @@ export interface ExperimentDefinition {
   description: string;
   variablesSchema: VariablesSchema;
   conceptTags?: string[];
+  /**
+   * Explicación hablada y escrita que se muestra al entrar. Es opcional en el
+   * tipo por compatibilidad, pero todo experimento nuevo debería traerla: sin
+   * ella, el que no conoce el tema ve una escena 3D sin saber qué mira.
+   */
+  briefing?: ExperimentBriefing;
   // Componente React que dibuja la escena 3D de este experimento.
   // Recibe el motor y las variables actuales (para alimentar engine.update
   // en cada frame) y renderiza con React Three Fiber.

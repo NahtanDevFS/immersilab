@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
+import { useCollider } from "@/lib/collision/useCollider";
 import type { ProjectileEngine } from "./engine";
 import {
   CannonBarrel,
@@ -50,6 +51,15 @@ export function ProjectileScene({ engine, variables }: Props) {
   const cannonRef = useRef<THREE.Group>(null);
   const trailGeometryRef = useRef<THREE.BufferGeometry>(null);
 
+  // El cañón como obstáculo: sin esto se le puede caminar a través, que es
+  // lo que más delata que la escena es un decorado. Las medidas son las de
+  // la cureña (~2.5 m de largo por 1.4 de ancho, ya escalada), no las del
+  // tubo, que queda por encima de la cabeza.
+  useCollider({
+    center: [CANNON_X + 0.4, 0.9, 0],
+    size: [2.6, 1.8, 1.4],
+  });
+
   const trailPositions = useMemo(
     () => new Float32Array(MAX_TRAIL_POINTS * 3),
     [],
@@ -68,6 +78,12 @@ export function ProjectileScene({ engine, variables }: Props) {
       // El motor ya trabaja en coordenadas del mundo desde que la escena le
       // fija la boca como punto de lanzamiento: no hace falta desplazarlo.
       ballRef.current.position.set(runtime.position.x, runtime.position.y, 0);
+      // En reposo la bala está CARGADA, o sea dentro del ánima: el punto de
+      // lanzamiento es la boca, así que dejarla visible ahí la mostraba
+      // asomada en la punta como si estuviera a medio salir. Se oculta hasta
+      // que el disparo empieza (y se deja visible al aterrizar, que es el
+      // resultado que el alumno tiene que poder mirar).
+      ballRef.current.visible = runtime.phase !== "idle";
     }
 
     const angle = Number(variables.angle ?? 45) * DEG;

@@ -41,17 +41,20 @@ export function LabLighting({
 
   return (
     <>
-      {/* Relleno: cielo frío arriba, rebote cálido del piso abajo. Sustituye
+      {/* Relleno: cielo frío arriba, rebote cálido del piso abajo.
+          En interior va más bajo que antes: el pasillo se ilumina sobre todo
+          con sus propias luminarias de techo, y el relleno alto lavaba los
+          contrastes hasta dejar las paredes sin sombra ninguna. Sustituye
           al ambientLight plano — un ambientLight suma lo mismo a todas las
           caras y es justamente lo que aplana una escena. */}
       <hemisphereLight
-        args={[indoor ? "#dce6f7" : "#bcd4ff", "#4a4036", indoor ? 0.75 : 0.45]}
+        args={[indoor ? "#dce6f7" : "#bcd4ff", "#4a4036", indoor ? 0.5 : 0.45]}
       />
 
       {/* Luz principal. La única con castShadow. */}
       <directionalLight
         position={indoor ? [7, 9, 5] : [12, 16, 9]}
-        intensity={indoor ? 1.15 : 1.2}
+        intensity={indoor ? 0.7 : 1.2}
         color={indoor ? "#fff8f2" : "#ffe8c9"}
         castShadow
         shadow-mapSize={[shadowMap, shadowMap]}
@@ -83,7 +86,9 @@ export function LabLighting({
           Se reutiliza el HDRI de atardecer que ya carga LabBackground —
           queda en caché del navegador, así que en el lobby es gratis. Va sin
           `background` y con intensidad baja: no se ve, solo aporta el brillo
-          del piso pulido y el reflejo de los metales. Cuando esté el HDRI de
+          del piso pulido y el reflejo de los metales. La intensidad es baja
+          también porque es un HDRI de ATARDECER: subida, le mete un tinte
+          rosado a las paredes del pasillo. Cuando esté el HDRI de
           interior (ver PLAN_DESARROLLO.md §5.2) se cambia solo esta ruta.
 
           Nota: NO usar <Environment> con <Lightformer> como hijos. Con drei
@@ -97,7 +102,7 @@ export function LabLighting({
         <Suspense fallback={null}>
           <Environment
             files="/textures/sky/qwantani_dusk_2_puresky.hdr"
-            environmentIntensity={0.35}
+            environmentIntensity={0.22}
           />
         </Suspense>
       )}

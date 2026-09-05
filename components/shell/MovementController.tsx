@@ -4,8 +4,13 @@ import { useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { readPad } from "./gamepad";
+import { resolveCollisions } from "@/lib/collision/colliders";
 
 const SPEED = 4; // metros por segundo, caminando
+
+/** Radio del jugador para colisionar. Es el "cuerpo" que no atraviesa las
+ *  paredes; 0.35 m es hombro a hombro y deja pasar por un vano de 1 m. */
+const PLAYER_RADIUS = 0.35;
 
 /**
  * Movimiento en el plano horizontal usando el stick izquierdo del control.
@@ -46,6 +51,11 @@ export function MovementController() {
     const step = SPEED * delta;
     camera.position.addScaledVector(forward.current, -moveY * step);
     camera.position.addScaledVector(right.current, moveX * step);
+
+    // Se mueve primero y se corrige después ("mover y resolver"): es más
+    // simple que predecir el choque y, con pasos de ~7 cm por frame contra
+    // paredes de 20 cm de espesor, no hay forma de atravesarlas de un salto.
+    resolveCollisions(camera.position, PLAYER_RADIUS);
   });
 
   return null;

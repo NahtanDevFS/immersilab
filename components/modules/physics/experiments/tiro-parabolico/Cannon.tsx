@@ -1,11 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
+
+/** Textura de roble del propio pack del modelo
+ *  (`NavalCannon/Wood3_by_Andrw9864/`), copiada a `public/`. El .glb
+ *  conserva las UVs del .obj original, así que la veta cae donde el autor la
+ *  mapeó — no hace falta reproyectar nada. */
+const WOOD_MAP = "/textures/wood/red-oak.jpg";
+const WOOD_BUMP = "/textures/wood/red-oak-bump.jpg";
 
 useGLTF.preload("/models/cannon-barrel.glb");
 useGLTF.preload("/models/cannon-carriage.glb");
+useTexture.preload([WOOD_MAP, WOOD_BUMP]);
 
 /**
  * Cañón naval, partido en dos piezas: el tubo (que se eleva con el slider de
@@ -62,58 +70,73 @@ const BRASS_GROUPS = new Set([
 ]);
 
 /*
- * Paleta: cañón negro con los herrajes en bronce y un acento teal.
+ * Paleta: la del render de referencia del propio pack
+ * (`NavalCannon/Renders/Render1.jpg`) — cureña y ruedas de roble, tubo de
+ * hierro fundido oscuro casi negro, y todos los herrajes (pernos, aros de
+ * las ruedas, cubos, muñoneras) en acero, no en bronce.
+ *
+ * Se probó antes la pieza entera en hierro del mismo tono: se leía limpia
+ * pero perdía el contraste madera/metal, que es justo lo que hace que un
+ * cañón se vea como un cañón. El riesgo de la madera es irse a naranja
+ * fluorescente contra el verde del pasto, así que el marrón va desaturado y
+ * bien mate.
  *
  * Ojo con los valores: un hex se convierte a espacio lineal y después pasa
- * por el tone mapping ACES, y en ese camino se oscurece bastante. Los
- * "negros" de acá son grises medios en el selector justamente por eso — un
+ * por el tone mapping ACES, y en ese camino se oscurece bastante. Los tonos
+ * de acá son más claros en el selector de lo que salen en pantalla — un
  * #111 de verdad sale negro absoluto y se pierde toda la forma. Misma
  * trampa que el techo del lobby (ver PLAN_DESARROLLO.md §2.6).
  */
 
-/** Tubo: hierro negro pulido. Metalness alto para que agarre el reflejo del
- *  cielo a lo largo del cañón — sin ese brillo, un objeto negro se convierte
- *  en una silueta plana sin volumen. */
+/** Tubo: hierro fundido, casi negro como en el render. Metalness alto para
+ *  que agarre el reflejo del cielo a lo largo del cañón — sin ese brillo un
+ *  objeto tan oscuro se convierte en una silueta plana sin volumen. */
 const BARREL = new THREE.MeshStandardMaterial({
-  color: "#2a2d33",
-  metalness: 0.9,
-  roughness: 0.38,
-  envMapIntensity: 1.2,
-  side: THREE.DoubleSide,
-});
-
-/** Cureña y ruedas: negro mate, tirando a grafito. Más apagado que el tubo
- *  para que las dos piezas se distingan aunque las dos sean oscuras. */
-const BODY = new THREE.MeshStandardMaterial({
-  color: "#33373f",
-  metalness: 0.25,
-  roughness: 0.75,
-  // DoubleSide: partes de la cureña vienen con las normales invertidas desde
-  // el .obj original y con FrontSide salían negras del todo.
-  side: THREE.DoubleSide,
-});
-
-/** Herrajes: bronce. Es el color natural de los apliques de artillería y
- *  contra el negro es lo que le da lectura a la pieza. */
-const BRASS = new THREE.MeshStandardMaterial({
-  color: "#b8863b",
-  metalness: 0.85,
-  roughness: 0.35,
+  color: "#2b2e34",
+  metalness: 0.92,
+  roughness: 0.34,
   envMapIntensity: 1.3,
   side: THREE.DoubleSide,
 });
 
-/** Muñoneras en el teal del laboratorio: ata el cañón a la paleta del resto
- *  de la app y marca justo el eje sobre el que gira el tubo, que es el dato
- *  que el experimento quiere que se mire. */
-const ACCENT = new THREE.MeshStandardMaterial({
-  color: "#1d5f57",
-  metalness: 0.6,
-  roughness: 0.4,
-  emissive: "#2dd4bf",
-  emissiveIntensity: 0.25,
+/** Cureña y ruedas: roble, con la textura del pack. El `color` NO es el
+ *  color de la madera — se multiplica sobre la textura, así que tiñe y
+ *  atenúa: acá baja la veta a un roble oscuro, porque a plena luz de la
+ *  escena la textura sale naranja fluorescente contra el pasto. Se probó con
+ *  un gris puro y la madera quedaba descolorida, sin nada de calidez; por eso
+ *  el atenuador es un marrón y no un neutro.
+ *
+ *  Es un parámetro suelto y no un material hecho, porque el material se arma
+ *  recién cuando la textura terminó de cargar (ver `useWoodBodyMaterial`). */
+const BODY_PARAMS: THREE.MeshStandardMaterialParameters = {
+  color: "#5c4028",
+  metalness: 0.04,
+  roughness: 0.85,
+  envMapIntensity: 0.5,
+  bumpScale: 0.6,
+  // FrontSide, NO DoubleSide: la cureña tiene caras interiores pegadas a las
+  // exteriores, y dibujando las dos caras se peleaban por el z-buffer — ese
+  // era el parpadeo de los laterales al mover la cámara. Las normales del
+  // .obj ya vienen recalculadas desde la conversión (`renorm`), así que
+  // descartar las traseras no deja ninguna cara negra.
+  side: THREE.FrontSide,
+};
+
+/** Herrajes: hierro forjado negro — pernos, aros y cubos de las ruedas. Se
+ *  probó bronce (quedaba de juguete) y acero claro (los apliques saltaban a
+ *  la vista más que el cañón). En negro los herrajes dibujan la pieza sin
+ *  competirle a la madera; el metalness alto es lo que evita que se lean
+ *  como plástico. */
+const BRASS = new THREE.MeshStandardMaterial({
+  color: "#191b1f",
+  metalness: 0.9,
+  roughness: 0.42,
+  envMapIntensity: 1.1,
   side: THREE.DoubleSide,
 });
+
+/** Muñoneras: el mismo hierro negro que el resto de los herrajes. */
+const ACCENT = BRASS;
 
 /**
  * Reemplaza los materiales de viewport por hierro y madera.
@@ -122,7 +145,31 @@ const ACCENT = new THREE.MeshStandardMaterial({
  * lo comparte: mutar los materiales del original afectaría a cualquier otro
  * componente que cargue el mismo archivo.
  */
-function useDressedModel(path: string, forceIron = false) {
+function useWoodBodyMaterial() {
+  const [map, bump] = useTexture([WOOD_MAP, WOOD_BUMP], (loaded) => {
+    // La configuración va en el callback de carga de useTexture y no después:
+    // la textura es un color, y sin marcarla como sRGB three la lee como
+    // datos lineales y la madera sale lavada y con el tono corrido.
+    for (const tex of Array.isArray(loaded) ? loaded : [loaded]) {
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.anisotropy = 8;
+    }
+    const [diffuse] = Array.isArray(loaded) ? loaded : [loaded];
+    diffuse.colorSpace = THREE.SRGBColorSpace;
+  });
+
+  return useMemo(
+    () => new THREE.MeshStandardMaterial({ ...BODY_PARAMS, map, bumpMap: bump }),
+    [map, bump],
+  );
+}
+
+function useDressedModel(
+  path: string,
+  body: THREE.Material,
+  forceIron = false,
+) {
   const { scene } = useGLTF(path);
 
   return useMemo(() => {
@@ -139,21 +186,24 @@ function useDressedModel(path: string, forceIron = false) {
           ? ACCENT
           : BRASS_GROUPS.has(name)
             ? BRASS
-            : BODY;
+            : body;
     });
     return copy;
-  }, [scene, forceIron]);
+  }, [scene, body, forceIron]);
 }
 
 /** El tubo, en hierro negro. */
 export function CannonBarrel() {
-  const model = useDressedModel("/models/cannon-barrel.glb", true);
+  // El tubo no usa la madera; se le pasa BARREL como cuerpo para no cargar la
+  // textura (y no suspender) en una pieza que es toda de hierro.
+  const model = useDressedModel("/models/cannon-barrel.glb", BARREL, true);
   return <primitive object={model} position={[0, -TRUNNION_Y, -TRUNNION_Z]} />;
 }
 
 /** Cureña y ruedas. */
 export function CannonCarriage() {
-  const model = useDressedModel("/models/cannon-carriage.glb");
+  const body = useWoodBodyMaterial();
+  const model = useDressedModel("/models/cannon-carriage.glb", body);
   return <primitive object={model} />;
 }
 

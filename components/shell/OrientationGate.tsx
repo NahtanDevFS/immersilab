@@ -53,6 +53,17 @@ function supportsFullscreen(): boolean {
 export function OrientationGate({ children }: { children: React.ReactNode }) {
   const [isPortrait, setIsPortrait] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  /**
+   * Se marca apenas se toca, sin esperar a `fullscreenchange`.
+   *
+   * El aviso tardaba en irse porque solo desaparecía cuando el navegador
+   * confirmaba el cambio de pantalla completa, y entre el toque y esa
+   * confirmación pasa un rato largo (la animación de la barra de
+   * direcciones). Ocultarlo enseguida es correcto igual: si el pedido
+   * fallara, lo peor que pasa es que se juega con la barra del navegador a la
+   * vista, no que quede nada roto.
+   */
+  const [dismissed, setDismissed] = useState(false);
   // Capacidad del dispositivo: no cambia nunca durante la sesión, así que
   // se lee con useSyncExternalStore en vez de un efecto con setState (que
   // además provoca un render en cascada, y el linter lo marca).
@@ -78,6 +89,7 @@ export function OrientationGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   const enterFullscreen = useCallback(async () => {
+    setDismissed(true);
     try {
       await document.documentElement.requestFullscreen({
         // Ocupa también el área del notch. Sin esto queda una franja negra
@@ -120,7 +132,7 @@ export function OrientationGate({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {!isPortrait && needsFullscreen && !isFullscreen && (
+      {!isPortrait && needsFullscreen && !isFullscreen && !dismissed && (
         // Botón a pantalla completa, no un div con onClick: así el gesto
         // cuenta como activación para el navegador y además se puede
         // disparar con el Enter de un control o un teclado.
