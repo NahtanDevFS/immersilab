@@ -12,7 +12,7 @@ import { getFluid, PIPE_RADIUS, type VenturiEngine } from "./engine";
  * El tubo se dibuja a escala aumentada: 1 metro del modelo son 8 metros de
  * escena. Un Venturi real de 12 cm de diámetro sería, a tamaño natural, un
  * caño del grosor de un brazo perdido en medio del campo — no se vería nada
- * de lo que hay que ver. Acá se camina POR AL LADO del tubo, que es lo que
+ * de lo que hay que ver. Aquí se camina POR AL LADO del tubo, que es lo que
  * justifica hacerlo en 3D.
  */
 const SCALE = 8;
@@ -138,7 +138,7 @@ export function VenturiScene({ engine, variables }: Props) {
           z,
         );
         // Se estiran donde van rápido, como el motion blur de un plano
-        // cenital de una autopista: refuerza la lectura de "acá acelera".
+        // cenital de una autopista: refuerza la lectura de "aquí acelera".
         const stretch = Math.min(4, (a1 / (r * r)) * 0.9);
         dummy.scale.set(1, 1, stretch);
         dummy.updateMatrix();

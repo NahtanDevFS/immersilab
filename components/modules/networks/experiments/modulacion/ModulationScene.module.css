@@ -1,0 +1,65 @@
+/* Etiquetas dentro de la escena: todas sin puntero, para no cortar el
+   arrastre con el que se mira alrededor. */
+.waveLabel,
+.filterLabel,
+.axisNote,
+.zoomTitle,
+.display {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.waveLabel {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.85);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  transform: translateX(-50%);
+}
+
+.waveLabel[data-accent] {
+  color: var(--lab-accent);
+  border-color: var(--lab-accent);
+}
+
+.filterLabel,
+.zoomTitle {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.85);
+  border: 0.5px solid var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+}
+
+.zoomTitle {
+  border-color: var(--lab-accent);
+  color: var(--lab-accent);
+}
+
+.axisNote {
+  color: var(--lab-text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6rem;
+}
+
+/* Pantalla de la radio: verde de display de cristal líquido, monoespaciada
+   para que la frecuencia no baile al girar el dial. */
+.display {
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  background: #0f2a1d;
+  border: 1px solid #1f4d36;
+  color: #7cf5c8;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  white-space: pre;
+  text-shadow: 0 0 6px rgba(124, 245, 200, 0.6);
+}

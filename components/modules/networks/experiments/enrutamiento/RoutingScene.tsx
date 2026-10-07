@@ -179,6 +179,9 @@ export function RoutingScene({ engine, variables }: Props) {
               }}
               castShadow
               onClick={(event) => {
+                // Si el puntero se movió más de unos píxeles fue un arrastre
+                // para mirar alrededor (DragLookControls), no un clic.
+                if (event.delta > 6) return;
                 // stopPropagation: sin esto, el clic atraviesa y activa
                 // también el router que esté detrás en la línea de vista.
                 event.stopPropagation();

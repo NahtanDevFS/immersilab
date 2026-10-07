@@ -1,19 +1,23 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { readPad } from "./gamepad";
+import { attachKeyboard, readKeyboard } from "./keyboard";
 import { resolveCollisions } from "@/lib/collision/colliders";
 
 const SPEED = 4; // metros por segundo, caminando
+const RUN_MULTIPLIER = 2; // con Shift, en teclado
 
 /** Radio del jugador para colisionar. Es el "cuerpo" que no atraviesa las
  *  paredes; 0.35 m es hombro a hombro y deja pasar por un vano de 1 m. */
 const PLAYER_RADIUS = 0.35;
 
 /**
- * Movimiento en el plano horizontal usando el stick izquierdo del control.
+ * Movimiento en el plano horizontal: stick izquierdo del control, o WASD /
+ * flechas del teclado (Shift para correr). Las dos fuentes se suman, así
+ * que funciona igual con visor, en la compu, o con las dos a la vez.
  *
  * Funciona igual por USB y por Bluetooth: la Gamepad API no los distingue.
  * La deteccion del control y la resolucion de que eje es cual vive en
@@ -33,13 +37,15 @@ export function MovementController() {
   const forward = useRef(new THREE.Vector3());
   const right = useRef(new THREE.Vector3());
 
+  useEffect(() => attachKeyboard(), []);
+
   useFrame((_, delta) => {
     const pad = readPad();
-    if (!pad) return;
+    const keys = readKeyboard();
 
     // Eje Y negativo = stick hacia arriba = caminar hacia adelante.
-    const moveX = pad.left.x;
-    const moveY = pad.left.y;
+    const moveX = clampAxis((pad?.left.x ?? 0) + keys.x);
+    const moveY = clampAxis((pad?.left.y ?? 0) + keys.y);
     if (moveX === 0 && moveY === 0) return;
 
     camera.getWorldDirection(forward.current);
@@ -48,7 +54,7 @@ export function MovementController() {
 
     right.current.crossVectors(forward.current, camera.up).normalize();
 
-    const step = SPEED * delta;
+    const step = SPEED * (keys.run ? RUN_MULTIPLIER : 1) * delta;
     camera.position.addScaledVector(forward.current, -moveY * step);
     camera.position.addScaledVector(right.current, moveX * step);
 
@@ -59,4 +65,8 @@ export function MovementController() {
   });
 
   return null;
+}
+
+function clampAxis(value: number) {
+  return Math.max(-1, Math.min(1, value));
 }

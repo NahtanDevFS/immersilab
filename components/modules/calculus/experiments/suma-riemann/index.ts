@@ -39,7 +39,7 @@ export const sumaRiemannExperiment: ExperimentDefinition = {
   slug: "suma-riemann",
   name: "Suma de Riemann",
   description:
-    "Llená el área bajo la curva con bloques. El reto: bajar del 1% de error con la MENOR cantidad de bloques posible.",
+    "Llena el área bajo la curva con bloques. El reto: bajar del 1% de error con la MENOR cantidad de bloques posible.",
   variablesSchema,
   conceptTags: [
     "integral definida",
@@ -49,9 +49,15 @@ export const sumaRiemannExperiment: ExperimentDefinition = {
   ],
   briefing: {
     what: "La integral de una función es el área que queda entre su curva y el eje horizontal. Cuando esa área no tiene una figura conocida, se la aproxima llenándola con bloques rectangulares: eso es una suma de Riemann.",
-    how: "Elegí una función y un intervalo. El deslizador de bloques parte ese intervalo en pedazos: mientras más bloques, más fino el escalonado y más se parece la suma al área real. El método decide con qué altura se dibuja cada bloque.",
-    goal: "Bajá el error a menos del uno por ciento usando la menor cantidad de bloques que puedas. Fijate que con el método del trapecio se llega con muchos menos bloques que con el del extremo izquierdo: esa es la idea de convergencia.",
+    how: "Elige una función y un intervalo. El deslizador de bloques parte ese intervalo en pedazos: mientras más bloques, más fino el escalonado y más se parece la suma al área real. El método decide con qué altura se dibuja cada bloque.",
+    goal: "Baja el error a menos del uno por ciento usando la menor cantidad de bloques que puedas. Fíjate en que con el método del trapecio se llega con muchos menos bloques que con el del extremo izquierdo: esa es la idea de convergencia.",
   },
+  tutorHints:
+    "Variables: funcion (parabola = x²/4 + 1, seno = 2 + sen(x), raiz = 1 + √x, exponencial = e^(x/3)), metodo (izquierda, derecha, punto-medio, trapecio), n es la cantidad de bloques, a y b son los límites del intervalo. " +
+    "result: aproximacion, valor_exacto, error_pct, bloques, funcion y, si ya lo logró, record_bloques_bajo_1pct (el récord de menos bloques con error menor a uno por ciento). " +
+    "En una función creciente el extremo izquierdo subestima y el derecho sobrestima. El error de los extremos baja como uno sobre n; el del punto medio y el del trapecio, como uno sobre n al cuadrado, por eso necesitan muchos menos bloques. " +
+    "En una función cóncava hacia arriba el trapecio sobrestima y el punto medio subestima, y el error del punto medio suele ser cerca de la mitad del trapecio. " +
+    "Si a es mayor o igual que b el intervalo no tiene sentido: pide corregirlo.",
   SceneComponent: RiemannScene,
   createEngine: createRiemannEngine,
 };

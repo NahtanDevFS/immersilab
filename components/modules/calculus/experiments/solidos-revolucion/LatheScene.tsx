@@ -48,11 +48,11 @@ function buildProfile(radii: number[]): THREE.Vector2[] {
 }
 
 /**
- * "Torneá la pieza" (C3): el sólido de revolución en vivo.
+ * "Tornea la pieza" (C3): el sólido de revolución en vivo.
  *
  * Es el experimento que más justifica que todo esto sea 3D. En papel, "la
  * región bajo la curva gira alrededor del eje" es una frase que hay que
- * creerse; acá el perfil ESTÁ ahí, dibujado al lado del sólido que genera, y
+ * creerse; aquí el perfil ESTÁ ahí, dibujado al lado del sólido que genera, y
  * se puede caminar alrededor de la pieza para ver qué produjo cada slider.
  *
  * Tres piezas en pantalla, y cada una tiene un porqué:

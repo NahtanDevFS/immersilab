@@ -126,7 +126,7 @@ function bitsToText(bits: number[]): string {
 }
 
 /**
- * Motor de "Recuperá el mensaje" (R2).
+ * Motor de "Recupera el mensaje" (R2).
  *
  * Cadena completa de un enlace digital, en cuatro pasos que el experimento
  * deja ver por separado:
@@ -302,7 +302,7 @@ export function createQamEngine(): QamEngine {
     getState(): AIContext {
       const mod = getModulation(lastVariables.modulacion ?? "qpsk");
       return {
-        experimentName: "Recuperá el mensaje",
+        experimentName: "Recupera el mensaje",
         disciplineName: "Redes",
         variables: lastVariables,
         result:

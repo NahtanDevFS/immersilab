@@ -18,7 +18,7 @@ import { useTexture } from "@react-three/drei";
  *
  * Poly Haven ya usa esos sufijos. Las de ambientCG vienen como _Color /
  * _NormalGL / _Roughness / _AmbientOcclusion — se renombran al copiarlas a
- * public/textures/, para que acá solo exista una convención.
+ * public/textures/, para que aquí solo exista una convención.
  *
  * Compartido entre el lobby y el fondo de los experimentos.
  */

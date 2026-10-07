@@ -1,0 +1,59 @@
+/* Etiquetas de la maqueta: sin puntero, para no cortar el arrastre con el
+   que se mira alrededor. */
+.building,
+.point,
+.site,
+.antenna {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  font-family: var(--font-mono), monospace;
+}
+
+.building {
+  color: #0b1220;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.7);
+}
+
+.point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.08rem 0.35rem;
+  border-radius: 6px;
+  background: rgba(11, 18, 32, 0.88);
+  font-size: 0.55rem;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.point span {
+  opacity: 0.85;
+}
+
+.point[data-state="ok"] {
+  color: #34d399;
+}
+.point[data-state="weak"] {
+  color: #f87171;
+}
+.point[data-state="interf"] {
+  color: #e879f9;
+}
+
+.site {
+  color: var(--lab-text-muted);
+  font-size: 0.55rem;
+}
+
+.antenna {
+  padding: 0.08rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.9);
+  border: 0.5px solid var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+  font-size: 0.6rem;
+}

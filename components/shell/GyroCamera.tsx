@@ -10,7 +10,7 @@ const DEG = Math.PI / 180;
 /**
  * Altura de los ojos, en metros, al entrar en modo visor.
  *
- * El giroscopio solo controla hacia dónde MIRÁS, no dónde estás parado: la
+ * El giroscopio solo controla hacia dónde MIRAS, no dónde estás parado: la
  * posición la deja donde la haya dejado la cámara de la escena. En los
  * experimentos esa cámara está pensada para mirar desde afuera (a 5 m de
  * alto y en diagonal), y al ponerse el visor eso se siente como estar

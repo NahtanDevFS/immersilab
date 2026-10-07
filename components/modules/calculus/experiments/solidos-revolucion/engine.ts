@@ -49,7 +49,7 @@ function readRadii(variables: VariablesState): number[] {
 }
 
 /**
- * Motor de "Torneá la pieza" (C3).
+ * Motor de "Tornea la pieza" (C3).
  *
  * No hay simulación en el tiempo: el volumen depende solo de los radios, así
  * que se recalcula al cambiar una variable y no 60 veces por segundo. Lo
@@ -134,7 +134,7 @@ export function createLatheEngine(): LatheEngine {
         runtime.shapeErrorPct < SHAPE_TOLERANCE;
 
       return {
-        experimentName: "Torneá la pieza",
+        experimentName: "Tornea la pieza",
         disciplineName: "Cálculo",
         variables: lastVariables,
         result: {

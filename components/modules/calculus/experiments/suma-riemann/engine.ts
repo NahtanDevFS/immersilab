@@ -39,7 +39,7 @@ const CURVE_SAMPLES = 240;
 /**
  * Motor de la suma de Riemann.
  *
- * A diferencia de los motores de física, acá NO hay simulación en el tiempo:
+ * A diferencia de los motores de física, aquí NO hay simulación en el tiempo:
  * el resultado depende solo de las variables. Por eso `update` recalcula
  * únicamente cuando alguna variable cambió (se compara una firma de texto) y
  * no 60 veces por segundo — con n=200 y el muestreo de la curva, recalcular

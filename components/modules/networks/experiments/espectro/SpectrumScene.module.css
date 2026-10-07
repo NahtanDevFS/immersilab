@@ -1,0 +1,43 @@
+/* Etiquetas dentro de la escena. Todas con `pointer-events: none`: son
+   informativas, y si capturaran el puntero cortarían el arrastre para mirar. */
+.tick,
+.axisNote,
+.bandLabel,
+.peakLabel {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  border-radius: 999px;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tick {
+  padding: 0.08rem 0.35rem;
+  background: rgba(11, 18, 32, 0.8);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+  font-size: 0.6rem;
+}
+
+.axisNote {
+  color: var(--lab-text-muted);
+  font-size: 0.6rem;
+}
+
+.bandLabel {
+  padding: 0.12rem 0.5rem;
+  background: rgba(11, 18, 32, 0.85);
+  border: 0.5px solid var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+  font-size: 0.66rem;
+}
+
+.peakLabel {
+  padding: 0.12rem 0.5rem;
+  background: rgba(11, 18, 32, 0.9);
+  border: 0.5px solid var(--lab-accent);
+  color: var(--lab-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}

@@ -18,9 +18,9 @@ const variablesSchema: VariablesSchema = {
 
 export const enrutamientoExperiment: ExperimentDefinition = {
   slug: "enrutamiento",
-  name: "Encontrá el camino",
+  name: "Encuentra el camino",
   description:
-    "Sos el router: elegí por dónde sale cada paquete y competí contra Dijkstra. Cambiá la métrica y mirá cómo cambia el mejor camino.",
+    "Eres el router: elige por dónde sale cada paquete y compite contra Dijkstra. Cambia la métrica y mira cómo cambia el mejor camino.",
   variablesSchema,
   conceptTags: [
     "enrutamiento",
@@ -31,9 +31,15 @@ export const enrutamientoExperiment: ExperimentDefinition = {
   ],
   briefing: {
     what: "Un paquete que va de una punta a otra de una red pasa por varios routers, y en cada uno hay que decidir por qué enlace sale. Esa decisión la toma un protocolo de enrutamiento, y para decidir necesita una métrica: una forma de medir qué tan caro es cada enlace. La métrica que se elija cambia por completo cuál es el mejor camino.",
-    how: "Vos sos el router. Tocá un router vecino, en la escena o en los botones de abajo, para mandar el paquete por ese enlace. Cada enlace muestra su latencia y su ancho de banda. Arriba elegís la métrica: contar saltos, sumar milisegundos, o el costo por ancho de banda que usa OSPF. Con el otro botón podés cortar un enlace del mejor camino y ver cómo cambia todo.",
-    goal: "Llegá al destino con el costo más bajo posible: al llegar se compara tu camino con el que habría elegido Dijkstra. Probá esto: con la métrica de saltos, el camino más corto pasa por un enlace satelital de doscientos diez milisegundos, así que gana en saltos y pierde feo en tiempo real. Ese es exactamente el motivo por el que RIP, que solo contaba saltos, quedó obsoleto frente a OSPF.",
+    how: "Tú eres el router. Toca un router vecino, en la escena o en los botones de abajo, para mandar el paquete por ese enlace. Cada enlace muestra su latencia y su ancho de banda. Arriba eliges la métrica: contar saltos, sumar milisegundos, o el costo por ancho de banda que usa OSPF. Con el otro botón puedes cortar un enlace del mejor camino y ver cómo cambia todo.",
+    goal: "Llega al destino con el costo más bajo posible: al llegar se compara tu camino con el que habría elegido Dijkstra. Prueba esto: con la métrica de saltos, el camino más corto pasa por un enlace satelital de doscientos diez milisegundos, así que gana en saltos y pierde mucho en tiempo real. Ese es exactamente el motivo por el que RIP, que solo contaba saltos, quedó obsoleto frente a OSPF.",
   },
+  tutorHints:
+    "Variables: metrica es saltos (como RIP, cuenta routers), latencia (suma milisegundos) u ospf (costo inversamente proporcional al ancho de banda). Los nodos van de A, el origen, a I, el destino. " +
+    "result solo aparece cuando el paquete llega: tu_camino y tu_costo, mejor_camino y mejor_costo (lo que habría elegido Dijkstra), paquetes_entregados y por_el_camino_optimo; estado aparece si igualó el óptimo. " +
+    "Dijkstra elige en cada paso el nodo pendiente con menor costo acumulado. RIP solo cuenta saltos y no ve que un enlace satelital es lento; OSPF pondera el ancho de banda. " +
+    "En este mapa, con la métrica de saltos el camino más corto pasa por un enlace satelital de unos doscientos diez milisegundos: gana en saltos y pierde en latencia. " +
+    "Cortar un enlace obliga a recalcular las rutas: eso es la convergencia. No le reveles el camino óptimo completo antes de que lo intente; guíalo salto por salto.",
   SceneComponent: RoutingScene,
   ControlsComponent: RoutingControls,
   createEngine: createRoutingEngine,

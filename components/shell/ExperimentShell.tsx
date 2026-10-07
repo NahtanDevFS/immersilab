@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, ContactShadows } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 import { Header } from "./Header";
 import { LabBackground } from "./LabBackground";
 import { LabLighting } from "./LabLighting";
@@ -15,12 +15,14 @@ import { ResultPanel } from "./ResultPanel";
 import { BriefingPanel } from "./BriefingPanel";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
+import { DragLookControls } from "./DragLookControls";
 import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { useVariables } from "@/lib/modules/useVariables";
 import { VirtualCursor } from "./VirtualCursor";
 import { useVirtualCursor } from "./useVirtualCursor";
+import { VoiceTutor } from "@/components/tutor/VoiceTutor";
 import type { ExperimentDefinition } from "@/types/module";
 import styles from "./ExperimentShell.module.css";
 
@@ -37,7 +39,7 @@ interface Props {
  * definición del experimento como prop.
  *
  * Para agregar un experimento nuevo (colisiones, péndulo, etc.) no hay que
- * tocar este archivo: solo crear su ExperimentDefinition y usarla acá.
+ * tocar este archivo: solo crear su ExperimentDefinition y usarla aquí.
  */
 export function ExperimentShell({
   experiment,
@@ -100,6 +102,10 @@ export function ExperimentShell({
 
         {gyroActive && <GamepadStatus />}
 
+        {/* Tutor por voz: R2 o el botón para preguntar. Se remonta con cada
+            experimento, así que cada uno arranca con memoria nueva. */}
+        <VoiceTutor engine={engine} hints={experiment.tutorHints} />
+
         {/* El botón aparece SIEMPRE que el sensor todavía no entregó datos.
             En Android el enganche automático lo pone en "granted" en
             milisegundos, así que casi nunca se llega a ver; en iOS, donde
@@ -121,8 +127,8 @@ export function ExperimentShell({
               ? // Este caso confunde muchísimo si no se dice: el teléfono
                 // TIENE giroscopio, pero el navegador no lo entrega fuera de
                 // HTTPS o localhost, y no avisa de ninguna forma.
-                "El navegador bloquea el giroscopio fuera de HTTPS — abrí el laboratorio por https:// o desde localhost."
-              : "Sin giroscopio disponible — usa el mouse para mover la cámara."}
+                "El navegador bloquea el giroscopio fuera de HTTPS — abre el laboratorio por https:// o desde localhost."
+              : "Sin giroscopio: WASD o flechas para caminar, arrastra para mirar."}
           </p>
         )}
 
@@ -173,8 +179,10 @@ export function ExperimentShell({
           />
 
           <GyroCamera orientation={orientation} enabled={gyroActive} />
-          {gyroActive && <MovementController />}
-          {!gyroActive && <OrbitControls target={[5, 1, 0]} />}
+          {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
+              lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
+          <MovementController />
+          {!gyroActive && <DragLookControls target={[5, 1, 0]} />}
 
           <PostFX quality={quality} />
         </Canvas>

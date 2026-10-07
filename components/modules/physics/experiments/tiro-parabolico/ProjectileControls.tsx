@@ -11,7 +11,7 @@ interface Props {
 
 /**
  * Botones de acción específicos de este experimento (no todos los
- * experimentos van a tener "Lanzar" — por eso vive acá y no en el shell).
+ * experimentos van a tener "Lanzar" — por eso vive aquí y no en el shell).
  * Sigue la fase del motor con un intervalo corto; es HTML fuera del
  * <Canvas>, no necesita sincronizarse a 60fps.
  */

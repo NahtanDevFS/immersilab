@@ -97,6 +97,10 @@ function isInsecureContext(): boolean {
   return typeof window !== "undefined" && !window.isSecureContext;
 }
 
+function hasOrientationApi(): boolean {
+  return "DeviceOrientationEvent" in window;
+}
+
 /** iOS 13+ exige un gesto del usuario para entregar el sensor. */
 function needsGesture(): boolean {
   const DOE = window.DeviceOrientationEvent as unknown as {
@@ -133,14 +137,13 @@ export function useDeviceOrientation() {
     () => false,
   );
 
-  useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      !("DeviceOrientationEvent" in window)
-    ) {
-      setPermission("unsupported");
-    }
-  }, []);
+  // Si el navegador ni siquiera expone la API, no hay nada que pedir. Se
+  // deriva en el render en vez de fijarlo con un efecto + setState.
+  const apiSupported = useSyncExternalStore(
+    subscribeNever,
+    hasOrientationApi,
+    () => true,
+  );
 
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
     // Un evento con los tres valores en null significa que no hay sensor real.
@@ -287,7 +290,7 @@ export function useDeviceOrientation() {
 
   return {
     orientation,
-    permission,
+    permission: apiSupported ? permission : ("unsupported" as const),
     requestPermission,
     /** El navegador bloquea el sensor por no estar en HTTPS ni en localhost. */
     insecure: insecureContext,

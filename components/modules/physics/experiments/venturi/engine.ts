@@ -82,7 +82,7 @@ const area = (radius: number) => Math.PI * radius * radius;
  * justo donde va más rápido. La intuición de la mayoría dice lo contrario
  * ("si aprieto, la presión sube").
  *
- * Igual que en los experimentos de cálculo, acá no hay simulación en el
+ * Igual que en los experimentos de cálculo, aquí no hay simulación en el
  * tiempo: el resultado depende solo de las variables, así que se recalcula
  * cuando alguna cambia y no 60 veces por segundo. Lo único que avanza por
  * frame es la fase del flujo, que es puramente visual.

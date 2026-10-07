@@ -42,7 +42,7 @@
     transform: rotate(90deg);
   }
 }
-/* Pantalla de "tocá para entrar". Es un <button>, así que hay que sacarle
+/* Pantalla de "toca para entrar". Es un <button>, así que hay que sacarle
    los estilos nativos y estirarlo a toda la pantalla. */
 .fsOverlay {
   position: fixed;

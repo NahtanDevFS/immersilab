@@ -30,7 +30,7 @@ useTexture.preload([WOOD_MAP, WOOD_BUMP]);
  *    recalculan al convertir (opción `renorm`).
  * 2. **No trae materiales reales.** Los 14 "wire_XXXXXXXX" son los colores
  *    de viewport de 3ds Max — azules, verdes y morados aleatorios. Si se
- *    usaran tal cual, el cañón sería un arlequín. Por eso acá se les asigna
+ *    usaran tal cual, el cañón sería un arlequín. Por eso aquí se les asigna
  *    hierro y madera a mano, según lo que es cada grupo en el render de
  *    referencia (`NavalCannon/Renders/Render1.jpg`).
  *
@@ -83,7 +83,7 @@ const BRASS_GROUPS = new Set([
  *
  * Ojo con los valores: un hex se convierte a espacio lineal y después pasa
  * por el tone mapping ACES, y en ese camino se oscurece bastante. Los tonos
- * de acá son más claros en el selector de lo que salen en pantalla — un
+ * de aquí son más claros en el selector de lo que salen en pantalla — un
  * #111 de verdad sale negro absoluto y se pierde toda la forma. Misma
  * trampa que el techo del lobby (ver PLAN_DESARROLLO.md §2.6).
  */
@@ -101,7 +101,7 @@ const BARREL = new THREE.MeshStandardMaterial({
 
 /** Cureña y ruedas: roble, con la textura del pack. El `color` NO es el
  *  color de la madera — se multiplica sobre la textura, así que tiñe y
- *  atenúa: acá baja la veta a un roble oscuro, porque a plena luz de la
+ *  atenúa: aquí baja la veta a un roble oscuro, porque a plena luz de la
  *  escena la textura sale naranja fluorescente contra el pasto. Se probó con
  *  un gris puro y la madera quedaba descolorida, sin nada de calidez; por eso
  *  el atenuador es un marrón y no un neutro.

@@ -22,7 +22,7 @@ import styles from "./Door.module.css";
  *      marco que se va encendiendo avisa qué está por pasar.
  */
 const TRIGGER_RADIUS = 1.15;
-/** Coseno del ángulo máximo entre hacia dónde mirás y dónde está la puerta.
+/** Coseno del ángulo máximo entre hacia dónde miras y dónde está la puerta.
  *  0.55 ≈ 57°: hay que estar de frente, pero no clavado al centímetro. */
 const FACING_THRESHOLD = 0.55;
 /** Cuánto hay que sostenerlo. Menos de medio segundo no da tiempo a soltar

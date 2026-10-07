@@ -36,7 +36,7 @@ export const venturiExperiment: ExperimentDefinition = {
   slug: "venturi",
   name: "Tubo de Venturi",
   description:
-    "Angostá el tubo y mirá lo que nadie espera: el fluido se acelera y la presión CAE justo donde va más rápido.",
+    "Angosta el tubo y mira lo que nadie espera: el fluido se acelera y la presión CAE justo donde va más rápido.",
   variablesSchema,
   conceptTags: [
     "mecánica de fluidos",
@@ -47,9 +47,15 @@ export const venturiExperiment: ExperimentDefinition = {
   ],
   briefing: {
     what: "Por un tubo cerrado pasa siempre la misma cantidad de fluido por segundo. Si el tubo se angosta, el fluido no tiene más remedio que ir más rápido; y como la energía total se conserva, lo que gana en velocidad lo paga en presión. Por eso la presión es MENOR justo donde el tubo es más angosto, al revés de lo que dice la intuición.",
-    how: "Elegí el fluido, subí o bajá el caudal y, sobre todo, movés el radio del cuello. Las esferas son el fluido: fijate cómo se apretujan y se estiran al pasar por el estrechamiento. Las dos columnas naranjas son manómetros, una antes del cuello y otra encima: su altura es la presión.",
-    goal: "Angostá el cuello hasta que la columna de la derecha quede bien por debajo de la otra, sin pasarte: si la presión baja de la presión de vapor del líquido, este hierve en frío, el fluido se pone rojo y eso es cavitación, lo que se come las bombas y las hélices de verdad. Probá con aceite y con aire y mirá cuánto cambia el margen.",
+    how: "Elige el fluido, sube o baja el caudal y, sobre todo, mueve el radio del cuello. Las esferas son el fluido: fíjate cómo se apretujan y se estiran al pasar por el estrechamiento. Las dos columnas naranjas son manómetros, una antes del cuello y otra encima: su altura es la presión.",
+    goal: "Angosta el cuello hasta que la columna de la derecha quede bien por debajo de la otra, sin pasarte: si la presión baja de la presión de vapor del líquido, este hierve en frío, el fluido se pone rojo y eso es cavitación, lo que se come las bombas y las hélices de verdad. Prueba con aceite y con aire y mira cuánto cambia el margen.",
   },
+  tutorHints:
+    "Variables: fluido (agua, aceite liviano o aire), caudal en litros por segundo y cuello, el radio del estrechamiento en metros; el tubo principal mide seis centímetros de radio. " +
+    "result: velocidad_tubo_ms y velocidad_cuello_ms, presion_cuello_kpa, caida_de_presion_kpa, reynolds y regimen (laminar o turbulento), fluido, y alerta cuando hay cavitación. " +
+    "Continuidad: el área por la velocidad es constante, así que la velocidad crece con uno sobre el radio al cuadrado: con la mitad del radio el fluido va cuatro veces más rápido. " +
+    "Bernoulli: la presión más un medio de la densidad por la velocidad al cuadrado se conserva, así que donde va más rápido la presión baja. " +
+    "La cavitación ocurre cuando la presión cae por debajo de la presión de vapor y el líquido hierve en frío; el aire es un gas y no cavita. Confusión típica: creer que en el angostamiento la presión sube.",
   SceneComponent: VenturiScene,
   createEngine: createVenturiEngine,
 };

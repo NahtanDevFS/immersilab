@@ -85,7 +85,7 @@ export function GamepadStatus() {
         </>
       ) : (
         <span className={styles.name}>
-          Sin control — enchufalo y apretá un botón
+          Sin control — conéctalo y presiona un botón
         </span>
       )}
     </div>

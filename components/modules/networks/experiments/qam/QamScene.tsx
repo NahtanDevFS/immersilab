@@ -11,7 +11,7 @@ import type { QamEngine } from "./engine";
  * El plano I/Q se dibuja de pie, como una pantalla de analizador vectorial:
  * el jugador queda parado frente a él. Tirarlo sobre el piso se probó y se
  * lee peor — la nube de puntos se ve en escorzo y deja de notarse cuándo un
- * símbolo cruzó la frontera hacia el vecino, que es lo único que importa acá.
+ * símbolo cruzó la frontera hacia el vecino, que es lo único que importa aquí.
  */
 const PLANE_SCALE = 2.4;
 const PLANE_Y = 2.1;

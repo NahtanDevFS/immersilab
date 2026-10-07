@@ -95,6 +95,13 @@ export interface ExperimentDefinition {
    * ella, el que no conoce el tema ve una escena 3D sin saber qué mira.
    */
   briefing?: ExperimentBriefing;
+  /**
+   * Pistas para el tutor de voz, propias de este experimento: qué conceptos
+   * cubre, qué confusiones son típicas, qué vocabulario usar. Se anexan al
+   * system prompt del tutor. Opcional: sin ellas el tutor se guía solo por
+   * el estado (`AIContext`).
+   */
+  tutorHints?: string;
   // Componente React que dibuja la escena 3D de este experimento.
   // Recibe el motor y las variables actuales (para alimentar engine.update
   // en cada frame) y renderiza con React Three Fiber.

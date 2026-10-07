@@ -40,12 +40,12 @@ interface Props {
  * El panel HTML pegado a la esquina de la pantalla funciona con un mouse,
  * pero dentro de unos lentes 360 queda literalmente sobre el ojo: no se
  * puede enfocar algo a dos centímetros de la cara, y tapa una esquina del
- * campo visual todo el tiempo. Acá el mismo panel se dibuja como una
+ * campo visual todo el tiempo. Aquí el mismo panel se dibuja como una
  * superficie en el espacio, a distancia de lectura.
  *
  * Dos detalles que lo hacen usable y no un estorbo más:
  *
- *  - **Se atenúa cuando no lo mirás.** Con la cabeza al frente queda casi
+ *  - **Se atenúa cuando no lo miras.** Con la cabeza al frente queda casi
  *    transparente y no compite con el experimento; al bajar la vista hacia
  *    él, se enciende. Esa transición es lo que lo vuelve "consultable" en
  *    vez de "siempre encima".

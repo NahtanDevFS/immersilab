@@ -38,7 +38,7 @@ export function BriefingPanel({ experimentName, briefing }: Props) {
   const pathname = usePathname();
 
   // El guion hablado es el mismo texto de la tarjeta, en orden: qué es, qué
-  // hacés y qué mirar. Mantenerlo unificado evita que la voz y la pantalla
+  // haces y qué mirar. Mantenerlo unificado evita que la voz y la pantalla
   // digan cosas distintas cuando alguien edita solo una de las dos.
   const script = [
     `${experimentName}.`,
@@ -104,7 +104,7 @@ export function BriefingPanel({ experimentName, briefing }: Props) {
       <dl className={styles.body}>
         <dt className={styles.label}>Qué es</dt>
         <dd className={styles.text}>{briefing.what}</dd>
-        <dt className={styles.label}>Qué hacés</dt>
+        <dt className={styles.label}>Qué haces</dt>
         <dd className={styles.text}>{briefing.how}</dd>
         <dt className={styles.label}>El reto</dt>
         <dd className={styles.text}>{briefing.goal}</dd>

@@ -10,7 +10,7 @@ import type { DerivativeEngine } from "./engine";
 
 /*
  * Igual que en la suma de Riemann, la pista se estira siempre hasta ocupar el
- * mismo cajón del mundo. Acá importa además que la escala en X y en Y sea la
+ * mismo cajón del mundo. Aquí importa además que la escala en X y en Y sea la
  * MISMA (`UNIFORM`): la pendiente que el jugador ve tiene que ser la
  * pendiente que marca el velocímetro. Estirar Y para que "se vea mejor"
  * mostraría una tangente que no es la de la función.

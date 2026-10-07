@@ -15,11 +15,11 @@ import type { RiemannEngine } from "./engine";
  *
  * Es a propósito: si el mapeo fuera fijo, cambiar de la parábola a la
  * exponencial (que llega a e²) dejaría a una de las dos como una rayita
- * pegada al piso. Lo que el alumno compara acá es la FORMA del error, no
+ * pegada al piso. Lo que el alumno compara aquí es la FORMA del error, no
  * cuántos metros mide la curva.
  *
  * El ancho y la posición coinciden con el target de la cámara del shell
- * (`OrbitControls target={[5, 1, 0]}`), así que la gráfica queda centrada al
+ * (`DragLookControls target={[5, 1, 0]}`), así que la gráfica queda centrada al
  * entrar sin tocar el shell.
  */
 const PLOT_WIDTH = 10;
