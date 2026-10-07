@@ -1,7 +1,6 @@
 import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
 import { createTaylorEngine } from "./engine";
 import { TaylorScene } from "./TaylorScene";
-import { TaylorControls } from "./TaylorControls";
 import { MAX_DEGREE, CENTER_STEP, SERIES_OPTIONS } from "./series";
 
 const variablesSchema: VariablesSchema = {
@@ -53,6 +52,5 @@ export const taylorExperiment: ExperimentDefinition = {
     "Seno y exponencial convergen en toda la recta: con suficientes términos cualquier intervalo se cubre. Logaritmo de uno más x tiene una singularidad en menos uno y uno sobre uno menos x en uno: su radio de convergencia es la distancia del centro a esa singularidad, y fuera de él la serie diverge sin importar el grado. Centradas en cero, no pueden cubrir su objetivo. " +
     "Hay un grado mínimo con el que se logra cada reto; no lo reveles ni digas el centro exacto: guía con preguntas sobre dónde está el centro respecto del intervalo y del radio.",
   SceneComponent: TaylorScene,
-  ControlsComponent: TaylorControls,
   createEngine: createTaylorEngine,
 };

@@ -4,6 +4,12 @@
   right: calc(0.75rem + env(safe-area-inset-right));
   z-index: 10;
   display: flex;
+  /* En los modos de juego hay marcador + "Disparar al blanco 2 (32 m)":
+     en pantallas angostas pasan a dos renglones en vez de meterse debajo
+     de los botones del centro. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: min(24rem, 46vw);
   gap: 0.5rem;
 }
 
@@ -32,4 +38,17 @@
   background: transparent;
   border: 0.5px solid var(--lab-panel-border);
   color: var(--lab-text-muted);
+}
+/* Marcador de la ronda de F1. */
+.score {
+  align-self: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(19, 27, 46, 0.92);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

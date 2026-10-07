@@ -1,10 +1,19 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
 
 export type CollisionPhase = "idle" | "moving" | "collided";
+
+/** F2 · Predice el resultado: lo que el alumno anotó antes de soltar y cómo le fue. */
+export interface Prediction {
+  predicted: { v1: number; v2: number };
+  actual: { v1: number; v2: number } | null;
+  /** 0–100, null hasta que chocan. */
+  score: number | null;
+}
 
 export interface CollisionRuntime {
   phase: CollisionPhase;
@@ -12,6 +21,8 @@ export interface CollisionRuntime {
   pos2: number;
   vel1: number;
   vel2: number;
+  /** La predicción congelada al soltar (null antes del primer intento). */
+  prediction: Prediction | null;
 }
 
 export interface CollisionEngine extends ExperimentEngine {
@@ -21,8 +32,30 @@ export interface CollisionEngine extends ExperimentEngine {
 
 const START_X1 = -6;
 const START_X2 = 6;
+// Mitad del ancho que DIBUJA la escena (0.6 + 0.2·m): antes el motor usaba
+// 0.05 por kg y la escena 0.2, así que con masas grandes los carritos se
+// encimaban en pantalla antes de "chocar".
 const BASE_HALF_WIDTH = 0.3;
-const WIDTH_PER_MASS = 0.05;
+const WIDTH_PER_MASS = 0.1;
+
+/** Puntaje mínimo de una predicción para contar en los retos. */
+export const GOOD_PREDICTION = 90;
+
+/**
+ * Puntaje de una predicción: 100 menos el error total relativo a la rapidez
+ * con que venían los carritos. Relativo a eso y no a cada velocidad final:
+ * una velocidad final de cero (choque plástico de masas iguales) haría que
+ * el error porcentual fuera infinito.
+ */
+export function predictionScore(
+  predicted: { v1: number; v2: number },
+  actual: { v1: number; v2: number },
+  initial: { v1: number; v2: number },
+): number {
+  const error = Math.abs(predicted.v1 - actual.v1) + Math.abs(predicted.v2 - actual.v2);
+  const scale = Math.max(1, Math.abs(initial.v1) + Math.abs(initial.v2));
+  return Math.max(0, Math.round(100 - (100 * error) / scale));
+}
 
 function halfWidth(mass: number) {
   return BASE_HALF_WIDTH + mass * WIDTH_PER_MASS;
@@ -51,6 +84,12 @@ interface CollisionResult {
 export function createCollisionEngine(): CollisionEngine {
   let lastVariables: VariablesState = {};
   let collisionResult: CollisionResult | null = null;
+  /** Velocidades con que se soltaron, para puntuar la predicción. */
+  let released = { v1: 0, v2: 0 };
+  // Logros de F2: aparte del estado del choque, `reset()` no los borra.
+  let bestElastic = 0;
+  let bestPlastic = 0;
+  let bestMixed = 0;
 
   const runtime: CollisionRuntime = {
     phase: "idle",
@@ -58,6 +97,7 @@ export function createCollisionEngine(): CollisionEngine {
     pos2: START_X2,
     vel1: 0,
     vel2: 0,
+    prediction: null,
   };
 
   function resetRuntime() {
@@ -109,12 +149,62 @@ export function createCollisionEngine(): CollisionEngine {
           runtime.vel2 = v2f;
           runtime.phase = "collided";
           collisionResult = { v1: v1f, v2: v2f, energyLostPct };
+
+          // Se puntúa la predicción que se congeló al soltar.
+          if (runtime.prediction) {
+            const actual = { v1: v1f, v2: v2f };
+            const score = predictionScore(runtime.prediction.predicted, actual, released);
+            runtime.prediction.actual = actual;
+            runtime.prediction.score = score;
+            if (e >= 0.99) bestElastic = Math.max(bestElastic, score);
+            else if (e <= 0.01) bestPlastic = Math.max(bestPlastic, score);
+            else if (e >= 0.2 && e <= 0.8 && Math.abs(m1 - m2) >= 1) {
+              bestMixed = Math.max(bestMixed, score);
+            }
+          }
         }
       }
     },
 
     reset() {
       resetRuntime();
+      runtime.prediction = null;
+    },
+
+    resetChallenges() {
+      bestElastic = 0;
+      bestPlastic = 0;
+      bestMixed = 0;
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      const challenge = (id: string, title: string, detail: string, best: number) => ({
+        id,
+        title,
+        detail: `${detail} Mejor predicción: ${best} pts.`,
+        done: best >= GOOD_PREDICTION,
+        progress: best / GOOD_PREDICTION,
+      });
+      return [
+        challenge(
+          "elastico",
+          "Predice un choque elástico",
+          `Con restitución 1, acierta las dos velocidades finales (${GOOD_PREDICTION} pts o más).`,
+          bestElastic,
+        ),
+        challenge(
+          "plastico",
+          "Predice un choque plástico",
+          "Con restitución 0 quedan pegados: ¿a qué velocidad siguen juntos?",
+          bestPlastic,
+        ),
+        challenge(
+          "mixto",
+          "Masas distintas, choque a medias",
+          "Restitución entre 0.2 y 0.8 y masas que difieran en 1 kg o más.",
+          bestMixed,
+        ),
+      ];
     },
 
     getState(): AIContext {
@@ -129,6 +219,13 @@ export function createCollisionEngine(): CollisionEngine {
               energia_perdida_pct: Number(
                 collisionResult.energyLostPct.toFixed(1),
               ),
+              ...(runtime.prediction?.score != null
+                ? {
+                    prediccion_v1_ms: runtime.prediction.predicted.v1,
+                    prediccion_v2_ms: runtime.prediction.predicted.v2,
+                    puntaje_prediccion: runtime.prediction.score,
+                  }
+                : {}),
             }
           : undefined,
         conceptTags: [
@@ -144,6 +241,17 @@ export function createCollisionEngine(): CollisionEngine {
       resetRuntime();
       runtime.vel1 = Number(lastVariables.velocity1 ?? 5);
       runtime.vel2 = Number(lastVariables.velocity2 ?? -3);
+      released = { v1: runtime.vel1, v2: runtime.vel2 };
+      // La predicción se congela al soltar: lo que cuenta es lo que se
+      // anotó ANTES de ver el choque, no un ajuste hecho después.
+      runtime.prediction = {
+        predicted: {
+          v1: Number(lastVariables.pred_v1 ?? 0),
+          v2: Number(lastVariables.pred_v2 ?? 0),
+        },
+        actual: null,
+        score: null,
+      };
       runtime.phase = "moving";
     },
 

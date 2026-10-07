@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -141,6 +142,8 @@ function bitsToText(bits: number[]): string {
  */
 export function createQamEngine(): QamEngine {
   let lastVariables: VariablesState = {};
+  /** Mayor cantidad de bits por símbolo con la que llegó un mensaje intacto. */
+  let cleanBits = 0;
   let bitsQueue: number[] = [];
   let clock = 0;
   let noiseSigma = 0;
@@ -255,6 +258,7 @@ export function createQamEngine(): QamEngine {
     if (runtime.bitErrors === 0 && runtime.throughput > runtime.bestThroughput) {
       runtime.bestThroughput = runtime.throughput;
     }
+    if (runtime.bitErrors === 0) cleanBits = Math.max(cleanBits, runtime.bitsPerSymbol);
   }
 
   return {
@@ -331,6 +335,25 @@ export function createQamEngine(): QamEngine {
       prepare(lastVariables);
       reset();
       runtime.phase = "transmitiendo";
+    },
+
+    resetChallenges() {
+      cleanBits = 0;
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      const level = (bits: number, title: string, detail: string) => ({
+        id: `bits-${bits}`,
+        title,
+        detail,
+        done: cleanBits >= bits,
+        progress: Math.min(1, cleanBits / bits),
+      });
+      return [
+        level(1, "Mensaje intacto", "Transmite HOLA UMG sin un solo bit errado."),
+        level(4, "Intacto en 16-QAM", "Cuatro bits por símbolo sin errores: el doble que QPSK."),
+        level(6, "Intacto en 64-QAM", "La máxima velocidad sin errores: necesitas un canal muy limpio."),
+      ];
     },
 
     getRuntime() {

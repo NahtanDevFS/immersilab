@@ -17,12 +17,8 @@ const MIC_NOTE: Partial<Record<SpectrumRuntime["mic"], string>> = {
 };
 
 /**
- * Botón del micrófono y tarjeta de retos.
- *
- * Los retos van aquí y no en el panel de resultados: son instrucciones con
- * progreso ("silba", "di u y luego i"), y el panel de resultados es para
- * números. Mientras se juega, la vista está en la cascada; la tarjeta solo
- * confirma qué falta.
+ * Botón del micrófono y avisos de permiso. Los retos los dibuja el HUD de
+ * retos del shell, a partir de `engine.getChallenges()`.
  */
 export function SpectrumControls({ engine }: Props) {
   const spectrum = engine as SpectrumEngine;
@@ -44,64 +40,11 @@ export function SpectrumControls({ engine }: Props) {
   }, [spectrum]);
 
   const listening = runtime.mic === "escuchando";
-  const { silbido, vocales, banda } = runtime.challenges;
-
-  const challenges = [
-    {
-      key: "silbido",
-      title: "Silba",
-      detail: "Un tono puro deja un solo pico.",
-      state: silbido,
-    },
-    {
-      key: "vocales",
-      title: runtime.vowelStage === "u" ? "Di «uuu»…" : "…y ahora «iii»",
-      detail:
-        runtime.vowelStage === "u"
-          ? "Sostén la u un segundo."
-          : "Mira cómo aparece energía arriba de 2 kHz.",
-      state: vocales,
-    },
-    {
-      key: "banda",
-      title: "Habla 3 segundos",
-      detail:
-        banda.progress > 0
-          ? `${runtime.phoneBandPct.toFixed(0)} % de tu voz cabe en la banda telefónica.`
-          : "¿Cuánto de tu voz cabe en 300–3400 Hz?",
-      state: banda,
-    },
-  ];
-
   return (
     <div className={styles.actions}>
-      {listening && (
-        <ol className={styles.challenges}>
-          {challenges.map(({ key, title, detail, state }) => (
-            <li key={key} className={styles.challenge} data-done={state.done}>
-              <span className={styles.check} aria-hidden>
-                {state.done ? "✓" : ""}
-              </span>
-              <span className={styles.text}>
-                <strong>{title}</strong>
-                <span className={styles.detail}>{detail}</span>
-                <span className={styles.bar}>
-                  <span style={{ width: `${state.progress * 100}%` }} />
-                </span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      )}
-
       {MIC_NOTE[runtime.mic] && <p className={styles.note}>{MIC_NOTE[runtime.mic]}</p>}
 
       <div className={styles.buttons}>
-        {listening && (
-          <button className={styles.resetButton} onClick={() => spectrum.reset()}>
-            Reiniciar retos
-          </button>
-        )}
         <button
           className={styles.fireButton}
           disabled={runtime.mic === "pidiendo"}

@@ -1,0 +1,15 @@
+/* Velocidad real contra la predicha, sobre cada carrito (F2). Sin puntero,
+   para no cortar el arrastre con el que se mira alrededor. */
+.label {
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.9);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}

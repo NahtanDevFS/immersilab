@@ -33,3 +33,21 @@
   border: 0.5px solid var(--lab-panel-border);
   color: var(--lab-text-muted);
 }
+/* Puntaje de la predicción (F2): ámbar, y verde si alcanza para los retos. */
+.score {
+  align-self: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(19, 27, 46, 0.92);
+  border: 0.5px solid var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score[data-good="true"] {
+  border-color: #34d399;
+  color: #34d399;
+}

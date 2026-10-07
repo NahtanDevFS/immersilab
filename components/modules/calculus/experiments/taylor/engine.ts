@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -107,12 +108,48 @@ export function createTaylorEngine(): TaylorEngine {
     },
 
     reset() {
+      this.resetChallenges!();
+    },
+
+    resetChallenges() {
       for (const challenge of Object.values(challenges)) {
         challenge.done = false;
         challenge.bestDegree = null;
       }
       lastKey = "";
       recompute(lastVariables);
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      // Un reto por función: cubrir su objetivo con el menor grado posible.
+      // "Logrado" es llegar al mínimo; cubrirlo con más grado deja la barra
+      // casi llena y dice que se puede mejorar, sin decir con qué centro.
+      return SERIES_FUNCTIONS.map((fn) => {
+        const challenge = challenges[fn.id];
+        const active = runtime.fn.id === fn.id;
+        const perfect =
+          challenge.bestDegree !== null && challenge.bestDegree <= challenge.minDegree;
+        const [lo, hi] = fn.target;
+        return {
+          id: fn.id,
+          title: fn.label,
+          detail: perfect
+            ? `Grado ${challenge.bestDegree}: ¡el mínimo posible!`
+            : challenge.done
+              ? `Grado ${challenge.bestDegree}. Se puede con ${challenge.minDegree}: prueba otro centro.`
+              : active
+                ? `Cubierto: ${Math.round(runtime.coverage.fraction * 100)} % de [${lo.toFixed(2)}, ${hi.toFixed(2)}].`
+                : `Cubre [${lo.toFixed(2)}, ${hi.toFixed(2)}] con el menor grado.`,
+          done: perfect,
+          progress: perfect
+            ? 1
+            : challenge.done
+              ? 0.75
+              : active
+                ? runtime.coverage.fraction * 0.7
+                : 0,
+        };
+      });
     },
 
     getRuntime() {

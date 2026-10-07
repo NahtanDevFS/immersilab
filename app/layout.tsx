@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ProgressBridge } from "@/components/progress/ProgressBridge";
 
 // Fuente de "instrumento": la usamos para números y lecturas de datos
 // (ángulo, velocidad, resultados) porque los dígitos tienen ancho fijo,
@@ -43,7 +44,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {/* Sincroniza el progreso del dispositivo con la cuenta (si hay). */}
+        <ProgressBridge />
+        {children}
+      </body>
     </html>
   );
 }

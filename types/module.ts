@@ -38,6 +38,26 @@ export interface AIContext {
   conceptTags?: string[];
 }
 
+/**
+ * Estado de un reto, tal como lo dibuja el HUD de retos del shell.
+ *
+ * Los retos viven en el motor porque casi todos tienen estado propio
+ * (sostener una condición un segundo, recordar el mejor intento, contar en
+ * qué modelos ya se logró), y eso no se puede deducir de una foto del
+ * `AIContext`. El shell solo los dibuja: ningún experimento necesita saber
+ * cómo se ve un HUD de puntaje (PLAN_DESARROLLO.md §3.4).
+ */
+export interface ChallengeStatus {
+  /** Estable entre llamadas: el HUD lo usa para detectar cuándo se completa. */
+  id: string;
+  title: string;
+  /** Instrucción o pista corta; cuando está logrado puede decir cómo salió. */
+  detail: string;
+  done: boolean;
+  /** 0–1, para la barra de progreso. */
+  progress: number;
+}
+
 // Ciclo de vida que cada experimento debe implementar.
 export interface ExperimentEngine {
   /** Se llama una vez al montar el experimento, con los valores iniciales de las variables. */
@@ -58,6 +78,19 @@ export interface ExperimentEngine {
    * resultados, sin necesidad de conocer la disciplina del experimento.
    */
   getSeries?: () => Array<{ x: number; y: number }>;
+
+  /**
+   * Opcional: los retos del experimento. Si existe, el shell muestra el HUD
+   * de retos (contador, barras de progreso y aviso al completar uno).
+   */
+  getChallenges?: () => ChallengeStatus[];
+
+  /**
+   * Opcional: borra el progreso de los retos SIN tocar el experimento. No es
+   * lo mismo que `reset()`, que en varios experimentos significa "intentar
+   * de nuevo" (volver a lanzar, volver a soltar) y no debe borrar logros.
+   */
+  resetChallenges?: () => void;
 }
 
 /**
@@ -95,6 +128,16 @@ export interface ExperimentDefinition {
    * ella, el que no conoce el tema ve una escena 3D sin saber qué mira.
    */
   briefing?: ExperimentBriefing;
+  /**
+   * Opcional: desde dónde se mira al entrar (modo computadora). Por defecto
+   * la cámara está en (8, 5, 10) mirando a (5, 1, 0), que sirve para las
+   * escenas de ~10 m. Un experimento más grande —el tiro parabólico, con
+   * blancos a 45 m— necesita alejarse para que se vea entero.
+   */
+  cameraView?: {
+    position: [number, number, number];
+    target: [number, number, number];
+  };
   /**
    * Pistas para el tutor de voz, propias de este experimento: qué conceptos
    * cubre, qué confusiones son típicas, qué vocabulario usar. Se anexan al

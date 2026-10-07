@@ -13,6 +13,7 @@ import { VariablesPanel } from "./VariablesPanel";
 import { VariablesHud3D } from "./VariablesHud3D";
 import { ResultPanel } from "./ResultPanel";
 import { BriefingPanel } from "./BriefingPanel";
+import { ChallengeHUD } from "./ChallengeHUD";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
 import { DragLookControls } from "./DragLookControls";
@@ -98,7 +99,14 @@ export function ExperimentShell({
           />
         )}
 
-        {ControlsComponent && <ControlsComponent engine={engine} />}
+        {/* Dock inferior derecho: el HUD de retos arriba y los controles
+            propios del experimento abajo, apilados. Cada ControlsComponent
+            se posiciona solo en esa esquina; el dock los pone en flujo para
+            que no se encimen con el HUD (ver ExperimentShell.module.css). */}
+        <div className={styles.dock}>
+          <ChallengeHUD engine={engine} experimentSlug={experiment.slug} />
+          {ControlsComponent && <ControlsComponent engine={engine} />}
+        </div>
 
         {gyroActive && <GamepadStatus />}
 
@@ -133,10 +141,16 @@ export function ExperimentShell({
         )}
 
         <Canvas
+          /* Contexto de apilamiento propio (z-index 0): las etiquetas <Html>
+             de drei se montan junto al canvas con z-index calculados que
+             pueden ser enormes, y se dibujaban ENCIMA de los paneles del
+             shell (variables, resultados, retos, avisos). Así quedan todas
+             debajo, sin tocar cada etiqueta. */
+          style={{ zIndex: 0 }}
           shadows={quality === "high" ? "soft" : true}
           dpr={[1, quality === "high" ? 2 : 1.5]}
           camera={{
-            position: [8, 5, 10],
+            position: experiment.cameraView?.position ?? [8, 5, 10],
             fov: 50,
             // near alto y far ajustado al tamaño real de la escena: es lo
             // que quita el parpadeo entre caras coplanares del cañón.
@@ -182,7 +196,9 @@ export function ExperimentShell({
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
           <MovementController />
-          {!gyroActive && <DragLookControls target={[5, 1, 0]} />}
+          {!gyroActive && (
+            <DragLookControls target={experiment.cameraView?.target ?? [5, 1, 0]} />
+          )}
 
           <PostFX quality={quality} />
         </Canvas>

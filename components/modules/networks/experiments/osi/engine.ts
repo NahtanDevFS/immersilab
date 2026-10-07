@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -170,6 +171,8 @@ function shuffle<T>(items: T[], seed: number): T[] {
  */
 export function createOsiEngine(): OsiEngine {
   let lastVariables: VariablesState = {};
+  /** Modelos en los que se entregó el mensaje sin un solo error. */
+  const cleanModels = new Set<string>();
   let stack: LayerStep[] = OSI_STACK;
   let seed = 1;
 
@@ -313,6 +316,7 @@ export function createOsiEngine(): OsiEngine {
         }
         runtime.phase = "entregado";
         runtime.options = [];
+        if (runtime.mistakes === 0) cleanModels.add(String(lastVariables.modelo ?? "osi"));
         return;
       }
 
@@ -320,6 +324,29 @@ export function createOsiEngine(): OsiEngine {
     },
 
     restart,
+
+    resetChallenges() {
+      cleanModels.clear();
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      return [
+        {
+          id: "osi",
+          title: "Sin errores en OSI",
+          detail: "Encapsula y desencapsula las siete capas sin equivocarte.",
+          done: cleanModels.has("osi"),
+          progress: cleanModels.has("osi") ? 1 : 0,
+        },
+        {
+          id: "tcpip",
+          title: "Sin errores en TCP/IP",
+          detail: "Lo mismo con las cuatro capas de TCP/IP.",
+          done: cleanModels.has("tcpip"),
+          progress: cleanModels.has("tcpip") ? 1 : 0,
+        },
+      ];
+    },
 
     getRuntime() {
       return runtime;

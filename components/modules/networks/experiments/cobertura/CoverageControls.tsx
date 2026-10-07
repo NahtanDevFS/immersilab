@@ -9,7 +9,11 @@ interface Props {
   engine: ExperimentEngine;
 }
 
-/** Tarjeta de los tres retos de cobertura. Las antenas se manejan desde el panel de variables. */
+/**
+ * Leyenda del mapa de calor, aviso de interferencia y contador de puntos.
+ * Los retos los dibuja el HUD de retos del shell; las antenas se manejan
+ * desde el panel de variables.
+ */
 export function CoverageControls({ engine }: Props) {
   const coverage = engine as CoverageEngine;
   const [runtime, setRuntime] = useState<CoverageRuntime>(() => ({
@@ -24,48 +28,10 @@ export function CoverageControls({ engine }: Props) {
     return () => window.clearInterval(id);
   }, [coverage]);
 
-  const { campus, wifi, reutilizar } = runtime.challenges;
   const { covered, total, interfered } = runtime.summary;
-  const challenges = [
-    {
-      key: "campus",
-      title: "Cubre el campus",
-      detail: `Los ${total} puntos con buena señal, en cualquier banda.`,
-      state: campus,
-    },
-    {
-      key: "wifi",
-      title: "Wi-Fi en 2.4 GHz",
-      detail: "Lo mismo en la banda de Wi-Fi: los muros atenúan más.",
-      state: wifi,
-    },
-    {
-      key: "reuse",
-      title: "Reutiliza canales",
-      detail: "Tres antenas en 2.4 GHz con solo dos canales distintos.",
-      state: reutilizar,
-    },
-  ];
 
   return (
     <div className={styles.actions}>
-      <ol className={styles.challenges}>
-        {challenges.map(({ key, title, detail, state }) => (
-          <li key={key} className={styles.challenge} data-done={state.done}>
-            <span className={styles.check} aria-hidden>
-              {state.done ? "✓" : ""}
-            </span>
-            <span className={styles.text}>
-              <strong>{title}</strong>
-              <span className={styles.detail}>{state.done ? "¡Logrado!" : detail}</span>
-              <span className={styles.bar}>
-                <span style={{ width: `${state.progress * 100}%` }} />
-              </span>
-            </span>
-          </li>
-        ))}
-      </ol>
-
       {/* Leyenda del mapa de calor: aquí y no en el piso, donde quedaba
           debajo del panel de variables o del botón del tutor. */}
       <p className={styles.note} data-legend>
@@ -84,9 +50,6 @@ export function CoverageControls({ engine }: Props) {
         <span className={styles.note} data-inline>
           {covered}/{total} cubiertos
         </span>
-        <button className={styles.resetButton} onClick={() => coverage.reset()}>
-          Reiniciar retos
-        </button>
       </div>
     </div>
   );

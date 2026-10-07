@@ -1,12 +1,20 @@
 "use client";
 
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { useCollider } from "@/lib/collision/useCollider";
-import type { ProjectileEngine } from "./engine";
+import { Html } from "@react-three/drei";
+import {
+  BULLSEYE_RADIUS,
+  TARGETS_X,
+  type ProjectileEngine,
+  type ProjectileMode,
+  type RoundState,
+} from "./engine";
+import styles from "./ProjectileScene.module.css";
 import {
   CannonBarrel,
   CannonCarriage,
@@ -155,6 +163,8 @@ export function ProjectileScene({ engine, variables }: Props) {
         <meshStandardMaterial color="#e24b4a" roughness={0.85} metalness={0.05} />
       </mesh>
 
+      <Targets engine={projectile} />
+
       {/* Trayectoria */}
       <line>
         <bufferGeometry ref={trailGeometryRef}>
@@ -169,6 +179,105 @@ export function ProjectileScene({ engine, variables }: Props) {
             contra el pasto, no como una raya naranja. */}
         <lineBasicMaterial color={TRAIL_COLOR} toneMapped={false} />
       </line>
+    </group>
+  );
+}
+
+/** Anillos del blanco, del centro hacia afuera: centro, medio y borde. */
+const RINGS: Array<[number, string]> = [
+  [BULLSEYE_RADIUS * 3, "#e7ecf5"],
+  [BULLSEYE_RADIUS * 2, "#e24b4a"],
+  [BULLSEYE_RADIUS, "#f2a65a"],
+];
+
+interface RoundView {
+  mode: ProjectileMode;
+  round: RoundState;
+}
+
+/**
+ * Blancos de F1 · Artillería, marcas de caída y viento.
+ *
+ * Se refresca con un intervalo y no en cada frame: los blancos y las marcas
+ * solo cambian cuando aterriza un disparo o empieza una ronda, y React no se
+ * entera de lo que el motor muta por dentro.
+ */
+function Targets({ engine }: { engine: ProjectileEngine }) {
+  const [view, setView] = useState<RoundView>(() => {
+    const r = engine.getRuntime();
+    return { mode: r.mode, round: { ...r.round, shots: [...r.round.shots] } };
+  });
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const r = engine.getRuntime();
+      setView({ mode: r.mode, round: { ...r.round, shots: [...r.round.shots] } });
+    }, 150);
+    return () => window.clearInterval(id);
+  }, [engine]);
+
+  if (view.mode === "libre") return null;
+  const { round } = view;
+
+  return (
+    <group>
+      {TARGETS_X.map((x, i) => {
+        const active = !round.finished && i === round.targetIndex;
+        const shot = round.shots[i];
+        return (
+          <group key={x} position={[x, 0, 0]}>
+            {RINGS.map(([radius, color], k) => (
+              <mesh key={k} position={[0, 0.02 + k * 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[radius, 40]} />
+                <meshStandardMaterial
+                  color={color}
+                  emissive={active ? color : "#000000"}
+                  emissiveIntensity={active ? 0.35 : 0}
+                  roughness={0.8}
+                />
+              </mesh>
+            ))}
+            {/* Poste con la etiqueta: el blanco acostado en el piso casi no
+                se ve desde el cañón, la etiqueta dice cuál es y a qué distancia. */}
+            <mesh position={[0, 1, -BULLSEYE_RADIUS * 3 - 0.2]}>
+              <cylinderGeometry args={[0.05, 0.05, 2, 8]} />
+              <meshStandardMaterial color="#8e9bb0" metalness={0.8} roughness={0.3} />
+            </mesh>
+            <Html position={[0, 2.4, -BULLSEYE_RADIUS * 3 - 0.2]} center>
+              <div className={styles.target} data-active={active} data-done={Boolean(shot)}>
+                Blanco {i + 1} · {x} m
+                {shot && <span>{shot.points} pts</span>}
+              </div>
+            </Html>
+          </group>
+        );
+      })}
+
+      {/* Dónde cayó cada disparo de la ronda. */}
+      {round.shots.map((shot, i) => (
+        <group key={i} position={[shot.x, 0, 0.6]}>
+          <mesh position={[0, 0.35, 0]}>
+            <coneGeometry args={[0.12, 0.7, 10]} />
+            <meshBasicMaterial
+              color={shot.miss <= BULLSEYE_RADIUS ? "#34d399" : "#f2a65a"}
+              toneMapped={false}
+            />
+          </mesh>
+          <Html position={[0, 0.95, 0]} center>
+            <div className={styles.mark}>
+              {shot.miss <= BULLSEYE_RADIUS ? "¡Impacto!" : `${shot.miss.toFixed(1)} m`}
+            </div>
+          </Html>
+        </group>
+      ))}
+
+      {view.mode === "viento" && (
+        <Html position={[6, 3.4, 0]} center>
+          <div className={styles.wind}>
+            Viento {round.wind > 0 ? "a favor →" : "← en contra"} · {Math.abs(round.wind).toFixed(1)} m/s²
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

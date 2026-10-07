@@ -50,8 +50,13 @@ Lo que **falta**:
 - Tutor de IA: implementado con Gemini (`GEMINI_API_KEY`), con `tutorHints`
   en todos los experimentos y límite de preguntas por IP. Falta medir la latencia
   en el celular dentro del visor.
-- Supabase: instalado (`lib/supabase/`) pero sin esquema ni uso.
-- Capa de "juego": no hay objetivos, puntaje, ni progreso.
+- Supabase: catálogo, `challenge_completions` y RLS en
+  `supabase/migrations/20261006120000_catalogo_y_retos.sql` (generada por
+  `scripts/generar_migracion_catalogo.py`). **Hay que correrla en el SQL
+  Editor**; sin ella, ingresar funciona pero los retos no se suben.
+- Capa de "juego": HUD de retos unificado y retos en los 15 experimentos.
+  Progreso guardado (dispositivo + Supabase) y pantalla de progreso hechos;
+  falta correr la migración en Supabase y que el tutor lea el resultado.
 - Calidad visual: ver sección 2.
 
 ---
@@ -751,12 +756,48 @@ como producto y no como prototipo. Comparativa antes/después para la tesis.
 cinco grados llega más lejos?" y recibir respuesta hablada, usando los valores
 actuales de los sliders.
 
-### Fase C — Capa de juego + persistencia
-1. `ExperimentChallenge` en `types/module.ts` + HUD de objetivo/puntaje en el shell.
-2. Retos para F1 y F2.
-3. Esquema en Supabase: `profiles`, `attempts` (experimento, reto, puntaje,
-   variables, duración), `sessions`.
-4. Pantalla de progreso del estudiante.
+### Fase C — Capa de juego + persistencia *(en curso)*
+1. ✅ HUD de retos en el shell (`components/shell/ChallengeHUD.tsx`).
+   Cambio respecto de lo planeado: en vez de `ExperimentChallenge` con un
+   `evaluate(AIContext)` sin estado, el **motor** expone `getChallenges()` y
+   `resetChallenges()` (`ChallengeStatus` en `types/module.ts`). Casi todos
+   los retos tienen estado que no se deduce de una foto del contexto
+   (sostener algo un segundo, recordar el mejor intento, en qué modelos ya se
+   logró). `resetChallenges()` es aparte de `reset()`, que en varios
+   experimentos significa "intentar de nuevo" y no debe borrar logros.
+   El HUD vive en un "dock" abajo a la derecha, apilado sobre los controles
+   del experimento; se pliega a "Retos 2/3" y avisa con un sonido corto
+   cuando se completa uno. Retos en 13 experimentos (los 6 nuevos ya los
+   tenían; se agregaron a derivada, Riemann, sólidos, QAM, enrutamiento y
+   OSI). Arreglo de paso: el canvas tiene su propio contexto de
+   apilamiento, así las etiquetas `<Html>` de drei ya no tapan los paneles.
+2. ✅ Juegos y retos de F1 y F2.
+   - **F1 · Artillería**: variable `modo` (libre / blancos / con viento).
+     Tres blancos a 20, 32 y 45 m, un disparo por blanco, 100 − 8 pts por
+     metro de error. Con viento, una aceleración horizontal al azar por ronda
+     (±0.6–1.8 m/s²) que corre la caída unos 3.6 m: probado que repetir los
+     tiros sin viento da 157/300 y corrigiendo se llega a 300. Retos: un
+     impacto, ronda ≥ 220 sin viento, ronda ≥ 180 con viento.
+   - **F2 · Predice el resultado**: `pred_v1` y `pred_v2` se congelan al
+     soltar; puntaje = 100 − error total relativo a la rapidez inicial (no
+     a cada velocidad final, que puede ser cero). Retos ≥ 90 pts: elástico,
+     plástico, y a medias con masas distintas.
+   - Arreglos de paso: el motor de colisiones usaba otro ancho de carrito
+     que la escena (se encimaban con masas grandes); el shell acepta una
+     cámara inicial por experimento (`cameraView`), porque los blancos a
+     45 m quedaban fuera de vista; el panel de variables se scrollea en vez
+     de tapar el header; colisiones centrado en la vista.
+3. ✅ Persistencia, con registro **opcional**: sin cuenta, los retos se
+   guardan en el dispositivo (`lib/progress/store.ts`, separados por dueño
+   para celulares compartidos); al ingresar o registrarse, lo del invitado
+   pasa a la cuenta y se sube a `challenge_completions` (insert con "on
+   conflict do nothing": se conserva la primera fecha). Sin red, queda en
+   cola y se sube al volver la conexión. Al cerrar sesión, lo de esa cuenta
+   deja de verse en el dispositivo. En vez de la tabla `attempts` planeada se
+   usa `challenge_completions`; `sessions`, `predictions` y
+   `ai_conversations` siguen sin usarse (quedan protegidas con RLS).
+4. ✅ `/progreso` (retos por experimento, con fecha) y `/cuenta` (ingresar,
+   registrarse, cerrar sesión). Acceso desde el header del lobby.
 5. El tutor lee el `feedback` del reto por voz al terminar.
 
 **Entregable:** un estudiante juega, obtiene puntaje, y el puntaje queda guardado.
