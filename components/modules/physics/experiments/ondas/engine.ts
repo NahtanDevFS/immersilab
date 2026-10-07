@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -201,10 +202,33 @@ export function createWavesEngine(): WavesEngine {
     },
 
     reset() {
+      this.resetChallenges!();
+    },
+
+    resetChallenges() {
       for (const key of Object.keys(runtime.challenges)) {
         runtime.challenges[key] = { done: false, progress: 0 };
         held[key] = 0;
       }
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      return TARGETS.map((target) => {
+        const challenge = runtime.challenges[target.id];
+        const active = runtime.target.id === target.id;
+        return {
+          id: target.id,
+          title: target.label + (active && !challenge.done ? " ←" : ""),
+          detail: challenge.done
+            ? "¡Logrado!"
+            : active
+              ? `${target.hint} Ajuste: ${Math.round(runtime.fit * 100)} %.`
+              : target.hint,
+          done: challenge.done,
+          // La barra del objetivo activo sigue el ajuste en vivo.
+          progress: challenge.done ? 1 : active ? runtime.fit : 0,
+        };
+      });
     },
 
     async startAudio() {

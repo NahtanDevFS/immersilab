@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -118,12 +119,40 @@ export function createCoverageEngine(): CoverageEngine {
     },
 
     reset() {
+      this.resetChallenges!();
+    },
+
+    resetChallenges() {
       for (const challenge of Object.values(runtime.challenges)) {
         challenge.done = false;
         challenge.progress = 0;
       }
       lastKey = "";
       recompute(lastVariables);
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      const { campus, wifi, reutilizar } = runtime.challenges;
+      return [
+        {
+          id: "campus",
+          title: "Cubre el campus",
+          detail: `Los ${runtime.summary.total} puntos con buena señal, en cualquier banda.`,
+          ...campus,
+        },
+        {
+          id: "wifi",
+          title: "Wi-Fi en 2.4 GHz",
+          detail: "Lo mismo en la banda de Wi-Fi: los muros atenúan más.",
+          ...wifi,
+        },
+        {
+          id: "reutilizar",
+          title: "Reutiliza canales",
+          detail: "Tres antenas en 2.4 GHz con solo dos canales distintos.",
+          ...reutilizar,
+        },
+      ];
     },
 
     getRuntime() {

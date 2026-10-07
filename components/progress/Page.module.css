@@ -1,0 +1,280 @@
+/* Páginas de cuenta y progreso: se usan fuera del visor (antes o después de
+   jugar), así que son páginas normales con scroll, no un HUD sobre la escena. */
+.page {
+  min-height: 100vh;
+  padding: calc(1.25rem + env(safe-area-inset-top)) 1rem 3rem;
+  background: var(--lab-bg);
+  color: var(--lab-text);
+  overflow-y: auto;
+}
+
+.inner {
+  width: min(44rem, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.back {
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.lead {
+  margin: 0;
+  color: var(--lab-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.card {
+  padding: 1rem 1.1rem;
+  background: var(--lab-panel);
+  border: 0.5px solid var(--lab-panel-border);
+  border-radius: 12px;
+}
+
+.note {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 0.5px solid var(--lab-accent-warm);
+  background: rgba(242, 166, 90, 0.08);
+  color: var(--lab-text);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.note a {
+  color: var(--lab-accent-warm);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.ok {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.error {
+  border-color: var(--lab-danger);
+  background: rgba(226, 75, 74, 0.1);
+}
+
+/* --- Formularios ---------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.55rem;
+  border-radius: 8px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: transparent;
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  background: var(--lab-bg);
+  border-color: var(--lab-accent);
+  color: var(--lab-accent);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--lab-text-muted);
+}
+
+.input {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-bg);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 1px;
+}
+
+.primary,
+.secondary {
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.primary {
+  background: var(--lab-accent);
+  color: #052e2b;
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.secondary {
+  background: transparent;
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* --- Progreso --------------------------------------------------------------- */
+
+.summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.big {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--lab-accent);
+}
+
+.meter {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--lab-panel-border);
+  overflow: hidden;
+  margin-top: 0.6rem;
+}
+
+.meter > span {
+  display: block;
+  height: 100%;
+  background: var(--lab-accent);
+}
+
+.discipline {
+  margin: 0.4rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.module {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lab-text-muted);
+}
+
+.experiment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.experimentHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.experimentName {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.count {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  color: var(--lab-text-muted);
+  white-space: nowrap;
+}
+
+.count[data-all="true"] {
+  color: #34d399;
+}
+
+.challenges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.challenge {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--lab-text-muted);
+}
+
+.challenge[data-done="true"] {
+  color: var(--lab-text);
+}
+
+.challenge time {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--lab-text-muted);
+  white-space: nowrap;
+}
+
+.go {
+  align-self: flex-start;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--lab-accent);
+}

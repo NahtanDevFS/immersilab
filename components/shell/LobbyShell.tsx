@@ -33,7 +33,7 @@ export function LobbyShell() {
   return (
     <OrientationGate>
       <div className={styles.container}>
-        <Header subtitle="Elige un experimento — camina hacia una puerta" />
+        <Header subtitle="Elige un experimento — camina hacia una puerta" showAccount />
 
         {gyroActive && <GamepadStatus />}
 
@@ -64,6 +64,12 @@ export function LobbyShell() {
         )}
 
         <Canvas
+          /* Contexto de apilamiento propio (z-index 0): las etiquetas <Html>
+             de drei se montan junto al canvas con z-index calculados que
+             pueden ser enormes, y se dibujaban ENCIMA de los paneles del
+             shell (variables, resultados, retos, avisos). Así quedan todas
+             debajo, sin tocar cada etiqueta. */
+          style={{ zIndex: 0 }}
           /* "soft" = PCFSoftShadowMap: bordes de sombra suaves. En gama baja
              se cae a PCF normal, que es más barato y más duro. */
           shadows={quality === "high" ? "soft" : true}

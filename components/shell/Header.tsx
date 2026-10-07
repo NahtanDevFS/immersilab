@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AccountChip } from "@/components/progress/AccountChip";
 import styles from "./Header.module.css";
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
   subtitle?: string;
   /** Muestra un link para volver al lobby. */
   showBackLink?: boolean;
+  /** Muestra el acceso a la cuenta y al progreso (en el lobby). */
+  showAccount?: boolean;
 }
 
 /**
@@ -14,7 +17,7 @@ interface Props {
  * logo de la universidad, el nombre del laboratorio, y opcionalmente un
  * subtítulo y un link de vuelta al lobby.
  */
-export function Header({ subtitle, showBackLink }: Props) {
+export function Header({ subtitle, showBackLink, showAccount }: Props) {
   return (
     <header className={styles.header}>
       <Image
@@ -33,6 +36,7 @@ export function Header({ subtitle, showBackLink }: Props) {
           ← Lobby
         </Link>
       )}
+      {showAccount && <AccountChip />}
     </header>
   );
 }

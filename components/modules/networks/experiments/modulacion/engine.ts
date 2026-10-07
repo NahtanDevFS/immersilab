@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -322,6 +323,10 @@ export function createModulationEngine(): ModulationEngine {
     },
 
     reset() {
+      this.resetChallenges!();
+    },
+
+    resetChallenges() {
       tuneAmHeld = 0;
       modHeld = 0;
       tuneFmHeld = 0;
@@ -329,6 +334,32 @@ export function createModulationEngine(): ModulationEngine {
         challenge.done = false;
         challenge.progress = 0;
       }
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      const { sintonizar_am, modular_100, sintonizar_fm } = runtime.challenges;
+      return [
+        {
+          id: "sintonizar_am",
+          title: "Sintoniza Radio UMG (AM)",
+          detail: "Está en 1040 kHz: mete su señal en el filtro del receptor.",
+          ...sintonizar_am,
+        },
+        {
+          id: "modular_100",
+          title: "Modula al 100 % sin pasarte",
+          detail: runtime.overmodulated
+            ? "¡Sobremodulación! La envolvente se corta y el audio se distorsiona."
+            : "Con Radio UMG sintonizada, lleva el índice entre 0.9 y 1.",
+          ...modular_100,
+        },
+        {
+          id: "sintonizar_fm",
+          title: "Sintoniza UMG FM",
+          detail: "Cambia a FM y búscala en 95.3 MHz.",
+          ...sintonizar_fm,
+        },
+      ];
     },
 
     async startAudio() {

@@ -19,9 +19,18 @@ import styles from "./OsiScene.module.css";
  * justamente de no ver nunca el mensaje moverse por ella. Aquí el movimiento
  * es el contenido.
  */
-const TOWER_X = 5.5;
-const LAYER_HEIGHT = 0.75;
-const BASE_Y = 0.6;
+/* Torres cerca y capas bajas para que las dos pilas enteras, con el paquete
+   arriba, entren en la vista con que se entra (antes, 11 m entre torres y
+   0.75 m por capa: se cortaban los extremos y la capa de aplicación). */
+const TOWER_X = 3.8;
+/**
+ * Centro de la escena. La cámara del shell entra mirando a x = 5; con las
+ * torres centradas en 0, al entrar solo se veía la del receptor y el emisor
+ * —donde arranca el juego— quedaba fuera de pantalla.
+ */
+const CENTER_X = 5;
+const LAYER_HEIGHT = 0.55;
+const BASE_Y = 0.5;
 const PLATE_SIZE: [number, number, number] = [2.6, 0.12, 2.2];
 
 interface Props {
@@ -114,14 +123,23 @@ export function OsiScene({ engine, variables }: Props) {
   const model = String(variables.modelo ?? "osi");
 
   return (
-    <group>
+    <group position={[CENTER_X, 0, 0]}>
       {/* Las dos torres. */}
       {[-1, 1].map((side) => (
         <group key={side} position={[side * TOWER_X, 0, 0]}>
           {stack.map((step, i) => {
             const index = side < 0 ? i : stack.length + i;
             return (
-              <group key={step.osi} position={[0, BASE_Y + i * LAYER_HEIGHT, 0]}>
+              // La pila viene de arriba hacia abajo (índice 0 = Aplicación),
+              // así que se dibuja al revés: Aplicación arriba y la capa
+              // física abajo, junto al cable. Antes se apilaba con el mismo
+              // índice y la torre quedaba invertida: el paquete arrancaba
+              // arriba, donde decía "Física", y se pedía "Bits" con el
+              // mensaje dibujado a la altura de "Aplicación".
+              <group
+                key={step.osi}
+                position={[0, BASE_Y + (stack.length - 1 - i) * LAYER_HEIGHT, 0]}
+              >
                 <mesh
                   ref={(mesh) => {
                     plateRefs.current[index] = mesh;

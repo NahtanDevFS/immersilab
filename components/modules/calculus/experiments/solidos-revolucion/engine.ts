@@ -1,9 +1,11 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
 import {
+  TARGET_PIECES,
   CONTROL_POINTS,
   getTargetPiece,
   silhouetteError,
@@ -63,6 +65,9 @@ function readRadii(variables: VariablesState): number[] {
 export function createLatheEngine(): LatheEngine {
   let lastVariables: VariablesState = {};
   let signature = "";
+  /** Mejor puntaje y si se logró, por pieza. `reset()` no los borra. */
+  const bestByPiece: Record<string, number> = {};
+  const piecesDone = new Set<string>();
 
   const runtime: LatheRuntime = {
     radii: Array.from({ length: CONTROL_POINTS }, () => 0.5),
@@ -102,6 +107,10 @@ export function createLatheEngine(): LatheEngine {
     runtime.shapeErrorPct = shapeErrorPct;
     runtime.score = score;
     if (score > runtime.bestScore) runtime.bestScore = score;
+    bestByPiece[piece.id] = Math.max(bestByPiece[piece.id] ?? 0, score);
+    if (Math.abs(volumeErrorPct) < VOLUME_TOLERANCE && shapeErrorPct < SHAPE_TOLERANCE) {
+      piecesDone.add(piece.id);
+    }
   }
 
   return {
@@ -155,6 +164,24 @@ export function createLatheEngine(): LatheEngine {
           "volumen",
         ],
       };
+    },
+
+    resetChallenges() {
+      piecesDone.clear();
+      for (const key of Object.keys(bestByPiece)) delete bestByPiece[key];
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      // Un reto por pieza objetivo: igualar volumen (±2 %) y silueta (±6 %).
+      return TARGET_PIECES.map((piece) => ({
+        id: piece.id,
+        title: piece.label,
+        detail: piecesDone.has(piece.id)
+          ? "¡Pieza lograda!"
+          : `Volumen ±${VOLUME_TOLERANCE} % y silueta ±${SHAPE_TOLERANCE} %. Mejor puntaje: ${bestByPiece[piece.id] ?? 0}.`,
+        done: piecesDone.has(piece.id),
+        progress: piecesDone.has(piece.id) ? 1 : (bestByPiece[piece.id] ?? 0) / 100,
+      }));
     },
 
     getRuntime() {

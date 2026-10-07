@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -268,13 +269,46 @@ export function createPendulumEngine(): PendulumEngine {
 
     reset() {
       runtime.phase = "listo";
+      this.resetChallenges!();
+      placeAtRest();
+    },
+
+    // Solo los retos: el péndulo sigue oscilando si estaba oscilando.
+    resetChallenges() {
       syncedMassMin = Infinity;
       syncedMassMax = -Infinity;
+      syncStreak = 0;
+      doubleStreak = 0;
       for (const challenge of Object.values(runtime.challenges)) {
         challenge.done = false;
         challenge.progress = 0;
       }
-      placeAtRest();
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      const { sincronizar, masa, doble } = runtime.challenges;
+      return [
+        {
+          id: "sincronizar",
+          title: "Sincroniza los relojes",
+          detail: "Que tu péndulo tenga el mismo período que la referencia (±1 %).",
+          ...sincronizar,
+        },
+        {
+          id: "masa",
+          title: "¿Y la masa?",
+          detail: sincronizar.done
+            ? "Sin soltar de nuevo, cambia la masa en 2 kg o más. ¿Se desincroniza?"
+            : "Primero sincroniza; después cambia la masa.",
+          ...masa,
+        },
+        {
+          id: "doble",
+          title: "El doble de lento",
+          detail: "Que tu período sea exactamente el doble. ¿Cuánto hay que alargarlo?",
+          ...doble,
+        },
+      ];
     },
 
     release() {

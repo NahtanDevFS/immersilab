@@ -8,7 +8,10 @@
 
   position: absolute;
   left: 50%;
-  bottom: calc(3.6rem + env(safe-area-inset-bottom));
+  /* "Activar giroscopio" vive en bottom 1.5rem y mide ~2.5rem de alto
+     (termina en ~4rem): con 3.6rem los dos botones se encimaban en la
+     computadora, donde ese botón queda visible. */
+  bottom: calc(4.6rem + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   /* Por encima de la tarjeta de explicación (z 20): si el alumno le
      pregunta algo con la tarjeta abierta, los subtítulos no pueden quedar

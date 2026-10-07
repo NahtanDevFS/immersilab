@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -204,6 +205,9 @@ const HOP_TIME = 0.45;
  */
 export function createRoutingEngine(): RoutingEngine {
   let lastVariables: VariablesState = {};
+  /** Métricas con las que se llegó por el camino óptimo, y si fue con un enlace caído. */
+  const optimalMetrics = new Set<string>();
+  let reroutedOptimal = false;
   let metric: RoutingMetric = "latencia";
 
   const runtime: RoutingRuntime = {
@@ -329,7 +333,11 @@ export function createRoutingEngine(): RoutingEngine {
       if (nodeId === GOAL) {
         runtime.arrived = true;
         runtime.delivered += 1;
-        if (runtime.cost === runtime.bestCost) runtime.optimal += 1;
+        if (runtime.cost === runtime.bestCost) {
+          runtime.optimal += 1;
+          optimalMetrics.add(metric);
+          if (runtime.downLinks.length > 0) reroutedOptimal = true;
+        }
       }
     },
 
@@ -357,6 +365,37 @@ export function createRoutingEngine(): RoutingEngine {
 
       recomputeBest();
       restart();
+    },
+
+    resetChallenges() {
+      optimalMetrics.clear();
+      reroutedOptimal = false;
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      return [
+        {
+          id: "dijkstra",
+          title: "Gánale a Dijkstra",
+          detail: "Lleva el paquete al destino por el camino de menor costo.",
+          done: optimalMetrics.size > 0,
+          progress: optimalMetrics.size > 0 ? 1 : 0,
+        },
+        {
+          id: "metricas",
+          title: "Con las tres métricas",
+          detail: `Camino óptimo en saltos, latencia y OSPF: ${optimalMetrics.size} de 3.`,
+          done: optimalMetrics.size >= 3,
+          progress: optimalMetrics.size / 3,
+        },
+        {
+          id: "caida",
+          title: "Re-enruta",
+          detail: "Corta un enlace y vuelve a llegar por el mejor camino que queda.",
+          done: reroutedOptimal,
+          progress: reroutedOptimal ? 1 : 0,
+        },
+      ];
     },
 
     getRuntime() {

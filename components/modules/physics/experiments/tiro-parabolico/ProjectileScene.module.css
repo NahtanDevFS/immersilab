@@ -1,0 +1,53 @@
+/* Etiquetas de los blancos de F1: sin puntero, para no cortar el arrastre
+   con el que se mira alrededor. */
+.target,
+.mark,
+.wind {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(11, 18, 32, 0.88);
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+  font-size: 0.66rem;
+}
+
+.target span {
+  color: var(--lab-accent);
+  font-weight: 600;
+}
+
+/* El blanco de turno: es al que hay que apuntar ahora. */
+.target[data-active="true"] {
+  border-color: var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+  font-weight: 600;
+}
+
+.mark {
+  padding: 0.08rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.88);
+  color: var(--lab-text);
+  font-size: 0.6rem;
+}
+
+.wind {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.9);
+  border: 1px solid #9fd8ff;
+  color: #9fd8ff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}

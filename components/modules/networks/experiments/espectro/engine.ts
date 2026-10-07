@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -387,6 +388,45 @@ export function createSpectrumEngine(): SpectrumEngine {
       runtime.active = false;
       runtime.tonal = false;
       runtime.bands.fill(0);
+    },
+
+    resetChallenges,
+
+    getChallenges(): ChallengeStatus[] {
+      const { silbido, vocales, banda } = runtime.challenges;
+      return [
+        {
+          id: "silbido",
+          title: "Silba",
+          detail: silbido.done
+            ? "Un solo pico: eso es un tono puro."
+            : "Un tono puro deja un solo pico.",
+          ...silbido,
+        },
+        {
+          id: "vocales",
+          title: vocales.done
+            ? "De «u» a «i»"
+            : runtime.vowelStage === "u"
+              ? "Di «uuu»…"
+              : "…y ahora «iii»",
+          detail: vocales.done
+            ? "La «i» sube el segundo formante a ~2300 Hz."
+            : runtime.vowelStage === "u"
+              ? "Sostén la u un segundo."
+              : "Mira cómo aparece energía arriba de 2 kHz.",
+          ...vocales,
+        },
+        {
+          id: "banda",
+          title: "Habla 3 segundos",
+          detail:
+            banda.progress > 0
+              ? `${runtime.phoneBandPct.toFixed(0)} % de tu voz cabe en la banda telefónica.`
+              : "¿Cuánto de tu voz cabe en 300–3400 Hz?",
+          ...banda,
+        },
+      ];
     },
 
     getRuntime() {

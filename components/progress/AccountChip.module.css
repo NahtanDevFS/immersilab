@@ -1,0 +1,29 @@
+.chip {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-left: 0.4rem;
+  /* El header tiene pointer-events:none para no tapar el arrastre; los
+     links lo revierten puntualmente. */
+  pointer-events: auto;
+}
+
+.primary,
+.secondary {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.primary {
+  background: var(--lab-accent);
+  border-color: var(--lab-accent);
+  color: #052e2b;
+}
+
+.secondary {
+  background: var(--lab-bg);
+  color: var(--lab-text-muted);
+}

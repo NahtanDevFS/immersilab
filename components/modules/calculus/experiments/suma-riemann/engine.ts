@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -35,6 +36,12 @@ export interface RiemannEngine extends ExperimentEngine {
 }
 
 const CURVE_SAMPLES = 240;
+/**
+ * Bloques que cuentan como "pocos" para el reto. Con la parábola en [0, 6]
+ * el trapecio necesita 7 para bajar del 1 % y el punto medio 5: con 6 o menos
+ * hay que haber descubierto que el método importa.
+ */
+const FEW_BLOCKS = 6;
 
 /**
  * Motor de la suma de Riemann.
@@ -52,6 +59,11 @@ const CURVE_SAMPLES = 240;
  */
 export function createRiemannEngine(): RiemannEngine {
   let lastVariables: VariablesState = {};
+  /** Logros: aparte de `bestBlocks`, que `reset()` borra. */
+  let underOnePct = false;
+  let fewBlocks = false;
+  let lowestError = Infinity;
+  const functionsDone = new Set<string>();
   let signature = "";
 
   const runtime: RiemannRuntime = {
@@ -132,6 +144,12 @@ export function createRiemannEngine(): RiemannEngine {
     if (errorPct < 1 && (runtime.bestBlocks === null || n < runtime.bestBlocks)) {
       runtime.bestBlocks = n;
     }
+    lowestError = Math.min(lowestError, errorPct);
+    if (errorPct < 1) {
+      underOnePct = true;
+      functionsDone.add(String(variables.funcion ?? "parabola"));
+      if (n <= FEW_BLOCKS) fewBlocks = true;
+    }
   }
 
   return {
@@ -181,6 +199,44 @@ export function createRiemannEngine(): RiemannEngine {
 
     getSeries() {
       return runtime.curve;
+    },
+
+    resetChallenges() {
+      underOnePct = false;
+      fewBlocks = false;
+      lowestError = Infinity;
+      functionsDone.clear();
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      // Progreso en escala logarítmica del error: de 100 % a 1 % la barra va
+      // de 0 a 1, y cada décima de error que se gana se nota igual.
+      const toward = Number.isFinite(lowestError)
+        ? Math.min(1, Math.max(0, 1 - Math.log10(Math.max(lowestError, 1)) / 2))
+        : 0;
+      return [
+        {
+          id: "uno",
+          title: "Menos de 1 % de error",
+          detail: "Agrega bloques o cambia de método hasta bajar del 1 %.",
+          done: underOnePct,
+          progress: toward,
+        },
+        {
+          id: "pocos",
+          title: `Con ${FEW_BLOCKS} bloques o menos`,
+          detail: "Menos del 1 % con muy pocos bloques: el método importa.",
+          done: fewBlocks,
+          progress: fewBlocks ? 1 : underOnePct ? 0.5 : 0,
+        },
+        {
+          id: "funciones",
+          title: "En las cuatro funciones",
+          detail: `Menos del 1 % en cada función: ${functionsDone.size} de 4.`,
+          done: functionsDone.size >= 4,
+          progress: functionsDone.size / 4,
+        },
+      ];
     },
 
     getRuntime() {

@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -39,6 +40,8 @@ export interface DerivativeEngine extends ExperimentEngine {
  *  cero a ojo del juego. Es |f'|, no distancia en x, porque es la pendiente
  *  lo que el jugador está mirando en el velocímetro. */
 const PERFECT_SLOPE = 0.05;
+/** Puntaje que cuenta como "frenó en un punto crítico" para los retos. */
+const GOOD_BRAKE = 80;
 
 /**
  * Motor de "Frena en el pico" (C1).
@@ -55,6 +58,9 @@ const PERFECT_SLOPE = 0.05;
  */
 export function createDerivativeEngine(): DerivativeEngine {
   let lastVariables: VariablesState = {};
+  /** Logros: aparte del estado del juego, `reset()` no los borra. */
+  const tracksDone = new Set<string>();
+  let bestEver = 0;
   let track: Track = getTrack("ondas");
   let amp = 1;
 
@@ -174,6 +180,39 @@ export function createDerivativeEngine(): DerivativeEngine {
       runtime.score =
         slope <= PERFECT_SLOPE ? 100 : Math.round(100 * Math.exp(-slope * 1.6));
       if (runtime.score > runtime.bestScore) runtime.bestScore = runtime.score;
+      bestEver = Math.max(bestEver, runtime.score);
+      if (runtime.score >= GOOD_BRAKE) tracksDone.add(String(lastVariables.pista ?? "ondas"));
+    },
+
+    resetChallenges() {
+      tracksDone.clear();
+      bestEver = 0;
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      return [
+        {
+          id: "critico",
+          title: "Frena en un pico o un valle",
+          detail: `Saca ${GOOD_BRAKE} puntos o más: la derivada tiene que estar casi en cero.`,
+          done: bestEver >= GOOD_BRAKE,
+          progress: Math.min(1, bestEver / GOOD_BRAKE),
+        },
+        {
+          id: "perfecto",
+          title: "Frenado perfecto",
+          detail: "100 puntos: frena con la pendiente prácticamente en cero.",
+          done: bestEver >= 100,
+          progress: bestEver / 100,
+        },
+        {
+          id: "pistas",
+          title: "En las tres pistas",
+          detail: `Frena bien (≥ ${GOOD_BRAKE}) en cada pista: ${tracksDone.size} de 3.`,
+          done: tracksDone.size >= 3,
+          progress: tracksDone.size / 3,
+        },
+      ];
     },
 
     getRuntime() {

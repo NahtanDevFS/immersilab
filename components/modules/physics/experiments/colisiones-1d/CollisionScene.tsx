@@ -1,15 +1,25 @@
 "use client";
 
 import { useRef } from "react";
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import type { CollisionEngine } from "./engine";
+import styles from "./CollisionScene.module.css";
 
 const RAIL_LENGTH = 16;
 const RAIL_HEIGHT = 0.1;
 const CART_DEPTH = 0.4;
+/**
+ * La escena se corre a x = 5: la cámara del shell entra mirando ahí, y con
+ * el riel centrado en 0 el carrito izquierdo arrancaba en el borde de la
+ * pantalla. Es solo visual: el motor sigue trabajando alrededor de 0.
+ */
+const CENTER_X = 5;
+
+const fmt = (v: number) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}`;
 
 interface Props {
   engine: ExperimentEngine;
@@ -20,6 +30,10 @@ export function CollisionScene({ engine, variables }: Props) {
   const collision = engine as CollisionEngine;
   const cart1Ref = useRef<THREE.Mesh>(null);
   const cart2Ref = useRef<THREE.Mesh>(null);
+  const label1Ref = useRef<THREE.Group>(null);
+  const label2Ref = useRef<THREE.Group>(null);
+  const text1Ref = useRef<HTMLDivElement>(null);
+  const text2Ref = useRef<HTMLDivElement>(null);
 
   useFixedTimestep((dt) => {
     collision.update(dt, variables);
@@ -42,10 +56,41 @@ export function CollisionScene({ engine, variables }: Props) {
       cart2Ref.current.position.set(runtime.pos2, RAIL_HEIGHT + h2 / 2, 0);
       cart2Ref.current.scale.set(w2, h2, CART_DEPTH);
     }
+
+    // F2: sobre cada carrito, la velocidad real después del choque contra
+    // la que predijo el alumno. Se escribe directo en el DOM: cambia cada
+    // frame y no vale la pena un re-render de React por eso.
+    const prediction = runtime.prediction;
+    const show = runtime.phase === "collided" && prediction?.actual != null;
+    [
+      [label1Ref.current, text1Ref.current, runtime.pos1, m1, "v1"],
+      [label2Ref.current, text2Ref.current, runtime.pos2, m2, "v2"],
+    ].forEach(([group, text, x, m, key]) => {
+      const g = group as THREE.Group | null;
+      const t = text as HTMLDivElement | null;
+      if (!g || !t) return;
+      g.visible = show;
+      g.position.set(x as number, RAIL_HEIGHT + 0.3 + (m as number) * 0.1 + 0.55, 0);
+      if (show && prediction?.actual) {
+        const k = key as "v1" | "v2";
+        t.textContent = `Real ${fmt(prediction.actual[k])} · Tú ${fmt(prediction.predicted[k])} m/s`;
+      }
+    });
   });
 
   return (
-    <group>
+    <group position={[CENTER_X, 0, 0]}>
+      <group ref={label1Ref} visible={false}>
+        <Html center>
+          <div ref={text1Ref} className={styles.label} />
+        </Html>
+      </group>
+      <group ref={label2Ref} visible={false}>
+        <Html center>
+          <div ref={text2Ref} className={styles.label} />
+        </Html>
+      </group>
+
       {/* Riel: aluminio anodizado. metalness alto + roughness bajo hace que
           refleje el cielo a lo largo de los 16 m, y ese reflejo continuo es
           lo que lee como "riel" en vez de como una barra pintada. */}
