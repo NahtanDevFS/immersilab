@@ -1,0 +1,59 @@
+/* Etiquetas dentro de la escena: sin puntero, para no cortar el arrastre
+   con el que se mira alrededor. */
+.legend,
+.target,
+.center,
+.radius,
+.axisNote {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.64rem;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(11, 18, 32, 0.88);
+  border: 0.5px solid var(--lab-panel-border);
+  transform: translateX(-50%);
+}
+
+.legend [data-real] {
+  color: var(--lab-accent);
+}
+
+.legend [data-poly] {
+  color: var(--lab-accent-warm);
+}
+
+.target,
+.center,
+.radius {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.88);
+}
+
+.target {
+  border: 0.5px solid var(--lab-text-muted);
+  color: var(--lab-text);
+}
+
+.center {
+  border: 0.5px solid var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+}
+
+.radius {
+  border: 0.5px solid #c084fc;
+  color: #d8b4fe;
+}
+
+.axisNote {
+  color: var(--lab-text-muted);
+}

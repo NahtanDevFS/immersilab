@@ -42,7 +42,7 @@ export function OsiControls({ engine }: Props) {
     <div className={styles.actions}>
       {runtime.lastError && step && (
         <p className={styles.readout}>
-          {runtime.lastError} no va acá — esta capa {step.why.toLowerCase()}
+          {runtime.lastError} no va aquí — esta capa {step.why.toLowerCase()}
         </p>
       )}
 

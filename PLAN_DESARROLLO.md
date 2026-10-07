@@ -3,7 +3,7 @@
 > Laboratorio inmersivo para enseñar Cálculo, Física y Redes/Telecomunicaciones,
 > con tutor por voz, pensado para visor 360 (celular + Cardboard/VR-box).
 >
-> Documento vivo. Última revisión: 2026-09-04.
+> Documento vivo. Última revisión: 2026-10-06.
 
 ---
 
@@ -28,20 +28,28 @@ Lo que **ya funciona**:
 | Redes: constelación QAM (R2) | `.../networks/experiments/qam/` | Funciona. |
 | Redes: enrutamiento (R4) | `.../networks/experiments/enrutamiento/` | Funciona. |
 | Redes: OSI y TCP/IP (R5) | `.../networks/experiments/osi/` | Funciona. |
+| Redes: modulación AM/FM (R1) | `.../networks/experiments/modulacion/` | Funciona (lógica probada con 23 casos; audio sin probar en el celular). |
+| Redes: propagación y cobertura (R3) | `.../networks/experiments/cobertura/` | Funciona (17 casos probados). |
+| Redes: espectro de la voz (R6) | `.../networks/experiments/espectro/` | Funciona (probado con señales sintéticas; falta probar con voz real). |
 | Física: tubo de Venturi (fluidos) | `.../physics/experiments/venturi/` | Funciona. |
+| Física: péndulo y energía (F3) | `.../physics/experiments/pendulo/` | Funciona (15 casos probados). |
+| Física: ondas y superposición (F4) | `.../physics/experiments/ondas/` | Funciona (15 casos probados). |
 | Cálculo: suma de Riemann (C2) | `.../calculus/experiments/suma-riemann/` | Funciona. |
 | Cálculo: sólidos de revolución (C3) | `.../calculus/experiments/solidos-revolucion/` | Funciona. |
 | Cálculo: derivada (C1) | `.../calculus/experiments/derivada-pico/` | Funciona. |
+| Cálculo: series de Taylor (C4) | `.../calculus/experiments/taylor/` | Funciona (16 casos probados). |
 | Catálogo de funciones y pistas | `components/modules/calculus/shared/` | Compartido por los experimentos de cálculo. |
 | Texturas PBR con tiling | `useTiledPbrTexture.ts` | Funciona; convención Poly Haven. |
+| Tutor por voz | `app/api/tutor/`, `components/tutor/`, `lib/tutor/` | Implementado (Fase B) con Gemini: push-to-talk R2/botón, streaming, TTS por oración, barge-in, subtítulos, modo sin conexión. Probado con la key real en escritorio; falta el celular. |
 
 Lo que **falta**:
 
-- Módulo de Cálculo: C2, C1 y C3 hechos; falta C4 (Taylor).
-- Módulo de Redes: R2 (QAM), R4 (enrutamiento) y R5 (OSI/TCP-IP) hechos; faltan R1, R3 y R6.
-- Tutor de IA: `AIContext` está definido en `types/module.ts` pero nadie lo consume.
-- Voz: hay SALIDA (la explicación de cada experimento, `briefing`). Falta la
-  entrada (hablarle al tutor) y que el tutor responda.
+- Módulo de Física: completo (F1, F2, F3, F4 y Venturi).
+- Módulo de Cálculo: completo (C1, C2, C3 y C4).
+- Módulo de Redes: completo (R1 a R6).
+- Tutor de IA: implementado con Gemini (`GEMINI_API_KEY`), con `tutorHints`
+  en todos los experimentos y límite de preguntas por IP. Falta medir la latencia
+  en el celular dentro del visor.
 - Supabase: instalado (`lib/supabase/`) pero sin esquema ni uso.
 - Capa de "juego": no hay objetivos, puntaje, ni progreso.
 - Calidad visual: ver sección 2.
@@ -50,8 +58,8 @@ Lo que **falta**:
 
 ## 1. Supuestos y decisiones tomadas
 
-Estas decisiones se toman acá para no bloquear el desarrollo. Si alguna no
-coincide con lo que querés, se cambia acá y el resto del plan se ajusta.
+Estas decisiones se toman aquí para no bloquear el desarrollo. Si alguna no
+coincide con lo que quieres, se cambia aquí y el resto del plan se ajusta.
 
 | Decisión | Elección | Por qué |
 |---|---|---|
@@ -59,8 +67,8 @@ coincide con lo que querés, se cambia acá y el resto del plan se ajusta.
 | **Presupuesto de render** | 60 fps objetivo, 30 fps piso. ~150k triángulos visibles, 1 sola luz con sombra | Un celular gama media no aguanta más. |
 | **Post-proceso** | Solo **bloom selectivo** + vignette. Sin SSAO, sin DOF, sin motion blur | SSAO en móvil cuesta ~40% del frame para un efecto que casi no se nota en un visor. |
 | **Dirección de arte** | **"Laboratorio limpio + HUD holográfico"** — espacio arquitectónico real y luminoso, con la data superpuesta en teal/ámbar translúcido | Es legible en proyector, se ve profesional en la defensa, y aprovecha los tokens teal/ámbar que ya existen en `globals.css`. Un lab oscuro sci-fi se ve genial en foto pero es ilegible en un visor barato, donde los lentes pierden contraste. |
-| **Idioma** | Español de Guatemala, voseo suave, como los comentarios actuales | Consistencia con el código existente. |
-| **Modelo del tutor** | `claude-opus-5` con `effort: "low"` y streaming | Ver sección 4.3. |
+| **Idioma** | Español neutro, tuteo (tú), sin voseo ni regionalismos, en todo texto que ve o escucha el usuario: interfaz, explicaciones, nombres de los juegos y voz del tutor | Decisión del equipo (2026-10-06): lo entiende cualquier hispanohablante, incluido el jurado. |
+| **Modelo del tutor** | Google Gemini: `gemini-3.5-flash-lite` (respaldo `gemini-2.5-flash`), pensamiento bajo y streaming | Ver sección 4.3. |
 
 ---
 
@@ -156,7 +164,7 @@ El diseño no debe *depender* del bloom.
 
 Tres bugs reales que costaron tiempo. Todos tienen el mismo síntoma —
 **pantalla negra, sin un solo error en consola** — y por eso quedan
-documentados acá y en comentarios dentro del código.
+documentados aquí y en comentarios dentro del código.
 
 1. **Varias cargas bajo un mismo `<Suspense>` no resuelven nunca.**
    `useTexture` y `useGLTF` suspenden mientras descargan. Con React 19.2 +
@@ -224,7 +232,7 @@ Todos implementan `ExperimentDefinition` — el shell no cambia.
 - **Variables**: `angle` (0–90°), `velocity` (1–50 m/s), `gravity` (Luna/Tierra/Marte), `wind`.
 - **Assets**: cañón (GLB), blancos, sonido de disparo e impacto.
 
-**F2 · Colisiones 1D → "Predecí el resultado"** *(existe; agregarle el juego)*
+**F2 · Colisiones 1D → "Predice el resultado"** *(existe; agregarle el juego)*
 - **Concepto**: conservación de momento y energía; elástico vs. inelástico.
 - **Mecánica**: el jugador **primero predice** v1' y v2' con dos sliders, después
   suelta los carritos. Puntaje = 100 − error porcentual. Esto convierte un
@@ -232,13 +240,24 @@ Todos implementan `ExperimentDefinition` — el shell no cambia.
 - **Variables**: `mass1`, `mass2`, `v1`, `v2`, `restitution` (0–1).
 - **Assets**: riel metálico, carritos, sonido de impacto (2 variantes: seco/elástico).
 
-**F3 · Péndulo y energía → "Sincronizá los relojes"**
+**F3 · Péndulo y energía → "Sincroniza los relojes"**
 - **Concepto**: T = 2π√(L/g); la masa **no** afecta el periodo (contraintuitivo,
   gran momento de aprendizaje); intercambio energía cinética ↔ potencial.
 - **Mecánica**: dos péndulos, uno fijo. Ajustar la longitud del segundo hasta que
   oscilen en fase. Barras de energía en vivo a los lados.
 - **Variables**: `length` (0.2–3 m), `mass` (0.1–5 kg), `angle0`, `damping`.
 - **Assets**: bastidor metálico, esfera pulida, sonido de tic.
+
+> **Implementado** (`physics/experiments/pendulo/`). Se integra la ecuación
+> completa (con sen θ) con RK4 y el período se MIDE entre cruces por cero:
+> a 15° coincide con T₀(1 + θ₀²/16) a cuatro decimales y a 60° sale 7.3 %
+> mayor que 2π√(L/g). Referencia fija de 0.7 m soltada a 15°. Retos:
+> sincronizar (±1 % durante 3 períodos), mantener la sincronía con masas que
+> difieran en 2 kg, y el doble de período (hace falta 4 × la longitud; con
+> 2 × da √2). Cambiar longitud, gravedad o ángulo con el péndulo en
+> movimiento lo vuelve a soltar desde el ángulo inicial (cambiar la
+> longitud en vuelo inventaba energía); cambiar la masa no, porque el reto 2
+> es justamente ese. Energía conservada con deriva < 10⁻⁶ sin rozamiento.
 
 **F4 · Ondas y superposición → "El sintonizador"** *(puente hacia Redes)*
 - **Concepto**: superposición, interferencia constructiva/destructiva, batido, y
@@ -251,13 +270,22 @@ Todos implementan `ExperimentDefinition` — el shell no cambia.
 - **Assets**: ninguno (geometría procedural) + audio: reproducir la suma con la
   Web Audio API. Escuchar el batido es didáctico y cuesta ~20 líneas.
 
+> **Implementado** (`physics/experiments/ondas/`). Cuatro objetivos: una sola
+> onda, batido (4 y 5 Hz), cuadrada (armónicos 1, 3, 5 con amplitudes ∝ 1/n)
+> y sierra (1, 2, 3 con el segundo en contrafase). Ajuste = 1 − error RMS
+> relativo al objetivo; meta 95 % sostenida 1 s. Calibrado para que lo
+> incompleto no pase: la cuadrada con 2 de 3 armónicos da 81 %, con un
+> armónico en contrafase 38 %, el batido corrido 0.1 Hz 50 %. El audio
+> multiplica las frecuencias por 110 Hz (mantiene las proporciones entre
+> armónicos) y el paso de frecuencia es 0.05 para poder oír batidos lentos.
+
 ### 3.2 Cálculo
 
 Nota de diseño: en cálculo la tentación es dibujar una gráfica 2D flotando en 3D.
-Eso desperdicia el medio. La regla acá es **el jugador está parado dentro del
+Eso desperdicia el medio. La regla aquí es **el jugador está parado dentro del
 espacio de la función**.
 
-**C1 · Derivada → "Frená en el pico"**
+**C1 · Derivada → "Frena en el pico"**
 - **Concepto**: la derivada como pendiente instantánea; f'(x)=0 en máximos y mínimos.
 - **Mecánica**: el jugador se desplaza sobre una pista curva 3D (la gráfica de
   f(x)) mientras una recta tangente gira con él y un velocímetro muestra f'(x).
@@ -276,13 +304,13 @@ espacio de la función**.
 - **Assets**: ninguno (procedural) — pero es *el* experimento donde el bloom en
   bloques translúcidos se luce.
 
-**C3 · Sólidos de revolución → "Torneá la pieza"**
+**C3 · Sólidos de revolución → "Tornea la pieza"**
 - **Concepto**: V = π∫f(x)²dx, método de discos y de capas.
 - **Mecánica**: el jugador edita el perfil f(x) con puntos de control, la curva
   gira alrededor del eje y genera el sólido en tiempo real. Objetivo: igualar la
   silueta de una pieza objetivo con el mínimo error de volumen. **Este es el
   experimento que más justifica el 3D de todo el proyecto** — en papel es
-  incomprensible, acá se camina alrededor del sólido.
+  incomprensible, aquí se camina alrededor del sólido.
 - **Variables**: 4–5 puntos de control del perfil, `metodo` (discos/capas), `eje`.
 - **Assets**: ninguno (`LatheGeometry` procedural) + ambiente de taller.
 
@@ -295,12 +323,24 @@ espacio de la función**.
 - **Variables**: `funcion`, `terminos` (1–12), `centro` (a), `rango`.
 - **Assets**: ninguno.
 
+> **Implementado** (`calculus/experiments/taylor/`). Cambios respecto de lo
+> planeado: `grado` (0–12) en vez de "términos", porque en el seno la mitad de
+> los coeficientes valen cero y "términos" era ambiguo; la tolerancia es fija
+> (0.05) en vez de una variable `rango`. Cuatro funciones elegidas por lo que
+> enseñan: sen(x) y eˣ convergen en toda la recta; ln(1+x) y 1/(1−x) tienen
+> radio finito y, **centradas en cero, no pueden cubrir su objetivo con ningún
+> grado** — hay que mover el centro. El grado mínimo de cada reto se calcula
+> buscando sobre la misma grilla de centros del slider: sen 7 (en 0 hace
+> falta 9), eˣ 6 (en 0, 9), ln(1+x) 3, 1/(1−x) 4. La escena muestra la curva y
+> el polinomio como tubos, una franja en el piso que se pone verde donde el
+> error ya es menor que la tolerancia, y la barra del radio de convergencia.
+
 ### 3.3 Redes y Telecomunicaciones
 
 Es tu carrera — este módulo debería ser el más fuerte y el que se muestre primero
 en la defensa.
 
-**R1 · Modulación AM/FM → "Sintonizá la emisora"**
+**R1 · Modulación AM/FM → "Sintoniza la emisora"**
 - **Concepto**: portadora, moduladora, índice de modulación, ancho de banda.
 - **Mecánica**: tres ondas en 3D apiladas (moduladora, portadora, modulada). El
   jugador ajusta la frecuencia del receptor hasta captar la emisora — cuando
@@ -309,7 +349,19 @@ en la defensa.
 - **Variables**: `fc` (portadora), `fm` (moduladora), `m` (índice), `tipo` (AM/FM), `f_receptor`.
 - **Assets**: radio receptor (GLB), clip de audio de voz, ruido blanco.
 
-**R2 · Constelación QAM → "Recuperá el mensaje"**
+> **Implementado** como "Sintoniza la emisora" (`networks/experiments/modulacion/`).
+> Diferencias con lo planeado: el jugador maneja a la vez la emisora propia
+> (tipo, índice m/β, tono) y el receptor (dial + **ajuste fino**: sin él, en
+> AM cada píxel del slider eran ~6 kHz con canales de 10 kHz y sintonizar era
+> imposible). No hay radio GLB: es una radio modelada con primitivas. El audio
+> se genera con Web Audio (tono + estática filtrada, saturación al
+> sobremodular, y baja al 20 % mientras habla el tutor), sin clips externos.
+> La escena pone lado a lado el tiempo (tres ondas) y la frecuencia (espectro
+> propio con Bessel y regla de Carson), y el dial con el filtro del receptor.
+> Retos: sintonizar Radio UMG (AM, 1040 kHz), modular entre 0.9 y 1 sin
+> sobremodular, sintonizar UMG FM (95.3 MHz).
+
+**R2 · Constelación QAM → "Recupera el mensaje"**
 - **Concepto**: I/Q, modulación digital (BPSK/QPSK/16-QAM/64-QAM), SNR, BER, y el
   compromiso central de las comunicaciones digitales: más bits por símbolo ⇒
   menos tolerancia al ruido.
@@ -319,9 +371,9 @@ en la defensa.
   degradándose carácter por carácter. Meta: transmitir el mensaje sin errores con
   la **mínima** potencia. Contador de BER en vivo.
 - **Variables**: `esquema` (BPSK/QPSK/16-QAM/64-QAM), `snr` (0–30 dB), `potencia`, `simbolos`.
-- **Assets**: ninguno (nube de puntos procedural) — el bloom acá es esencial.
+- **Assets**: ninguno (nube de puntos procedural) — el bloom aquí es esencial.
 
-**R3 · Propagación y cobertura → "Cubrí el campus"**
+**R3 · Propagación y cobertura → "Cubre el campus"**
 - **Concepto**: pérdida de espacio libre (FSPL = 20·log d + 20·log f + 32.44),
   sombra por obstáculos, presupuesto de enlace, reutilización de frecuencias.
 - **Mecánica**: un plano 3D del campus con edificios. El jugador coloca antenas
@@ -331,7 +383,21 @@ en la defensa.
 - **Variables**: por antena — `potencia` (dBm), `frecuencia` (900 MHz / 2.4 / 5 GHz), `altura`, `tipo` (omni/sectorial).
 - **Assets**: edificios low-poly, torre de antena, antena sectorial, terreno.
 
-**R4 · Enrutamiento → "Ganale a Dijkstra"**
+> **Implementado** (`networks/experiments/cobertura/`). Cambios respecto de lo
+> planeado: sin modelos GLB (edificios, postes y antenas con primitivas);
+> las antenas van en 7 postes candidatos y no en cualquier punto (en el
+> visor no hay cómo apuntar un lugar del piso con precisión), con banda y
+> potencia comunes y canal por antena (1, 6, 11). El modelo es
+> log-distancia (FSPL a 1 m + 10·n·log d, n = 2.4) más pérdida por edificio
+> atravesado (8/12/18 dB según banda), sensibilidad −78 dBm y SIR ≥ 6 dB.
+> **Calibrado con búsqueda exhaustiva**: con espacio libre puro (n = 2) una
+> antena de 900 MHz cubría todo a la mínima potencia; con n = 2.4, 900 MHz
+> se resuelve con 1 antena (18 dBm), 2.4 GHz necesita 2 (26 dBm) y 5 GHz no
+> alcanza con 3. Retos: cubrir los 12 puntos, hacerlo en 2.4 GHz, y con 3
+> antenas y solo 2 canales (reutilización de frecuencias). Todas en el
+> mismo canal es siempre imposible por interferencia.
+
+**R4 · Enrutamiento → "Gánale a Dijkstra"**
 - **Concepto**: grafos, costo de enlace, vector-distancia vs. estado de enlace,
   convergencia tras una caída de enlace.
 - **Mecánica**: el jugador está **dentro** de la red — nodos como racks flotantes
@@ -342,7 +408,7 @@ en la defensa.
 - **Variables**: `topologia` (select), `metrica` (saltos / ancho de banda / latencia), `nodo_caido`.
 - **Assets**: rack de servidores, switch, router (GLB), paquete (cubo emisivo).
 
-**R5 · Encapsulación OSI/TCP-IP → "Armá la trama"**
+**R5 · Encapsulación OSI/TCP-IP → "Arma la trama"**
 - **Concepto**: las 7 capas, encapsulación y desencapsulación, qué cabecera agrega
   cada capa, MTU y fragmentación.
 - **Mecánica**: cajas literalmente anidadas. Los datos bajan por un tubo vertical
@@ -360,10 +426,25 @@ en la defensa.
   desplaza en el tiempo (cascada / waterfall). Retos: dar con un tono puro,
   silbar para ver un solo pico, decir una vocal para ver los formantes.
 - **Assets**: ninguno.
-- **Por qué es barato**: reutiliza **el mismo micrófono y el mismo `AudioContext`
-  del tutor de voz** (sección 4). Una vez concedido el permiso de micrófono,
-  `AnalyserNode.getByteFrequencyData()` da el espectro con ~30 líneas. Máximo
-  impacto en la defensa por unidad de esfuerzo.
+
+> **Implementado** como "Tu voz en el espectro" (`networks/experiments/espectro/`).
+> Cascada 3D de 96 columnas × 64 instantes (~3 s), escala logarítmica o lineal,
+> banda telefónica marcada. Los tres retos se miden sobre el espectro:
+> - **Silba**: un solo pico agudo (>45 % de la energía en ±2 bins, entre 500 y
+>   4500 Hz) sostenido 1 s. Un pico grave NO cuenta: una "u" sostenida también
+>   concentra casi toda su energía en un armónico.
+> - **De "u" a "i"**: la energía de 1800–3200 Hz relativa a la de 200–1000 Hz
+>   tiene que subir 8 dB respecto de la "u" del mismo jugador. Relativo a
+>   propósito: no depende del micrófono ni de la voz.
+> - **Habla 3 s**: mide qué porcentaje de la energía de la voz cae en 300–3400 Hz.
+>
+> Decisiones: el micrófono se pide con `echoCancellation`, `noiseSuppression`
+> y `autoGainControl` apagados (la supresión de ruido borra los silbidos); el
+> analizador no se conecta a los parlantes (evita el acople); "sonando" =
+> 12 dB sobre el ruido de fondo estimado, o más de −40 dBFS en absoluto.
+> La lógica se verificó con espectros sintéticos (silencio, silbido, "u", "i",
+> voz, ruido constante). **Pendiente**: calibrar umbrales con voces reales en
+> el celular objetivo.
 
 ### 3.4 Capa de juego compartida (transversal)
 
@@ -373,7 +454,7 @@ en `types/module.ts` con un objetivo opcional:
 ```ts
 export interface ExperimentChallenge {
   id: string;
-  prompt: string;                       // "Acertá a los 3 blancos"
+  prompt: string;                       // "Acierta a los 3 blancos"
   evaluate: (state: AIContext) => {
     solved: boolean;
     score: number;                      // 0–100
@@ -384,7 +465,7 @@ export interface ExperimentChallenge {
 
 Y `ExperimentDefinition` gana `challenges?: ExperimentChallenge[]`. El shell
 dibuja el objetivo, el puntaje y el resultado — **ningún experimento necesita
-saber cómo se ve un HUD de puntaje**. Es el mismo principio que ya usás con
+saber cómo se ve un HUD de puntaje**. Es el mismo principio que ya usas con
 `VariablesSchema`.
 
 Los resultados se guardan en Supabase (sección 6), para que el proyecto tenga una
@@ -415,8 +496,8 @@ interacción tiene que ser: hablar → escuchar. Todo el diseño sale de ahí.
   └──────────────┼────────────────────────────────────────────┘
                  │  POST /api/tutor  { transcript, context, history }
   ┌──────────────▼───────── SERVIDOR (Next.js Route Handler) ──┐
-  │  [3] @anthropic-ai/sdk → client.messages.stream()           │
-  │      model: claude-opus-5, effort: low, prompt caching      │
+  │  [3] @google/genai → ai.models.generateContentStream()      │
+  │      model: gemini-3.5-flash-lite, thinking: LOW            │
   │      La API key NUNCA sale del servidor.                    │
   └──────────────┼─────────────────────────────────────────────┘
                  │  stream de texto
@@ -451,85 +532,44 @@ en la defensa, se cambie la implementación **sin tocar nada más**.
 
 ### 4.3 El endpoint del tutor
 
-`app/api/tutor/route.ts` — Route Handler de Next.js, **runtime Node.js** (no Edge,
-para usar el SDK oficial cómodamente).
+**Proveedor: Google Gemini** (decisión del equipo: todo el proyecto usa
+Gemini). Implementado en `app/api/tutor/route.ts` — Route Handler de Next.js,
+**runtime Node.js**, con el SDK oficial `@google/genai`. El system prompt
+completo está en ese archivo.
 
-```ts
-import Anthropic from "@anthropic-ai/sdk";
+Cómo funciona y por qué:
 
-const client = new Anthropic(); // lee ANTHROPIC_API_KEY del entorno
+- **Modelos con respaldo.** Primero `gemini-3.5-flash-lite`; si Google
+  responde 503/429 (saturado o sin cuota) antes del primer token, se
+  reintenta con `gemini-2.5-flash`. Medido con la key del proyecto el
+  2026-10-06: Flash-Lite 3.5 da el primer token en **~0.6–0.9 s**; los Flash
+  más grandes (3.5, 3.8, `gemini-flash-latest`) devolvían 503 "high demand" o
+  tardaban 20–30 s, inservibles para voz. Se fijan versiones concretas, no
+  alias `-latest`, para que el tutor no cambie solo antes de la defensa.
+- **Pensamiento bajo** (`thinkingLevel: LOW` en 3.x — Flash-Lite no acepta
+  `MINIMAL` —; `thinkingBudget: 0` en 2.5). Es conversación, no análisis.
+- **Streaming** — indispensable. Sin él, el usuario espera en silencio la
+  respuesta completa. Con él, el TTS arranca al cerrarse la primera oración.
+- **Se espera el primer pedazo antes de responder** — así una key inválida
+  o un modelo saturado devuelven un status de error de verdad (y permiten
+  probar el modelo de respaldo), en vez de un 200 con el stream cortado.
+- **`AIContext` va en el mensaje del usuario, no en el system** — el system
+  prompt queda byte a byte idéntico y Gemini puede aprovechar su caché
+  implícito. Las `tutorHints` del experimento se anexan al system (son
+  fijas por experimento).
+- **Historial append-only, solo texto**, que guarda el cliente; el
+  servidor lo valida y lo recorta a los últimos 20 turnos.
+- **`maxOutputTokens: 1024`** — el prompt ya limita a 3 oraciones; esto es
+  el techo duro.
+- **Validación y límites de tamaño** — el endpoint es público.
+- La API key va en `.env` / `.env.local` como `GEMINI_API_KEY` y **nunca**
+  con prefijo `NEXT_PUBLIC_` — eso la expondría en el bundle del cliente.
 
-const SYSTEM = `Sos el tutor de ImmersiLab, un laboratorio virtual universitario.
-Hablás español de Guatemala, en segunda persona (vos), con tono de auxiliar de
-cátedra: cercano pero preciso.
-
-REGLAS DE FORMATO — tu respuesta se convierte en AUDIO, no se lee:
-- Máximo 3 oraciones. Si necesitás más, terminá con una pregunta y esperá.
-- Cero markdown, cero listas, cero símbolos. "v sub uno", no "v₁".
-- Las fórmulas se dicen habladas: "ele sobre ge, todo bajo raíz", no "√(L/g)".
-- Los números se redondean a 2 decimales.
-
-PEDAGOGÍA:
-- Si el estudiante puede deducirlo, guialo con una pregunta antes de dar la respuesta.
-- Usá SIEMPRE los valores concretos de las variables actuales del experimento.
-- Si preguntan algo fuera del experimento, respondé breve y traelos de vuelta.`;
-
-export async function POST(req: Request) {
-  const { transcript, context, history } = await req.json();
-
-  const stream = client.messages.stream({
-    model: "claude-opus-5",
-    max_tokens: 1024,
-    output_config: { effort: "low" }, // baja latencia: es conversación, no análisis
-    system: [
-      { type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } },
-    ],
-    messages: [
-      ...history,
-      {
-        role: "user",
-        content:
-          `[Estado del experimento]\n${JSON.stringify(context)}\n\n` +
-          `[Pregunta del estudiante]\n${transcript}`,
-      },
-    ],
-  });
-
-  return new Response(
-    new ReadableStream({
-      async start(controller) {
-        for await (const event of stream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
-            controller.enqueue(new TextEncoder().encode(event.delta.text));
-          }
-        }
-        controller.close();
-      },
-    }),
-    { headers: { "Content-Type": "text/plain; charset=utf-8" } },
-  );
-}
-```
-
-Por qué está así:
-
-- **`effort: "low"`** — es una conversación corta, no un problema difícil. Baja el
-  tiempo hasta el primer token, que es lo único que el usuario percibe.
-- **`cache_control` en el system prompt** — el prompt es idéntico en cada pregunta;
-  cachearlo abarata y acelera cada intercambio a partir del segundo.
-- **Streaming** — indispensable. Sin él, el usuario espera en silencio la respuesta
-  completa (2–4 s). Con él, el TTS arranca al cerrarse la primera oración (~600 ms).
-- **`max_tokens: 1024`** — el prompt ya limita a 3 oraciones; esto es el techo duro.
-- **`AIContext` va en el mensaje del usuario, no en el system** — así el system
-  prompt se mantiene byte a byte idéntico y el caché no se invalida.
-- **Costo estimado** (`claude-opus-5`: $5/MTok entrada, $25/MTok salida): con el
-  system cacheado, ~250 tokens de entrada nueva + ~120 de salida ≈ **$0.004 por
-  pregunta**. Una demo de 30 preguntas cuesta unos 12 centavos de dólar.
-- La API key va en `.env.local` como `ANTHROPIC_API_KEY` y **nunca** con prefijo
-  `NEXT_PUBLIC_` — eso la expondría en el bundle del cliente.
+**Límite por IP** (`lib/tutor/rate-limit.ts`): 12 preguntas por minuto por
+IP; al pasarse responde 429 con `Retry-After` y el tutor dice "Me hiciste
+muchas preguntas seguidas". Vive en la memoria del proceso: alcanza para un
+servidor único (`next start`); en serverless con varias instancias haría
+falta un almacén compartido (p. ej. Supabase).
 
 ### 4.4 Detalles de interacción que deciden si se siente bien o mal
 
@@ -555,7 +595,7 @@ Por qué está así:
    reinicia el `history`. El tutor no debería arrastrar el tiro parabólico a una
    conversación sobre QAM.
 7. **Modo sin conexión.** Si `/api/tutor` falla, hablar por TTS un mensaje
-   preescrito ("No me puedo conectar ahorita") en vez de quedarse mudo. En una
+   preescrito ("No me puedo conectar en este momento") en vez de quedarse mudo. En una
    defensa, un fallo de red no puede ser un fallo silencioso.
 
 ### 4.5 Estructura de archivos del tutor
@@ -637,7 +677,7 @@ Fuentes recomendadas, todas de uso libre:
 | ✔ | Árboles de fondo | *ya incorporado* (`22-trees_9_obj`) | `public/models/trees.glb` | Todos los exteriores |
 | 13 | Osciloscopio | "oscilloscope", "measuring device" | `public/models/oscilloscope.glb` | R1, F4 |
 
-**Antes de subir cualquier `.glb` al repo, comprimilo.** Si viene en `.obj`,
+**Antes de subir cualquier `.glb` al repo, comprímelo.** Si viene en `.obj`,
 el flujo completo está en [`scripts/README.md`](scripts/README.md):
 `obj2glb.py` → `gltf-transform simplify` → `gltf-transform meshopt`. El pack
 de árboles pasó de 33 MB a 1.46 MB así.
@@ -645,7 +685,7 @@ Comprime texturas y colapsa mallas; suele bajar el peso 60–80%. En celular eso
 la diferencia entre cargar en 2 s o en 15 s.
 
 **Presupuesto por modelo**: ≤ 15k triángulos, ≤ 2 MB, texturas ≤ 1024 px. Si un
-modelo de Sketchfab pesa 40 MB, no sirve — buscá el equivalente low-poly.
+modelo de Sketchfab pesa 40 MB, no sirve — busca el equivalente low-poly.
 
 ### 5.4 Audio
 
@@ -696,13 +736,16 @@ Cada fase termina en algo demostrable. Nada de fases que solo "preparan".
 **Entregable:** el lobby y los dos experimentos actuales, mismo contenido, vistos
 como producto y no como prototipo. Comparativa antes/después para la tesis.
 
-### Fase B — Tutor por voz
-1. `useSpeechInput` / `useSpeechOutput` + `lib/tutor/sentence-buffer.ts`.
-2. `app/api/tutor/route.ts` con streaming (§4.3).
-3. `VoiceTutor` + `TutorHUD`; montarlo en `ExperimentShell`.
-4. Push-to-talk en R2, barge-in, ducking, subtítulos, modo sin conexión.
-5. Probar en el celular objetivo dentro del visor. Medir el tiempo hasta el primer
-   audio (meta: < 1.2 s).
+### Fase B — Tutor por voz *(implementada; falta validar en el dispositivo)*
+1. ✅ `useSpeechInput` / `useSpeechOutput` + `lib/tutor/sentence-buffer.ts`.
+2. ✅ `app/api/tutor/route.ts` con streaming (§4.3).
+3. ✅ `VoiceTutor` + `TutorHUD`; montado en `ExperimentShell`.
+4. ✅ Push-to-talk en R2, barge-in, subtítulos, modo sin conexión.
+   Ducking queda para cuando haya experimentos con audio (R1, F4).
+5. ⏳ Probar en el celular objetivo dentro del visor. Medir el tiempo hasta el
+   primer audio (meta: < 1.2 s).
+6. ✅ `tutorHints` en los 9 experimentos y límite de preguntas por IP.
+7. ⏳ Opcional: subtítulos en 3D para el modo visor (hoy son un overlay HTML).
 
 **Entregable:** en el tiro parabólico se puede preguntar "¿por qué a cuarenta y
 cinco grados llega más lejos?" y recibir respuesta hablada, usando los valores
@@ -720,16 +763,16 @@ actuales de los sliders.
 Esto es lo que convierte el proyecto en un sistema educativo evaluable, no en una
 demo suelta.
 
-### Fase D — Módulo de Cálculo *(en curso)*
-C2 (Riemann) ✅ → C1 (derivada) ✅ → C3 (sólidos de revolución) ✅ → C4 (Taylor).
+### Fase D — Módulo de Cálculo ✅
+C2 (Riemann) ✅ → C1 (derivada) ✅ → C3 (sólidos de revolución) ✅ → C4 (Taylor) ✅.
 Ese orden: C2 es el más simple y valida el patrón; C3 es el más impresionante y
 conviene tenerlo listo con tiempo de sobra.
 
 **Entregable:** puerta de Cálculo en el lobby con 4 experimentos.
 
 ### Fase E — Módulo de Redes *(el módulo estrella)*
-R6 (espectro, casi gratis reusando el micrófono) → R2 (QAM) → R1 (modulación) →
-R5 (OSI) → R4 (enrutamiento) → R3 (cobertura, el más pesado).
+R6 (espectro) ✅ → R2 (QAM) ✅ → R1 (modulación) ✅ →
+R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
 
 **Entregable:** puerta de Redes con 5–6 experimentos.
 

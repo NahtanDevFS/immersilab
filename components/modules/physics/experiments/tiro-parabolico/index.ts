@@ -50,9 +50,15 @@ export const tiroParabolicoExperiment: ExperimentDefinition = {
   conceptTags: ["cinemática", "movimiento parabólico", "gravedad"],
   briefing: {
     what: "Un proyectil lanzado al aire sigue una parábola: avanza en horizontal a velocidad constante mientras la gravedad lo frena y lo trae de vuelta hacia abajo. Los dos movimientos son independientes y pasan al mismo tiempo.",
-    how: "Ajustá el ángulo del cañón y la velocidad de salida, y disparalo. La gravedad y la resistencia del aire también se pueden cambiar, para ver qué pasa en la Luna o con aire espeso.",
-    goal: "Buscá con qué ángulo llega más lejos a una misma velocidad. Sin resistencia del aire el máximo está cerca de los cuarenta y cinco grados; probá si con aire sigue siendo así.",
+    how: "Ajusta el ángulo del cañón y la velocidad de salida, y dispara. La gravedad y la resistencia del aire también se pueden cambiar, para ver qué pasa en la Luna o con aire espeso.",
+    goal: "Busca con qué ángulo llega más lejos a una misma velocidad. Sin resistencia del aire el máximo está cerca de los cuarenta y cinco grados; prueba si con aire sigue siendo así.",
   },
+  tutorHints:
+    "Las variables son angle (grados), velocity (metros por segundo), gravity (metros por segundo al cuadrado) y drag (coeficiente de resistencia del aire, en uno sobre segundo). " +
+    "result solo aparece después de un disparo que ya aterrizó: alcance_m, altura_maxima_m y tiempo_vuelo_s. Si no hay result, invita a disparar. " +
+    "Sin resistencia del aire el alcance es v al cuadrado por seno de dos theta, sobre ge, y es máximo a cuarenta y cinco grados; ángulos complementarios, como treinta y sesenta, llegan igual de lejos. " +
+    "Con resistencia del aire el ángulo óptimo baja de cuarenta y cinco. " +
+    "Confusión típica: creer que el proyectil 'pierde' velocidad horizontal sin aire; sin drag la componente horizontal es constante.",
   SceneComponent: ProjectileScene,
   ControlsComponent: ProjectileControls,
   createEngine: createProjectileEngine,

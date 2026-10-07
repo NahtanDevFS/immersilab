@@ -23,7 +23,7 @@ export function useQualityTier(): QualityTier {
   const tier = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   // Persistir el override de la URL es un efecto secundario, no parte de
-  // leer el valor — por eso va acá y no en getSnapshot, que tiene que ser
+  // leer el valor — por eso va aquí y no en getSnapshot, que tiene que ser
   // puro (React lo llama en cada render).
   useEffect(() => {
     const forced = readUrlOverride();

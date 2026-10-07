@@ -58,11 +58,14 @@ export function useVirtualCursor(enabled: boolean) {
     positionRef.current = position;
   }, [position]);
 
-  // Centra el cursor al activarse.
+  // Centra el cursor al activarse. Va en un frame aparte y no directo en el
+  // efecto: un setState síncrono ahí provoca un render en cascada.
   useEffect(() => {
-    if (enabled) {
-      setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-    }
+    if (!enabled) return;
+    const id = requestAnimationFrame(() =>
+      setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 }),
+    );
+    return () => cancelAnimationFrame(id);
   }, [enabled]);
 
   const handleTouchStart = useCallback(

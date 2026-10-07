@@ -1,9 +1,9 @@
 /**
- * Pistas para "Frená en el pico" (C1).
+ * Pistas para "Frena en el pico" (C1).
  *
  * Van aparte del catálogo de `functions.ts` a propósito: aquellas son
  * monótonas y positivas porque las pide la suma de Riemann (área sin signo),
- * y acá hace falta justo lo contrario — curvas con varios máximos y mínimos,
+ * y aquí hace falta justo lo contrario — curvas con varios máximos y mínimos,
  * que es donde f'(x) cambia de signo y el juego tiene sentido.
  *
  * Cada pista trae su derivada ANALÍTICA. Se podría derivar numéricamente,

@@ -8,7 +8,7 @@ interface Props {
   /**
    * "indoor": sala cerrada (lobby). La luz ambiente se fabrica con
    * Lightformers, porque no hay cielo del cual tomarla.
-   * "outdoor": el HDRI de LabBackground ya aporta el ambiente; acá solo se
+   * "outdoor": el HDRI de LabBackground ya aporta el ambiente; aquí solo se
    * agrega la luz principal que tira las sombras.
    */
   variant: "indoor" | "outdoor";
@@ -26,7 +26,7 @@ interface Props {
  * mismo = cero volumen. Y aunque el <Canvas> tenía `shadows`, ninguna luz
  * declaraba `castShadow`, así que no había una sola sombra en la escena.
  *
- * Acá la luz principal viene en ángulo (~35° de elevación), que es lo que
+ * Aquí la luz principal viene en ángulo (~35° de elevación), que es lo que
  * hace que una pared se lea como una pared y no como un rectángulo de
  * color, y es la única que tira sombra — una sola sombra bien puesta cuesta
  * menos y se ve mejor que tres mal puestas.

@@ -32,9 +32,9 @@ const variablesSchema: VariablesSchema = {
 
 export const derivadaPicoExperiment: ExperimentDefinition = {
   slug: "derivada-pico",
-  name: "Frená en el pico",
+  name: "Frena en el pico",
   description:
-    "El vagón recorre la curva y el velocímetro marca f'(x). Frená exactamente donde la pendiente es cero.",
+    "El vagón recorre la curva y el velocímetro marca f'(x). Frena exactamente donde la pendiente es cero.",
   variablesSchema,
   conceptTags: [
     "derivada",
@@ -45,8 +45,14 @@ export const derivadaPicoExperiment: ExperimentDefinition = {
   briefing: {
     what: "La derivada de una función es su pendiente en un punto exacto: qué tan empinada está la curva justo ahí. Donde la curva llega a un pico o a un valle, deja de subir y todavía no baja, así que la pendiente vale cero.",
     how: "El vagón recorre la curva y el número de abajo es la derivada en el punto donde va: positivo si sube, negativo si baja. La recta que gira con el vagón es esa misma pendiente, dibujada.",
-    goal: "Frená lo más cerca que puedas de donde la derivada vale cero, mirando el número, no la curva. Al frenar aparecen marcados los picos y los valles, y vas a ver si le pegaste.",
+    goal: "Frena lo más cerca que puedas de donde la derivada vale cero, mirando el número, no la curva. Al frenar aparecen marcados los picos y los valles, y vas a ver si acertaste.",
   },
+  tutorHints:
+    "Variables: pista es la curva (ondas = sen(x) + sen(2x)/2, cubica = x³/9 − x² + 2x, colinas = dos gaussianas), amplitud escala la curva en vertical y velocidad es qué tan rápido avanza el vagón. " +
+    "result solo aparece después de frenar: pendiente_al_frenar es f'(x) donde se detuvo, distancia_al_pico es cuánto le faltó o se pasó del punto crítico más cercano, y además vienen puntaje, mejor_puntaje e intentos. Si no hay result, invita a soltar el vagón y frenar. " +
+    "Idea central: en un máximo o un mínimo la recta tangente queda horizontal y la derivada vale cero; la señal para frenar es el número cambiando de signo, de positivo a negativo en un pico y de negativo a positivo en un valle. " +
+    "Cambiar la amplitud multiplica la derivada por el mismo factor pero no mueve los puntos donde vale cero. " +
+    "Confusiones típicas: creer que f'(x) igual a cero significa que la función vale cero, y olvidar que los valles también son puntos críticos. A más velocidad cuesta más frenar a tiempo: sugiere bajarla para practicar.",
   SceneComponent: DerivativeScene,
   ControlsComponent: RideControls,
   createEngine: createDerivativeEngine,

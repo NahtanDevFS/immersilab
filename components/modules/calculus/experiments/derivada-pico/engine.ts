@@ -41,11 +41,11 @@ export interface DerivativeEngine extends ExperimentEngine {
 const PERFECT_SLOPE = 0.05;
 
 /**
- * Motor de "Frená en el pico" (C1).
+ * Motor de "Frena en el pico" (C1).
  *
  * El vagón recorre la pista a velocidad constante EN X (no en longitud de
  * arco). Es una simplificación consciente: con velocidad sobre el arco, los
- * tramos empinados pasarían más lento y el jugador leería eso como "acá la
+ * tramos empinados pasarían más lento y el jugador leería eso como "aquí la
  * derivada es chica", que es exactamente lo contrario de lo que enseña el
  * experimento.
  *
@@ -126,7 +126,7 @@ export function createDerivativeEngine(): DerivativeEngine {
 
     getState(): AIContext {
       return {
-        experimentName: "Frená en el pico",
+        experimentName: "Frena en el pico",
         disciplineName: "Cálculo",
         variables: lastVariables,
         result:

@@ -37,7 +37,7 @@ export const OSI_STACK: LayerStep[] = [
     tcpip: "Aplicación",
     header: "HTTP",
     pdu: "Datos",
-    why: "El programa arma el mensaje: acá vive el GET que pide una página.",
+    why: "El programa arma el mensaje: aquí vive el GET que pide una página.",
     color: "#2dd4bf",
   },
   {
@@ -155,7 +155,7 @@ function shuffle<T>(items: T[], seed: number): T[] {
 }
 
 /**
- * Motor de "Armá el paquete" (R5).
+ * Motor de "Arma el paquete" (R5).
  *
  * El juego es la encapsulación completa, ida y vuelta: bajando por la pila
  * del emisor hay que elegir qué cabecera agrega cada capa, y subiendo por la
@@ -258,7 +258,7 @@ export function createOsiEngine(): OsiEngine {
     getState(): AIContext {
       const total = stack.length * 2;
       return {
-        experimentName: "Armá el paquete",
+        experimentName: "Arma el paquete",
         disciplineName: "Redes",
         variables: lastVariables,
         result:

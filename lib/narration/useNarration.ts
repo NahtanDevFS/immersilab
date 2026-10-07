@@ -11,14 +11,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * marca para la defensa (§7 de PLAN_DESARROLLO.md). La contra es que la
  * calidad depende de las voces instaladas en la máquina. Este hook aísla la
  * implementación: si más adelante se pasa a un TTS de servidor, se cambia
- * acá y ningún experimento se entera.
+ * aquí y ningún experimento se entera.
  *
  * QUÉ SE PUEDE Y QUÉ NO CON LO ROBÓTICO
  *
  * Lo que más define si suena a robot es la VOZ, y esa la pone el sistema
  * operativo, no el código: las locales de Windows (Microsoft Sabina, Raul)
  * son concatenativas y suenan a lector de los 2000; las de red (Google,
- * Microsoft Natural/Online) son neuronales y suenan a persona. Por eso acá
+ * Microsoft Natural/Online) son neuronales y suenan a persona. Por eso aquí
  * se hacen tres cosas:
  *
  *   1. Se elige la mejor voz disponible con un puntaje (`voiceScore`), que
@@ -81,6 +81,36 @@ function voiceScore(voice: SpeechSynthesisVoice): number {
   return score;
 }
 
+/** Voces en español instaladas (puede venir vacía hasta `voiceschanged`). */
+export function spanishVoices(): SpeechSynthesisVoice[] {
+  return window.speechSynthesis
+    .getVoices()
+    .filter((voice) => voice.lang.toLowerCase().startsWith("es"));
+}
+
+/**
+ * La voz que usa el laboratorio: la elegida a mano si sigue instalada, si no
+ * la de mejor puntaje. La comparten la explicación y el tutor, para que las
+ * dos "personas" del laboratorio suenen igual.
+ */
+export function chooseVoice(
+  all: SpeechSynthesisVoice[] = spanishVoices(),
+): SpeechSynthesisVoice | null {
+  if (all.length === 0) return null;
+  let remembered: string | null = null;
+  try {
+    remembered = window.localStorage.getItem(VOICE_STORAGE_KEY);
+  } catch {
+    // Almacenamiento bloqueado: se usa el puntaje.
+  }
+  return (
+    all.find((voice) => voice.name === remembered) ??
+    all.reduce((best, voice) =>
+      voiceScore(voice) > voiceScore(best) ? voice : best,
+    )
+  );
+}
+
 /**
  * Parte el guion en oraciones. Se cortan también los dos puntos, porque en
  * estos textos introducen una definición y ahí la pausa cae natural.
@@ -126,26 +156,17 @@ export function useNarration() {
 
   useEffect(() => {
     // Sin `speechSynthesis` no hay nada que suscribir. El estado
-    // "unsupported" NO se fija acá: marcarlo desde un efecto dispara un
+    // "unsupported" NO se fija aquí: marcarlo desde un efecto dispara un
     // render en cascada (y en SSR el efecto ni corre). Se resuelve en
     // `speak()`, que es el único momento en que hace falta saberlo.
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
     const pickVoice = () => {
-      const all = window.speechSynthesis
-        .getVoices()
-        .filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-      if (all.length === 0) return;
+      const all = spanishVoices();
+      const chosen = chooseVoice(all);
+      if (!chosen) return;
 
       setVoices(all);
-
-      const remembered = window.localStorage.getItem(VOICE_STORAGE_KEY);
-      const chosen =
-        all.find((voice) => voice.name === remembered) ??
-        all.reduce((best, voice) =>
-          voiceScore(voice) > voiceScore(best) ? voice : best,
-        );
-
       voiceRef.current = chosen;
       setVoiceName(chosen.name);
     };

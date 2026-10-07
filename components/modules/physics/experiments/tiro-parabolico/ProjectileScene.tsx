@@ -137,7 +137,7 @@ export function ProjectileScene({ engine, variables }: Props) {
           </Suspense>
 
           {/* El pivote va en los muñones, no en el origen del archivo: es
-              el eje sobre el que gira un cañón de verdad. El ref está acá
+              el eje sobre el que gira un cañón de verdad. El ref está aquí
               afuera del Suspense a propósito, para que la elevación no
               dependa de que el modelo haya terminado de cargar. */}
           <group ref={cannonRef} position={[0, TRUNNION_Y, TRUNNION_Z]}>

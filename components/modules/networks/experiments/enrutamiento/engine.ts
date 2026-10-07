@@ -190,9 +190,9 @@ export function shortestPath(
 const HOP_TIME = 0.45;
 
 /**
- * Motor de "Encontrá el camino" (R4).
+ * Motor de "Encuentra el camino" (R4).
  *
- * A diferencia del resto de los experimentos, acá el jugador no mueve
+ * A diferencia del resto de los experimentos, aquí el jugador no mueve
  * sliders: TOMA DECISIONES. En cada router elige por qué enlace sale el
  * paquete, y recién al llegar al destino se compara su camino con el que
  * habría elegido Dijkstra con esa misma métrica.
@@ -222,7 +222,7 @@ export function createRoutingEngine(): RoutingEngine {
   function refreshOptions() {
     const current = runtime.path[runtime.path.length - 1];
     // No se ofrece volver por donde vino: un paquete que rebota entre dos
-    // routers es un bucle de enrutamiento, y acá sería solo una forma de
+    // routers es un bucle de enrutamiento, y aquí sería solo una forma de
     // inflar el costo sin aprender nada.
     const previous = runtime.path[runtime.path.length - 2];
     runtime.options = neighbours(current, runtime.downLinks).filter(
@@ -286,7 +286,7 @@ export function createRoutingEngine(): RoutingEngine {
 
     getState(): AIContext {
       return {
-        experimentName: "Encontrá el camino",
+        experimentName: "Encuentra el camino",
         disciplineName: "Redes",
         variables: lastVariables,
         result: runtime.arrived

@@ -17,7 +17,7 @@ npx @gltf-transform/cli meshopt mid.glb public/models/salida.glb
 ```
 
 `--ratio` es cuánta geometría se conserva. 0.35 va bien para props de fondo;
-para algo que se mira de cerca, subilo a 0.6–0.8 o salteá el `simplify`.
+para algo que se mira de cerca, súbelo a 0.6–0.8 o omite el `simplify`.
 
 ### Dos decisiones que importan
 

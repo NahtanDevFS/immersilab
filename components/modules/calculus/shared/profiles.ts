@@ -1,8 +1,8 @@
 /**
  * Perfiles de revolución: la matemática compartida entre el motor y la
- * escena de "Torneá la pieza" (C3).
+ * escena de "Tornea la pieza" (C3).
  *
- * Un sólido de revolución acá queda definido por CINCO radios repartidos a lo
+ * Un sólido de revolución aquí queda definido por CINCO radios repartidos a lo
  * largo del eje. Cinco y no una fórmula libre porque el experimento se juega
  * con sliders: con tres, cualquier pieza sale como un cono y no hay nada que
  * ajustar; con diez, mover uno no cambia nada visible y el reto se vuelve

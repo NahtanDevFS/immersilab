@@ -1,0 +1,69 @@
+/* Etiquetas dentro de la escena: sin puntero, para no cortar el arrastre
+   con el que se mira alrededor. Monoespaciadas con cifras tabulares: los
+   períodos cambian en vivo y si no, bailan. */
+.label,
+.ratio,
+.barsLegend,
+.barsTitle {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.9);
+  font-size: 0.66rem;
+}
+
+.label[data-kind="ref"] {
+  border: 0.5px solid var(--lab-text-muted);
+  color: var(--lab-text);
+}
+
+.label[data-kind="mine"] {
+  border: 0.5px solid var(--lab-accent);
+  color: var(--lab-accent);
+}
+
+.ratio {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(11, 18, 32, 0.92);
+  border: 1px solid var(--lab-accent-warm);
+  color: var(--lab-accent-warm);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.ratio[data-synced="true"] {
+  border-color: var(--lab-accent);
+  color: var(--lab-accent);
+}
+
+.barsLegend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 8px;
+  background: rgba(11, 18, 32, 0.88);
+  font-size: 0.6rem;
+}
+
+.barsLegend [data-k] {
+  color: #f2a65a;
+}
+
+.barsLegend [data-p] {
+  color: var(--lab-accent);
+}
+
+.barsTitle {
+  color: var(--lab-text-muted);
+  font-size: 0.6rem;
+}

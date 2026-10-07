@@ -16,7 +16,7 @@ import styles from "./OsiScene.module.css";
  *
  * Esa forma no es decorativa: la encapsulación se dibuja en todos los libros
  * como una pila, y el error de entenderla como "una lista de nombres" viene
- * justamente de no ver nunca el mensaje moverse por ella. Acá el movimiento
+ * justamente de no ver nunca el mensaje moverse por ella. Aquí el movimiento
  * es el contenido.
  */
 const TOWER_X = 5.5;

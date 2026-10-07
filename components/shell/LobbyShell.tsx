@@ -2,10 +2,10 @@
 
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
 import { Header } from "./Header";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
+import { DragLookControls } from "./DragLookControls";
 import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
 import { LabLighting } from "./LabLighting";
@@ -21,7 +21,7 @@ import styles from "./ExperimentShell.module.css";
  * Reusa las mismas piezas que ExperimentShell (giroscopio, caminar con
  * gamepad, aviso de horizontal) — solo cambia qué hay adentro del Canvas
  * (LobbyScene en vez de un experimento) y no hay panel de variables ni de
- * resultados ni cursor, porque en el lobby no hay nada que tocar: entrás
+ * resultados ni cursor, porque en el lobby no hay nada que tocar: entras
  * caminando a través de la puerta.
  */
 export function LobbyShell() {
@@ -33,7 +33,7 @@ export function LobbyShell() {
   return (
     <OrientationGate>
       <div className={styles.container}>
-        <Header subtitle="Elegí un experimento — caminá hacia una puerta" />
+        <Header subtitle="Elige un experimento — camina hacia una puerta" />
 
         {gyroActive && <GamepadStatus />}
 
@@ -58,8 +58,8 @@ export function LobbyShell() {
               ? // Este caso confunde muchísimo si no se dice: el teléfono
                 // TIENE giroscopio, pero el navegador no lo entrega fuera de
                 // HTTPS o localhost, y no avisa de ninguna forma.
-                "El navegador bloquea el giroscopio fuera de HTTPS — abrí el laboratorio por https:// o desde localhost."
-              : "Sin giroscopio disponible — usa el mouse para mover la cámara."}
+                "El navegador bloquea el giroscopio fuera de HTTPS — abre el laboratorio por https:// o desde localhost."
+              : "Sin giroscopio: WASD o flechas para caminar, arrastra para mirar."}
           </p>
         )}
 
@@ -87,8 +87,10 @@ export function LobbyShell() {
           </Suspense>
 
           <GyroCamera orientation={orientation} enabled={gyroActive} />
-          {gyroActive && <MovementController />}
-          {!gyroActive && <OrbitControls target={[0, 1.4, -10]} />}
+          {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
+              lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
+          <MovementController />
+          {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
 
           <PostFX quality={quality} />
         </Canvas>

@@ -52,7 +52,7 @@ const LAMPS = Array.from(
  */
 export function LobbyScene() {
   // El pasillo entero como recinto: el jugador se mueve libre adentro y no
-  // puede cruzar las paredes ni las dos puntas. Va acá y no en cada pared
+  // puede cruzar las paredes ni las dos puntas. Va aquí y no en cada pared
   // porque es UNA sola prueba por frame, y porque las paredes son planos sin
   // espesor — lo que encierra al jugador es el rectángulo, no la geometría.
   useBounds({
@@ -62,7 +62,7 @@ export function LobbyScene() {
 
   return (
     <group>
-      {/* Cada <Suspense> de acá abajo es obligatorio, no decorativo.
+      {/* Cada <Suspense> de aquí abajo es obligatorio, no decorativo.
           Ver "TRAMPA IMPORTANTE" al pie del archivo antes de tocarlos. */}
       <Suspense fallback={null}>
         <Floor />
@@ -231,7 +231,7 @@ function Floor() {
   );
 }
 
-/** Las dos paredes largas y las dos de las puntas. La colisión no vive acá:
+/** Las dos paredes largas y las dos de las puntas. La colisión no vive aquí:
  *  es el recinto que registra LobbyScene. */
 function Walls() {
   // Fabric081C (ambientCG): tela lisa y neutra, casi sin dibujo — el

@@ -12,7 +12,7 @@ interface Props {
 /**
  * Botón de transmitir y "pantalla" del receptor.
  *
- * El texto recibido va acá y no en el panel de resultados a propósito: es el
+ * El texto recibido va aquí y no en el panel de resultados a propósito: es el
  * feedback del juego. Ver "HOLA UMG" convertirse en "H�LA U�G" comunica lo
  * que significa un BER de 3% mucho mejor que el número 3.
  */

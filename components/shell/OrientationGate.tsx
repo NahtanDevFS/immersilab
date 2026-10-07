@@ -39,7 +39,7 @@ function supportsFullscreen(): boolean {
  * Lo importante de la #2: `requestFullscreen()` **solo funciona dentro de un
  * gesto del usuario**. Llamarla al montar el componente falla siempre y en
  * silencio — que es exactamente lo que le pasaba al `orientation.lock()` que
- * había acá antes. Por eso hay una pantalla de "tocá para entrar": no es un
+ * había aquí antes. Por eso hay una pantalla de "toca para entrar": no es un
  * paso de más, es el único momento en que el navegador acepta el pedido.
  *
  * Y el orden importa: primero pantalla completa, después bloquear la
@@ -104,7 +104,7 @@ export function OrientationGate({ children }: { children: React.ReactNode }) {
     const orientation = screen.orientation as
       | (ScreenOrientation & { lock?: (o: string) => Promise<void> })
       | undefined;
-    // Ahora sí tiene chance de funcionar: estamos en pantalla completa.
+    // Ahora sí tiene posibilidad de funcionar: estamos en pantalla completa.
     orientation?.lock?.("landscape").catch(() => {});
   }, []);
 
@@ -125,7 +125,7 @@ export function OrientationGate({ children }: { children: React.ReactNode }) {
             <rect x="5" y="2" width="14" height="20" rx="2" />
             <path d="M12 18h.01" />
           </svg>
-          <p className={styles.text}>Girá tu teléfono</p>
+          <p className={styles.text}>Gira tu teléfono</p>
           <p className={styles.subtext}>
             Este laboratorio funciona en horizontal
           </p>
@@ -147,7 +147,7 @@ export function OrientationGate({ children }: { children: React.ReactNode }) {
           >
             <path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4M21 15v4a2 2 0 0 1-2 2h-4" />
           </svg>
-          <span className={styles.text}>Tocá para entrar</span>
+          <span className={styles.text}>Toca para entrar</span>
           <span className={styles.subtext}>
             Se abre en pantalla completa — si no, los controles de abajo
             quedan tapados por el navegador

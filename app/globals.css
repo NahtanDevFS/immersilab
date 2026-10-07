@@ -1,7 +1,7 @@
 /*
  * Tokens de diseño de ImmersiLab.
  * Todos los componentes del shell (Header, VariablesPanel, ResultPanel,
- * ExperimentShell) usan estas variables — cambiar un color acá lo cambia
+ * ExperimentShell) usan estas variables — cambiar un color aquí lo cambia
  * en todo el laboratorio, sin tocar cada componente.
  */
 :root {
