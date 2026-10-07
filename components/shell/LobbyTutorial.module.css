@@ -1,0 +1,134 @@
+/* Tarjeta del tutorial: abajo al centro, encima de donde aparece el botón
+   del giroscopio, para no tapar las puertas que se están mirando. */
+.card {
+  position: absolute;
+  bottom: calc(5rem + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: min(24rem, calc(100% - 2rem));
+  padding: 0.9rem 1.1rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: rgba(19, 27, 46, 0.92);
+  border: 0.5px solid var(--lab-accent);
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  font-family: var(--font-sans);
+  color: var(--lab-text);
+  animation: enter 300ms ease;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.5rem);
+  }
+}
+
+.dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.dots > span {
+  width: 1.4rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--lab-panel-border);
+  transition: background 200ms ease;
+}
+
+.dots > span[data-state="done"] {
+  background: #34d399;
+}
+
+.dots > span[data-state="current"] {
+  background: var(--lab-accent);
+}
+
+.title {
+  margin: 0;
+  /* Grande a propósito: dentro del visor la pantalla queda a pocos
+     centímetros y pasa por lentes; un texto de 14 px no se lee. */
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--lab-text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.3rem;
+}
+
+.skip,
+.next {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.skip {
+  padding: 0.35rem 0;
+  border: none;
+  background: none;
+  color: var(--lab-text-muted);
+  text-decoration: underline;
+}
+
+.next {
+  padding: 0.45rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--lab-accent);
+  color: #052e2b;
+}
+
+.padHint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--lab-text-muted);
+  text-align: right;
+}
+
+/* Botones del lobby, abajo a la izquierda: reabrir el tutorial y el
+   recorrido guiado. */
+.lobbyActions {
+  position: absolute;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  left: calc(0.75rem + env(safe-area-inset-left));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.tour,
+.reopen {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: rgba(19, 27, 46, 0.85);
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tour {
+  border: 0.5px solid var(--lab-accent);
+  background: var(--lab-accent);
+  color: #052e2b;
+}

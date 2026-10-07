@@ -31,7 +31,7 @@ Lo que **ya funciona**:
 | Redes: modulación AM/FM (R1) | `.../networks/experiments/modulacion/` | Funciona (lógica probada con 23 casos; audio sin probar en el celular). |
 | Redes: propagación y cobertura (R3) | `.../networks/experiments/cobertura/` | Funciona (17 casos probados). |
 | Redes: espectro de la voz (R6) | `.../networks/experiments/espectro/` | Funciona (probado con señales sintéticas; falta probar con voz real). |
-| Física: tubo de Venturi (fluidos) | `.../physics/experiments/venturi/` | Funciona. |
+| Física: tubo de Venturi (fluidos) | `.../physics/experiments/venturi/` | Funciona, con 3 retos. |
 | Física: péndulo y energía (F3) | `.../physics/experiments/pendulo/` | Funciona (15 casos probados). |
 | Física: ondas y superposición (F4) | `.../physics/experiments/ondas/` | Funciona (15 casos probados). |
 | Cálculo: suma de Riemann (C2) | `.../calculus/experiments/suma-riemann/` | Funciona. |
@@ -52,11 +52,12 @@ Lo que **falta**:
   en el celular dentro del visor.
 - Supabase: catálogo, `challenge_completions` y RLS en
   `supabase/migrations/20261006120000_catalogo_y_retos.sql` (generada por
-  `scripts/generar_migracion_catalogo.py`). **Hay que correrla en el SQL
-  Editor**; sin ella, ingresar funciona pero los retos no se suben.
-- Capa de "juego": HUD de retos unificado y retos en los 15 experimentos.
-  Progreso guardado (dispositivo + Supabase) y pantalla de progreso hechos;
-  falta correr la migración en Supabase y que el tutor lea el resultado.
+  `scripts/generar_migracion_catalogo.py`), ya aplicada.
+- Capa de "juego": HUD de retos unificado y retos en los 15 experimentos
+  (47 en total).
+  Progreso guardado (dispositivo + Supabase, migración ya aplicada),
+  pantalla de progreso, comentario del tutor al lograr un reto y vista
+  docente (`/docente`): Fase C completa.
 - Calidad visual: ver sección 2.
 
 ---
@@ -756,7 +757,7 @@ como producto y no como prototipo. Comparativa antes/después para la tesis.
 cinco grados llega más lejos?" y recibir respuesta hablada, usando los valores
 actuales de los sliders.
 
-### Fase C — Capa de juego + persistencia *(en curso)*
+### Fase C — Capa de juego + persistencia ✅
 1. ✅ HUD de retos en el shell (`components/shell/ChallengeHUD.tsx`).
    Cambio respecto de lo planeado: en vez de `ExperimentChallenge` con un
    `evaluate(AIContext)` sin estado, el **motor** expone `getChallenges()` y
@@ -767,7 +768,12 @@ actuales de los sliders.
    experimentos significa "intentar de nuevo" y no debe borrar logros.
    El HUD vive en un "dock" abajo a la derecha, apilado sobre los controles
    del experimento; se pliega a "Retos 2/3" y avisa con un sonido corto
-   cuando se completa uno. Retos en 13 experimentos (los 6 nuevos ya los
+   cuando se completa uno. Venturi, que no estaba en el catálogo de juegos,
+   recibió los suyos al final: 9 veces más rápido (continuidad, el cuello a
+   un tercio del radio), presión del cuello bajo 30 kPa sin cavitar
+   (Bernoulli) y flujo laminar (Reynolds; con agua es imposible en el rango
+   de los sliders, hay que cambiar de fluido). Los tres piden sostener la
+   condición 1 s. Retos en 13 experimentos (los 6 nuevos ya los
    tenían; se agregaron a derivada, Riemann, sólidos, QAM, enrutamiento y
    OSI). Arreglo de paso: el canvas tiene su propio contexto de
    apilamiento, así las etiquetas `<Html>` de drei ya no tapan los paneles.
@@ -798,7 +804,24 @@ actuales de los sliders.
    `ai_conversations` siguen sin usarse (quedan protegidas con RLS).
 4. ✅ `/progreso` (retos por experimento, con fecha) y `/cuenta` (ingresar,
    registrarse, cerrar sesión). Acceso desde el header del lobby.
-5. El tutor lee el `feedback` del reto por voz al terminar.
+5. ✅ El tutor comenta el reto logrado por voz. El HUD emite un evento
+   (`lib/tutor/events.ts`) y el tutor dice "¡Reto logrado!" al instante con
+   la voz del dispositivo; después Gemini agrega una o dos oraciones con los
+   valores del experimento (va como un turno más: si el alumno pregunta
+   "¿cómo lo hice?", el tutor tiene el contexto). No interrumpe: si el tutor
+   está hablando o escuchando, o se está leyendo la explicación, queda solo
+   el aviso visual. Sin red se calla en vez de decir "no me puedo conectar".
+6. ✅ Vista docente (`/docente`), solo para cuentas con rol `teacher` o
+   `admin`. Los datos los protege RLS (`is_staff()`); la página solo explica
+   qué pasa si no hay sesión o permiso. Muestra: cantidad de estudiantes,
+   retos logrados, promedio por estudiante y el reto que menos lograron;
+   lista de estudiantes con buscador, totales por disciplina y detalle por
+   experimento; qué porcentaje de la clase logró cada reto; y descarga en
+   CSV (con BOM para que Excel lea los acentos). Las cuentas están en
+   `lib/teacher/aggregate.ts` como funciones puras, probadas con datos
+   inventados. Solo cuentan los perfiles `student` y los retos que siguen
+   en el catálogo. Para dar el rol de docente (desde el SQL Editor):
+   `update public.profiles set role = 'teacher' where id = '<uuid>';`
 
 **Entregable:** un estudiante juega, obtiene puntaje, y el puntaje queda guardado.
 Esto es lo que convierte el proyecto en un sistema educativo evaluable, no en una
@@ -822,9 +845,29 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
 2. Precarga de assets con pantalla de carga. Hoy el `Suspense fallback={null}`
    muestra una pantalla vacía mientras cargan las texturas — reemplazar por un
    indicador real de progreso.
-3. Tutorial de entrada de 30 segundos (cómo caminar, cómo hablar).
-4. Modo "recorrido guiado" para el jurado.
-5. Documentación, créditos de assets, video de demostración.
+3. ✅ Tutorial de entrada de 30 segundos, en el lobby (`LobbyTutorial`,
+   `TutorialProbe`, `tutorialStore`). Cuatro pasos: mirar, caminar, hablar
+   con el tutor y entrar por una puerta. Mirar y caminar avanzan cuando el
+   alumno lo hace de verdad (se mide la cámara: giro acumulado de 60° y 2 m
+   caminados, sin contar el primer segundo, que es el salto inicial del
+   giroscopio). Los otros dos se leen y avanzan solos. El texto cambia según
+   el aparato: visor, control, mouse o dedo. Con el visor puesto todo se
+   hace con el control (A siguiente, B saltar); en la compu, Enter y Escape.
+   Sale la primera vez en cada dispositivo y se reabre con "¿Cómo me muevo?".
+4. ✅ Recorrido guiado (`lib/tour.ts`, `TourPanel`), pensado para mostrar el
+   laboratorio en clase. Botón "Recorrido guiado" en el lobby; cuatro
+   paradas (Tiro parabólico en modo artillería, Tornea la pieza, Tu voz en el
+   espectro, Encuentra el camino) y al final la pantalla de progreso. En cada
+   parada, una tarjeta corta que se lee en voz alta reemplaza a la
+   explicación larga (sigue disponible con "Explicación completa"); al
+   plegarla queda una pastilla arriba al centro con "Siguiente". El estado
+   vive en la URL (`?recorrido=N`): se puede abrir una parada directo o
+   recargar sin perderse. "Salir del recorrido" deja el experimento libre.
+5. Documentación y créditos: ✅ `README.md` (puesta en marcha, variables,
+   base de datos, prueba en el celular, cómo agregar un experimento),
+   ✅ `CREDITOS.md` y ✅ `.env.example`. Falta: confirmar el origen y la
+   licencia del cañón, la madera del cañón y el pack de árboles (marcados
+   "por confirmar"), y grabar el video de demostración.
 
 ---
 

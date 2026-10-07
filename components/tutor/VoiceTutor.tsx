@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { ExperimentEngine } from "@/types/module";
 import { readPad } from "@/components/shell/gamepad";
+import { onChallengeCompleted, type ChallengeCompletedEvent } from "@/lib/tutor/events";
 import { useSpeechInput } from "./useSpeechInput";
 import { useSpeechOutput } from "./useSpeechOutput";
 import { useTutorSession } from "./useTutorSession";
@@ -28,6 +29,23 @@ interface Props {
  * Apretar mientras el tutor habla lo corta en seco (barge-in): sin esto, una
  * respuesta larga se vuelve una cárcel.
  */
+/**
+ * Lo que se le pide al tutor cuando el alumno logra un reto. Va como un turno
+ * más de la conversación: así, si después el alumno pregunta "¿y cómo lo
+ * hice?", el tutor tiene el contexto.
+ */
+function challengePrompt(event: ChallengeCompletedEvent): string {
+  const detail =
+    event.detail && !/^¡?logrado!?$/i.test(event.detail.trim())
+      ? ` (${event.detail.trim()})`
+      : "";
+  return (
+    `[Reto logrado] El estudiante acaba de lograr el reto «${event.title}»${detail}. ` +
+    "Felicítalo en una oración corta y, en otra, explica con los valores actuales " +
+    "del experimento por qué funcionó. No le hagas preguntas."
+  ).slice(0, 580);
+}
+
 export function VoiceTutor({ engine, hints }: Props) {
   const output = useSpeechOutput();
 
@@ -89,6 +107,27 @@ export function VoiceTutor({ engine, hints }: Props) {
       : session.pending
         ? "thinking"
         : "idle";
+
+  // Reto logrado: el tutor lo festeja y explica por qué funcionó (Fase C).
+  // Primero una frase fija, al instante y sin red; después Gemini agrega una
+  // o dos oraciones con los valores reales del experimento (el AIContext
+  // viaja solo con cada pregunta).
+  const statusRef = useRef(status);
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+  useEffect(() => {
+    return onChallengeCompleted((event) => {
+      // No se interrumpe: si el alumno está hablando con el tutor, si el
+      // tutor está respondiendo, o si se está leyendo la explicación, queda
+      // solo el aviso visual y el sonido del HUD.
+      const voiceBusy =
+        typeof window !== "undefined" && window.speechSynthesis?.speaking;
+      if (statusRef.current !== "idle" || voiceBusy) return;
+      output.enqueue("¡Reto logrado!");
+      void ask(challengePrompt(event), { quiet: true });
+    });
+  }, [ask, output]);
 
   return (
     <TutorHUD

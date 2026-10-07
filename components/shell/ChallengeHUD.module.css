@@ -155,7 +155,9 @@
 .toast {
   position: fixed;
   left: 50%;
-  top: calc(4.2rem + env(safe-area-inset-top));
+  /* Debajo del botón "?" de la explicación (top 3.6rem, 2.2rem de alto):
+     con 4.2rem el aviso quedaba encima de ese botón. */
+  top: calc(6.6rem + env(safe-area-inset-top));
   transform: translateX(-50%);
   z-index: 30;
   display: flex;

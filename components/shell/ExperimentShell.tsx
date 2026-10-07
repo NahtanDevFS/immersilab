@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import { Header } from "./Header";
@@ -13,6 +14,8 @@ import { VariablesPanel } from "./VariablesPanel";
 import { VariablesHud3D } from "./VariablesHud3D";
 import { ResultPanel } from "./ResultPanel";
 import { BriefingPanel } from "./BriefingPanel";
+import { TourPanel } from "./TourPanel";
+import { TOUR, readTourIndex } from "@/lib/tour";
 import { ChallengeHUD } from "./ChallengeHUD";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
@@ -26,6 +29,10 @@ import { useVirtualCursor } from "./useVirtualCursor";
 import { VoiceTutor } from "@/components/tutor/VoiceTutor";
 import type { ExperimentDefinition } from "@/types/module";
 import styles from "./ExperimentShell.module.css";
+
+/** La URL no cambia mientras el experimento está montado (cambiar de parada
+ *  monta otra página), así que no hace falta suscribirse a nada. */
+const noSubscription = () => () => {};
 
 interface Props {
   experiment: ExperimentDefinition;
@@ -69,6 +76,21 @@ export function ExperimentShell({
 
   const { SceneComponent, ControlsComponent } = experiment;
 
+  // Recorrido guiado (lib/tour.ts): activo si la URL trae ?recorrido=N y la
+  // parada N es este experimento.
+  const router = useRouter();
+  const pathname = usePathname();
+  const tourIndex = useSyncExternalStore(
+    noSubscription,
+    () => readTourIndex(window.location.search),
+    () => null,
+  );
+  const [tourExited, setTourExited] = useState(false);
+  const touring =
+    tourIndex !== null && TOUR[tourIndex].slug === experiment.slug && !tourExited;
+  // null = lo de siempre: abierta al entrar, salvo en el recorrido.
+  const [briefingOpen, setBriefingOpen] = useState<boolean | null>(null);
+
   return (
     <OrientationGate>
       <div className={styles.container}>
@@ -96,6 +118,27 @@ export function ExperimentShell({
           <BriefingPanel
             experimentName={experiment.name}
             briefing={experiment.briefing}
+            // En el recorrido la explicación larga arranca cerrada: la
+            // reemplaza la tarjeta corta de la parada.
+            open={briefingOpen ?? !touring}
+            onOpenChange={setBriefingOpen}
+            hideReopen={touring}
+          />
+        )}
+
+        {touring && tourIndex !== null && (
+          <TourPanel
+            index={tourIndex}
+            onPreset={(preset) =>
+              Object.entries(preset).forEach(([key, value]) => setValue(key, value))
+            }
+            onExit={() => {
+              setTourExited(true);
+              // Que siga cerrada al salir, con su "?" para abrirla.
+              setBriefingOpen((open) => open ?? false);
+              router.replace(pathname);
+            }}
+            onShowBriefing={() => setBriefingOpen(true)}
           />
         )}
 

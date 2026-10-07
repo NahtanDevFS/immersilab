@@ -6,6 +6,7 @@ import type { ChallengeStatus, ExperimentEngine } from "@/types/module";
 import { GUEST, completionKey, recordCompletion } from "@/lib/progress/store";
 import { pushPending } from "@/lib/progress/sync";
 import { useProgress } from "@/lib/progress/useSession";
+import { emitChallengeCompleted } from "@/lib/tutor/events";
 import styles from "./ChallengeHUD.module.css";
 
 interface Props {
@@ -88,6 +89,13 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
           if (firstTime) {
             setToast(fresh.title);
             playChime();
+            // El tutor lo comenta por voz (si no está ocupado).
+            emitChallengeCompleted({
+              experimentSlug,
+              challengeId: fresh.id,
+              title: fresh.title,
+              detail: fresh.detail,
+            });
             window.clearTimeout(toastTimer);
             toastTimer = window.setTimeout(() => setToast(null), TOAST_MS);
           }
