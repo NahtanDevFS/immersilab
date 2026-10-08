@@ -1,5 +1,5 @@
-import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createOsiEngine } from "./engine";
+import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
+import { createOsiEngine, type OsiEngine } from "./engine";
 import { OsiScene } from "./OsiScene";
 import { OsiControls } from "./OsiControls";
 
@@ -42,5 +42,29 @@ export const osiExperiment: ExperimentDefinition = {
     "Confusiones típicas: mezclar MAC con IP, o creer que TCP/IP tiene otras cabeceras; en realidad son casi las mismas, agrupadas en menos capas.",
   SceneComponent: OsiScene,
   ControlsComponent: OsiControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const osi = engine as OsiEngine;
+    const r = osi.getRuntime();
+    const actions: VrAction[] = [];
+    if (r.errorNote) actions.push({ id: "error", label: r.errorNote, info: true });
+    if (r.phase === "viajando") actions.push({ id: "cable", label: "Viajando por el cable…", info: true });
+    if (r.phase === "entregado") {
+      actions.push({ id: "otro", label: "Otro mensaje", onSelect: () => osi.restart(), primary: true });
+      return actions;
+    }
+    r.options.forEach((option) =>
+      actions.push({
+        id: `elegir-${option}`,
+        label: `${r.phase === "bajando" ? "+" : "-"} ${option}`,
+        onSelect: () => osi.choose(option),
+        primary: true,
+      }),
+    );
+    if (r.depth > 0 || r.phase !== "bajando" || r.mistakes > 0) {
+      actions.push({ id: "reiniciar", label: "Empezar de nuevo", onSelect: () => osi.restart() });
+    }
+    return actions;
+  },
   createEngine: createOsiEngine,
 };

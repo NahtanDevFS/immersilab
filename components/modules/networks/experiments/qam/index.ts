@@ -1,5 +1,5 @@
-import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createQamEngine, MODULATIONS } from "./engine";
+import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
+import { createQamEngine, MODULATIONS, type QamEngine } from "./engine";
 import { QamScene } from "./QamScene";
 import { QamControls } from "./QamControls";
 
@@ -46,5 +46,25 @@ export const qamExperiment: ExperimentDefinition = {
     "El reto es la mayor velocidad con cero bits errados: sugiere subir la modulación solo cuando el canal está limpio y bajarla cuando aparecen errores, que es lo que hace un módem real.",
   SceneComponent: QamScene,
   ControlsComponent: QamControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const q = engine as QamEngine;
+    const r = q.getRuntime();
+    const transmitting = r.phase === "transmitiendo";
+    const actions: VrAction[] = [
+      { id: "mensaje", label: `Mensaje: ${q.getMessage() || "HOLA UMG"}`, info: true },
+    ];
+    if (r.phase === "terminado") {
+      actions.push({ id: "recibido", label: `Recibido: ${r.receivedText}`, info: true });
+    }
+    actions.push({
+      id: "transmitir",
+      label: transmitting ? `Transmitiendo… ${r.progress}/${r.total}` : "Transmitir mensaje",
+      onSelect: () => q.transmit(),
+      disabled: transmitting,
+      primary: true,
+    });
+    return actions;
+  },
   createEngine: createQamEngine,
 };

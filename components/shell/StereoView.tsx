@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { StereoEffect } from "three/examples/jsm/effects/StereoEffect.js";
+import { readPad } from "./gamepad";
+import { selectGazed, updateGaze } from "@/lib/view/gaze";
 
 /** Separación entre los ojos, en metros (la escena está en metros). */
 const EYE_SEPARATION = 0.064;
@@ -65,15 +67,52 @@ export function StereoView() {
   return <GazeReticle />;
 }
 
+/** Un toque más largo o con más recorrido que esto es arrastrar, no tocar. */
+const TAP_MAX_MS = 400;
+const TAP_MAX_PX = 12;
+
 /**
  * Mira en el centro de la vista: un anillo chico que sigue a la cabeza, a
  * metro y medio. Sin ella, en el visor no hay referencia de hacia dónde se
  * está mirando exactamente. Se dibuja encima de todo (sin prueba de
  * profundidad) para que no se esconda detrás de una pared.
+ *
+ * También es el "puntero" de la vista VR (lib/view/gaze.ts): cada cuadro
+ * mira qué botón 3D queda al centro, y se agranda cuando hay uno. Se activa
+ * con A en el control, tocando la pantalla (el botón de muchos visores
+ * genéricos toca la pantalla) o con Enter en la compu.
  */
 function GazeReticle() {
   const ref = useRef<THREE.Mesh>(null);
   const forward = useMemo(() => new THREE.Vector3(), []);
+  const canvas = useThree((state) => state.gl.domElement);
+  const padWasPressed = useRef(true); // si ya venía apretado al entrar, no cuenta
+
+  useEffect(() => {
+    let down: { x: number; y: number; t: number } | null = null;
+    const onDown = (e: PointerEvent) => {
+      down = { x: e.clientX, y: e.clientY, t: performance.now() };
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!down) return;
+      const tap =
+        performance.now() - down.t < TAP_MAX_MS &&
+        Math.hypot(e.clientX - down.x, e.clientY - down.y) < TAP_MAX_PX;
+      down = null;
+      if (tap) selectGazed();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") selectGazed();
+    };
+    canvas.addEventListener("pointerdown", onDown);
+    canvas.addEventListener("pointerup", onUp);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointerup", onUp);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [canvas]);
 
   useFrame(({ camera }) => {
     const mesh = ref.current;
@@ -81,6 +120,14 @@ function GazeReticle() {
     camera.getWorldDirection(forward);
     mesh.position.copy(camera.position).addScaledVector(forward, 1.5);
     mesh.quaternion.copy(camera.quaternion);
+
+    const gazed = updateGaze(camera);
+    mesh.scale.setScalar(gazed ? 1.8 : 1);
+
+    // A del control: por flanco, una vez por apretón.
+    const pressed = readPad()?.action ?? false;
+    if (pressed && !padWasPressed.current) selectGazed();
+    padWasPressed.current = pressed;
   });
 
   return (

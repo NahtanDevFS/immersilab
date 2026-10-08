@@ -1,5 +1,5 @@
-import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createRoutingEngine } from "./engine";
+import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
+import { createRoutingEngine, findLink, NODES, type RoutingEngine } from "./engine";
 import { RoutingScene } from "./RoutingScene";
 import { RoutingControls } from "./RoutingControls";
 
@@ -42,5 +42,44 @@ export const enrutamientoExperiment: ExperimentDefinition = {
     "Cortar un enlace obliga a recalcular las rutas: eso es la convergencia. No le reveles el camino óptimo completo antes de que lo intente; guíalo salto por salto.",
   SceneComponent: RoutingScene,
   ControlsComponent: RoutingControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const routing = engine as RoutingEngine;
+    const r = routing.getRuntime();
+    const label = (id: string) => NODES.find((n) => n.id === id)?.label ?? id;
+    const head = r.path[r.path.length - 1];
+    const actions: VrAction[] = [
+      { id: "camino", label: `${r.path.map(label).join(" → ")} · costo ${r.cost}`, info: true },
+    ];
+    if (!r.reachable) {
+      actions.push({ id: "aislado", label: "El destino quedó aislado: repara algún enlace.", info: true });
+    }
+    if (r.arrived) {
+      actions.push({ id: "otro", label: "Otro paquete", onSelect: () => routing.restart(), primary: true });
+    } else {
+      r.options.forEach((option) => {
+        const found = findLink(head, option);
+        actions.push({
+          id: `ir-${option}`,
+          label: `Ir a ${label(option)}${found ? ` · ${found.link.latency} ms` : ""}`,
+          onSelect: () => routing.hop(option),
+          primary: true,
+        });
+      });
+      if (r.path.length > 1) {
+        actions.push({ id: "reiniciar", label: "Reiniciar paquete", onSelect: () => routing.restart() });
+      }
+    }
+    actions.push({
+      id: "cortar",
+      label: "Cortar un enlace al azar",
+      onSelect: () => routing.cutRandom(),
+      disabled: !r.reachable,
+    });
+    if (r.downLinks.length > 0) {
+      actions.push({ id: "reparar", label: `Reparar enlaces (${r.downLinks.length})`, onSelect: () => routing.repairAll() });
+    }
+    return actions;
+  },
   createEngine: createRoutingEngine,
 };

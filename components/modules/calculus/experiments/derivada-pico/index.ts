@@ -1,6 +1,6 @@
 import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
 import { TRACK_OPTIONS } from "@/components/modules/calculus/shared/tracks";
-import { createDerivativeEngine } from "./engine";
+import { createDerivativeEngine, type DerivativeEngine } from "./engine";
 import { DerivativeScene } from "./DerivativeScene";
 import { RideControls } from "./RideControls";
 
@@ -55,5 +55,24 @@ export const derivadaPicoExperiment: ExperimentDefinition = {
     "Confusiones típicas: creer que f'(x) igual a cero significa que la función vale cero, y olvidar que los valles también son puntos críticos. A más velocidad cuesta más frenar a tiempo: sugiere bajarla para practicar.",
   SceneComponent: DerivativeScene,
   ControlsComponent: RideControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const d = engine as DerivativeEngine;
+    const r = d.getRuntime();
+    if (r.phase === "rodando") {
+      return [
+        { id: "pendiente", label: `f'(x) = ${r.slope.toFixed(2)}`, info: true },
+        { id: "frenar", label: "¡Frenar!", onSelect: () => d.brake(), primary: true },
+      ];
+    }
+    return [
+      {
+        id: "arrancar",
+        label: r.phase === "frenado" ? "Otra vuelta" : "Arrancar",
+        onSelect: () => d.start(),
+        primary: true,
+      },
+    ];
+  },
   createEngine: createDerivativeEngine,
 };

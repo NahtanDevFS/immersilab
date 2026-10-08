@@ -1,5 +1,5 @@
 import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createModulationEngine } from "./engine";
+import { createModulationEngine, type ModulationEngine } from "./engine";
 import { ModulationScene } from "./ModulationScene";
 import { ModulationControls } from "./ModulationControls";
 
@@ -76,5 +76,18 @@ export const modulacionExperiment: ExperimentDefinition = {
     "Confusión típica: creer que FM cambia la amplitud, o que el índice de FM tiene límite de cien por ciento como AM.",
   SceneComponent: ModulationScene,
   ControlsComponent: ModulationControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const m = engine as ModulationEngine;
+    const on = m.getRuntime().audioOn;
+    return [
+      {
+        id: "radio",
+        label: on ? "Apagar radio" : "Encender radio",
+        onSelect: () => (on ? m.stopAudio() : void m.startAudio()),
+        primary: !on,
+      },
+    ];
+  },
   createEngine: createModulationEngine,
 };

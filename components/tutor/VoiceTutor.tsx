@@ -9,6 +9,7 @@ import { useSpeechOutput } from "./useSpeechOutput";
 import { useTutorSession } from "./useTutorSession";
 import { TutorHUD, type TutorStatus } from "./TutorHUD";
 import { describePanel } from "@/lib/tutor/panel";
+import { publishTutorHud } from "@/lib/tutor/hudStore";
 
 interface Props {
   engine: ExperimentEngine;
@@ -113,6 +114,16 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
       : session.pending
         ? "thinking"
         : "idle";
+
+  // Para los subtítulos 3D de la vista VR (components/vr/VrHud.tsx).
+  useEffect(() => {
+    publishTutorHud({
+      status,
+      heard: input.transcript,
+      reply: session.reply,
+      offline: session.failed,
+    });
+  }, [status, input.transcript, session.reply, session.failed]);
 
   // Reto logrado: el tutor lo festeja y explica por qué funcionó (Fase C).
   // Primero una frase fija, al instante y sin red; después Gemini agrega una

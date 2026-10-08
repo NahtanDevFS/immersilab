@@ -18,7 +18,8 @@ import { VariablesHud3D } from "./VariablesHud3D";
 import { ResultPanel } from "./ResultPanel";
 import { BriefingPanel } from "./BriefingPanel";
 import { TourPanel } from "./TourPanel";
-import { TOUR, readTourIndex } from "@/lib/tour";
+import { TOUR, readTourIndex, tourHref } from "@/lib/tour";
+import { VrHud } from "@/components/vr/VrHud";
 import { ChallengeHUD } from "./ChallengeHUD";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
@@ -30,7 +31,7 @@ import { useVariables } from "@/lib/modules/useVariables";
 import { VirtualCursor } from "./VirtualCursor";
 import { useVirtualCursor } from "./useVirtualCursor";
 import { VoiceTutor } from "@/components/tutor/VoiceTutor";
-import type { ExperimentDefinition } from "@/types/module";
+import type { ExperimentDefinition, VrAction } from "@/types/module";
 import styles from "./ExperimentShell.module.css";
 
 /** La URL no cambia mientras el experimento está montado (cambiar de parada
@@ -68,7 +69,8 @@ export function ExperimentShell({
   const vr = view === "vr";
   // hoveredKey: qué slider está bajo el cursor ahora mismo (con dedo o con
   // el stick derecho del gamepad) — se usa para resaltarlo en el panel.
-  const { position: cursorPos, hoveredKey } = useVirtualCursor(gyroActive);
+  // En la vista VR no hay cursor: se apunta con la mira (lib/view/gaze.ts).
+  const { position: cursorPos, hoveredKey } = useVirtualCursor(gyroActive && !vr);
 
   // Una única instancia del motor durante toda la vida del componente.
   const engine = useMemo(() => experiment.createEngine(), [experiment]);
@@ -96,6 +98,20 @@ export function ExperimentShell({
     tourIndex !== null && TOUR[tourIndex].slug === experiment.slug && !tourExited;
   // null = lo de siempre: abierta al entrar, salvo en el recorrido.
   const [briefingOpen, setBriefingOpen] = useState<boolean | null>(null);
+
+  // En la vista VR la tarjeta del recorrido no se ve (es HTML): el paso a la
+  // siguiente parada va como un botón más del panel de acciones 3D.
+  const nextStop = touring && tourIndex !== null ? TOUR[tourIndex + 1] : undefined;
+  const tourActions: VrAction[] =
+    touring && tourIndex !== null
+      ? [
+          {
+            id: "recorrido",
+            label: nextStop ? `Siguiente parada: ${nextStop.name}` : "Terminar el recorrido",
+            onSelect: () => router.push(nextStop ? tourHref(tourIndex + 1) : "/progreso"),
+          },
+        ]
+      : [];
 
   return (
     <OrientationGate>
@@ -230,7 +246,7 @@ export function ExperimentShell({
           </Suspense>
           <SceneComponent engine={engine} variables={values} />
 
-          {gyroActive && (
+          {gyroActive && !vr && (
             <VariablesHud3D
               schema={experiment.variablesSchema}
               values={values}
@@ -262,6 +278,19 @@ export function ExperimentShell({
           {/* En la vista VR dibuja StereoView (dos ojos) y el post-proceso
               se apaga: los dos quieren tomar el dibujo de cada cuadro. */}
           {vr ? <StereoView /> : <PostFX quality={quality} />}
+
+          {/* La interfaz de la vista VR, dentro de la escena. */}
+          {vr && (
+            <VrHud
+              engine={engine}
+              experimentSlug={experiment.slug}
+              schema={experiment.variablesSchema}
+              values={values}
+              onChange={setValue}
+              vrActions={experiment.vrActions}
+              extraActions={tourActions}
+            />
+          )}
         </Canvas>
         <VirtualCursor position={cursorPos} visible={gyroActive} />
 

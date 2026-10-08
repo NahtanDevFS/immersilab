@@ -92,7 +92,9 @@ export function LobbyShell() {
           <p className={styles.gyroNote}>Permiso de giroscopio denegado.</p>
         )}
 
-        {!tutorialSeen && (
+        {/* En la vista VR el tutorial (HTML) no se vería: se deja para la
+            vista 360. */}
+        {!tutorialSeen && !vr && (
           <LobbyTutorial
             gyroActive={gyroActive}
             looked={looked}
@@ -163,7 +165,7 @@ export function LobbyShell() {
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
           <MovementController />
-          {!tutorialSeen && <TutorialProbe onLook={onLook} onWalk={onWalk} />}
+          {!tutorialSeen && !vr && <TutorialProbe onLook={onLook} onWalk={onWalk} />}
           {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
 
           {vr ? <StereoView /> : <PostFX quality={quality} />}

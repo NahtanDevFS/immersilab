@@ -1,5 +1,5 @@
 import type { ExperimentDefinition, VariableDefinition, VariablesSchema } from "@/types/module";
-import { createWavesEngine, TARGETS } from "./engine";
+import { createWavesEngine, TARGETS, type WavesEngine } from "./engine";
 import { WavesScene } from "./WavesScene";
 import { WavesControls } from "./WavesControls";
 
@@ -77,5 +77,18 @@ export const ondasExperiment: ExperimentDefinition = {
     "La fase importa: una componente en contrafase resta en vez de sumar. La frecuencia del batido es la diferencia entre las dos frecuencias.",
   SceneComponent: WavesScene,
   ControlsComponent: WavesControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const w = engine as WavesEngine;
+    const on = w.getRuntime().audioOn;
+    return [
+      {
+        id: "sonido",
+        label: on ? "Apagar sonido" : "Escuchar la suma",
+        onSelect: () => (on ? w.stopAudio() : void w.startAudio()),
+        primary: !on,
+      },
+    ];
+  },
   createEngine: createWavesEngine,
 };

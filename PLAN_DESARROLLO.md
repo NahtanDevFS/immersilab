@@ -879,8 +879,17 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      en cada mitad. El post-proceso se apaga en esta vista. Todo el HTML
      (paneles, retos, etiquetas de drei) se oculta: se dibujaría una sola
      vez y cada ojo vería medio panel. El tutor sigue funcionando con R2.
-   - ⏳ Etapa 2: interfaz esencial en 3D (panel de variables manejado con
-     la mira y el botón A, retos, aviso de logro, subtítulos del tutor).
+   - ✅ Etapa 2: interfaz esencial en 3D (`components/vr/`). Se apunta con
+     la mira y se activa con A, tocando la pantalla o con Enter
+     (`lib/view/gaze.ts`: el rayo va solo contra los botones registrados).
+     A la izquierda, las variables con − y + (y < > en las listas); a la
+     derecha, los retos y las acciones de cada experimento (`vrActions` en
+     la definición, que replica su panel HTML) y "Siguiente parada" en el
+     recorrido; pegados a la vista, el aviso de reto y los subtítulos del
+     tutor (`lib/tutor/hudStore.ts`). Los paneles acompañan al caminar y
+     siguen la vista solo si se gira más de 55°. Las puertas del lobby
+     también tienen su etiqueta en 3D. Texto con troika y una fuente local
+     (Geist), para que funcione sin internet.
    - ⏳ Etapa 3: etiquetas de cada experimento como texto 3D.
 
 ---

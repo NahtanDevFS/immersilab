@@ -1,5 +1,5 @@
 import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createPendulumEngine } from "./engine";
+import { createPendulumEngine, type PendulumEngine } from "./engine";
 import { PendulumScene } from "./PendulumScene";
 import { PendulumControls } from "./PendulumControls";
 
@@ -79,5 +79,18 @@ export const penduloExperiment: ExperimentDefinition = {
     "Cambiar la gravedad afecta a los dos péndulos por igual, así que no rompe la sincronía. Con amortiguamiento la energía total baja y la amplitud se achica, pero el período casi no cambia.",
   SceneComponent: PendulumScene,
   ControlsComponent: PendulumControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const p = engine as PendulumEngine;
+    const swinging = p.getRuntime().phase === "oscilando";
+    return [
+      {
+        id: "soltar",
+        label: swinging ? "Detener" : "Soltar los péndulos",
+        onSelect: () => (swinging ? p.stop() : p.release()),
+        primary: !swinging,
+      },
+    ];
+  },
   createEngine: createPendulumEngine,
 };
