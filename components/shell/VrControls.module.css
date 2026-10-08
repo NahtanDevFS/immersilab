@@ -1,0 +1,56 @@
+/* Botón del visor, en el encabezado. El encabezado no recibe clics (para no
+   tapar el arrastre de la vista); el botón los recupera. */
+.enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-accent);
+  background: var(--lab-glass);
+  color: var(--lab-accent);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Capa de salida en la vista VR: cubre la pantalla sin recibir clics, salvo
+   los botones. */
+.exitLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.exit {
+  margin-top: calc(0.6rem + env(safe-area-inset-top));
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-glass);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.75;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: #000;
+}

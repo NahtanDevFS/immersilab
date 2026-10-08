@@ -8,6 +8,9 @@ import { Header } from "./Header";
 import { LabBackground } from "./LabBackground";
 import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
+import { StereoView } from "./StereoView";
+import { VrButton, VrExit } from "./VrControls";
+import { useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { useQualityTier } from "./useQualityTier";
 import { VariablesPanel } from "./VariablesPanel";
@@ -60,6 +63,9 @@ export function ExperimentShell({
   const quality = useQualityTier();
 
   const gyroActive = permission === "granted";
+  // Vista VR: pantalla partida para el visor (ver lib/view/viewMode.ts).
+  const view = useViewMode();
+  const vr = view === "vr";
   // hoveredKey: qué slider está bajo el cursor ahora mismo (con dedo o con
   // el stick derecho del gamepad) — se usa para resaltarlo en el panel.
   const { position: cursorPos, hoveredKey } = useVirtualCursor(gyroActive);
@@ -93,8 +99,11 @@ export function ExperimentShell({
 
   return (
     <OrientationGate>
-      <div className={styles.container}>
+      <div className={styles.container} data-view={view}>
         <Header
+          actions={
+            <VrButton onBeforeEnter={permission === "prompt" ? requestPermission : undefined} />
+          }
           subtitle={`${disciplineName} / ${moduleName} / ${experiment.name}`}
           showBackLink
         />
@@ -188,6 +197,9 @@ export function ExperimentShell({
         )}
 
         <Canvas
+          // Lo único que queda visible en la vista VR (ver el CSS del shell).
+          data-vr-keep
+          data-vr-scene
           /* Contexto de apilamiento propio (z-index 0): las etiquetas <Html>
              de drei se montan junto al canvas con z-index calculados que
              pueden ser enormes, y se dibujaban ENCIMA de los paneles del
@@ -247,9 +259,13 @@ export function ExperimentShell({
             <DragLookControls target={experiment.cameraView?.target ?? [5, 1, 0]} />
           )}
 
-          <PostFX quality={quality} />
+          {/* En la vista VR dibuja StereoView (dos ojos) y el post-proceso
+              se apaga: los dos quieren tomar el dibujo de cada cuadro. */}
+          {vr ? <StereoView /> : <PostFX quality={quality} />}
         </Canvas>
         <VirtualCursor position={cursorPos} visible={gyroActive} />
+
+        {vr && <VrExit />}
 
         <LoadingOverlay label={experiment.name} />
       </div>

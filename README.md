@@ -27,8 +27,8 @@ Gemini) que responde con los valores actuales del experimento.
   invitado pasa a la cuenta al ingresar.
 - **Vista docente** (`/docente`): avance de la clase, retos más difíciles y
   descarga en CSV. Solo para cuentas con rol de docente.
-- **Tutorial de entrada** de 30 segundos y **recorrido guiado** por cuatro
-  experimentos, para mostrar el laboratorio en clase.
+- **Tutorial de entrada** de 30 segundos y **recorrido guiado** por un
+  experimento de cada módulo (seis), para mostrar el laboratorio en clase.
 
 ## Requisitos
 

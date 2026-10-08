@@ -855,9 +855,10 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
    hace con el control (A siguiente, B saltar); en la compu, Enter y Escape.
    Sale la primera vez en cada dispositivo y se reabre con "¿Cómo me muevo?".
 4. ✅ Recorrido guiado (`lib/tour.ts`, `TourPanel`), pensado para mostrar el
-   laboratorio en clase. Botón "Recorrido guiado" en el lobby; cuatro
-   paradas (Tiro parabólico en modo artillería, Tornea la pieza, Tu voz en el
-   espectro, Encuentra el camino) y al final la pantalla de progreso. En cada
+   laboratorio en clase. Botón "Recorrido guiado" en el lobby; seis
+   paradas, una por módulo (Tiro parabólico en modo artillería, Tubo de
+   Venturi, Tornea la pieza, Tu voz en el espectro, Encuentra el camino y
+   Arma el paquete) y al final la pantalla de progreso. En cada
    parada, una tarjeta corta que se lee en voz alta reemplaza a la
    explicación larga (sigue disponible con "Explicación completa"); al
    plegarla queda una pastilla arriba al centro con "Siguiente". El estado
@@ -868,6 +869,19 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
    ✅ `CREDITOS.md` y ✅ `.env.example`. Falta: confirmar el origen y la
    licencia del cañón, la madera del cañón y el pack de árboles (marcados
    "por confirmar"), y grabar el video de demostración.
+
+6. Vista VR, como la de YouTube en los videos 360: botón "Visor" en el
+   encabezado que alterna entre la vista 360 (una imagen, se mira moviendo
+   el celular) y la pantalla partida para el visor (una imagen por ojo).
+   - ✅ Etapa 1: `StereoView` dibuja la escena dos veces con `StereoEffect`
+     de three (ojos a 6.4 cm, campo visual de 75°), mira en el centro de la
+     vista, pantalla completa en horizontal al entrar, "Salir del visor"
+     en cada mitad. El post-proceso se apaga en esta vista. Todo el HTML
+     (paneles, retos, etiquetas de drei) se oculta: se dibujaría una sola
+     vez y cada ojo vería medio panel. El tutor sigue funcionando con R2.
+   - ⏳ Etapa 2: interfaz esencial en 3D (panel de variables manejado con
+     la mira y el botón A, retos, aviso de logro, subtítulos del tutor).
+   - ⏳ Etapa 3: etiquetas de cada experimento como texto 3D.
 
 ---
 
