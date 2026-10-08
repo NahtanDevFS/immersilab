@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { ExperimentEngine } from "@/types/module";
-import type { QamEngine, QamRuntime } from "./engine";
+import {
+  MAX_MESSAGE_LENGTH,
+  MIN_CHALLENGE_LENGTH,
+  type QamEngine,
+  type QamRuntime,
+} from "./engine";
 import styles from "./QamControls.module.css";
 
 interface Props {
@@ -19,6 +24,7 @@ interface Props {
 export function QamControls({ engine }: Props) {
   const qam = engine as QamEngine;
   const [runtime, setRuntime] = useState<QamRuntime>(() => qam.getRuntime());
+  const [message, setMessage] = useState(() => qam.getMessage());
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -32,8 +38,26 @@ export function QamControls({ engine }: Props) {
 
   const transmitting = runtime.phase === "transmitiendo";
 
+  const short = message.trim().length > 0 && message.trim().length < MIN_CHALLENGE_LENGTH;
+
   return (
     <div className={styles.actions}>
+      {/* El mensaje a transmitir. Se limpia al escribir (sin tildes ni ñ:
+          cada letra tiene que ser un solo byte), así se ve qué viaja. */}
+      <label className={styles.message} data-short={short}>
+        <span>Tu mensaje</span>
+        <input
+          type="text"
+          value={message}
+          maxLength={MAX_MESSAGE_LENGTH}
+          placeholder="HOLA UMG"
+          disabled={transmitting}
+          onChange={(e) => setMessage(qam.setMessage(e.target.value))}
+          title={`Hasta ${MAX_MESSAGE_LENGTH} caracteres. Para los retos, ${MIN_CHALLENGE_LENGTH} o más.`}
+        />
+        {short && <small>Con menos de {MIN_CHALLENGE_LENGTH} no cuenta para los retos</small>}
+      </label>
+
       {runtime.phase !== "listo" && (
         <p className={styles.readout}>
           {transmitting

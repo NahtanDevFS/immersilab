@@ -6,10 +6,10 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
-import type { CollisionEngine } from "./engine";
+import { RAIL_HALF, type CollisionEngine } from "./engine";
 import styles from "./CollisionScene.module.css";
 
-const RAIL_LENGTH = 16;
+const RAIL_LENGTH = RAIL_HALF * 2;
 const RAIL_HEIGHT = 0.1;
 const CART_DEPTH = 0.4;
 /**
@@ -110,6 +110,14 @@ export function CollisionScene({ engine, variables }: Props) {
         <mesh key={x} position={[x, 0.03, 0]} castShadow receiveShadow>
           <boxGeometry args={[0.25, 0.06, 0.7]} />
           <meshStandardMaterial color="#2b3140" metalness={0.5} roughness={0.6} />
+        </mesh>
+      ))}
+
+      {/* Topes en las puntas: frenan al carrito que llega (ver el motor). */}
+      {[-RAIL_HALF - 0.1, RAIL_HALF + 0.1].map((x) => (
+        <mesh key={x} position={[x, 0.35, 0]} castShadow receiveShadow>
+          <boxGeometry args={[0.2, 0.7, 0.8]} />
+          <meshStandardMaterial color="#e24b4a" metalness={0.3} roughness={0.5} />
         </mesh>
       ))}
 

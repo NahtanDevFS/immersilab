@@ -264,7 +264,11 @@ export function ModulationScene({ engine, variables }: Props) {
           <planeGeometry args={[ZOOM_WIDTH + 0.5, ZOOM_HEIGHT + 0.8]} />
           <meshStandardMaterial color="#0b1220" transparent opacity={0.65} />
         </mesh>
-        <instancedMesh ref={zoomRef} args={[undefined, undefined, MAX_LINES]}>
+        {/* frustumCulled={false}: three calcula UNA vez la esfera que envuelve las
+            instancias, cuando todavía están todas en el origen, y después recorta el
+            grupo entero si esa esfera chica queda fuera de cámara: los puntos
+            desaparecían al acercarse o al girar un poco. */}
+        <instancedMesh frustumCulled={false} ref={zoomRef} args={[undefined, undefined, MAX_LINES]}>
           <boxGeometry args={[0.06, 1, 0.06]} />
           <meshBasicMaterial color={OWN_COLOR} toneMapped={false} />
         </instancedMesh>

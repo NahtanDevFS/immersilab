@@ -3,7 +3,7 @@
   bottom: calc(0.75rem + env(safe-area-inset-bottom));
   left: calc(0.75rem + env(safe-area-inset-left));
   z-index: 10;
-  width: 220px;
+  width: 248px;
   /* Tope de alto: con muchos controles (colisiones con predicción, ondas
      con diez sliders) el panel crecía hacia arriba y tapaba el header en
      pantallas bajas. Se deja libre el alto del header (~4.5rem) y el resto
@@ -11,7 +11,7 @@
   max-height: calc(100% - 5.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow-y: auto;
   padding: 0.85rem;
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--lab-glass);
   border: 0.5px solid var(--lab-panel-border);
   border-radius: 10px;
   backdrop-filter: blur(6px);
@@ -24,6 +24,17 @@
   color: var(--lab-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.group {
+  margin: 0.9rem 0 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 0.5px solid var(--lab-panel-border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lab-accent);
 }
 
 .field {
@@ -46,16 +57,56 @@
 .label {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.78rem;
   color: var(--lab-text);
   margin-bottom: 0.3rem;
 }
 
+/* El valor nunca se parte: si el nombre es largo ("Amortiguamiento"), el
+   que pasa a dos líneas es el nombre, no la unidad. */
 .value {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   font-family: var(--font-mono), monospace;
   font-size: 0.78rem;
   color: var(--lab-accent);
+}
+
+.unit {
+  width: 2.4rem;
+  padding-left: 0.3rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.74rem;
+  color: var(--lab-text-muted);
+  text-align: left;
+}
+
+/* Casilla del valor exacto: discreta hasta que se la toca, para que el panel
+   siga leyéndose como "nombre y valor". */
+.number {
+  width: 4.2rem;
+  padding: 0.1rem 0.3rem;
+  border: 0.5px solid transparent;
+  border-radius: 4px;
+  background: rgba(10, 14, 26, 0.55);
+  color: var(--lab-accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.number:hover {
+  border-color: var(--lab-panel-border);
+}
+
+.number:focus {
+  outline: none;
+  border-color: var(--lab-accent);
+  background: var(--lab-bg);
 }
 
 .slider {

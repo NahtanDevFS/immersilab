@@ -1,5 +1,6 @@
 import type {
   AIContext,
+  ChallengeStatus,
   ExperimentEngine,
   VariablesState,
 } from "@/types/module";
@@ -45,7 +46,42 @@ export interface VenturiRuntime {
   reynolds: number;
   /** Fase del reloj de partículas, para animar el flujo en la escena. */
   flowPhase: number;
+  challenges: Record<ChallengeId, ChallengeProgress>;
 }
+
+type ChallengeId = "nueve" | "borde" | "laminar";
+
+interface ChallengeProgress {
+  done: boolean;
+  progress: number;
+  /** Segundos seguidos cumpliendo la condición. */
+  held: number;
+  /** Cómo salió, para mostrarlo una vez logrado. */
+  result: string;
+}
+
+/**
+ * Hay que sostener la condición este tiempo para que cuente. El resultado
+ * no depende del tiempo, pero sin esto un reto se lograría "de pasada" al
+ * arrastrar un slider por encima del valor justo, sin entender nada.
+ */
+const HOLD_SECONDS = 1;
+
+/** Reto de continuidad: el cuello a un tercio del radio → 9 veces más rápido. */
+const SPEED_RATIO_TARGET = 9;
+const SPEED_RATIO_TOLERANCE = 0.03;
+
+/**
+ * Reto de Bernoulli: presión absoluta del cuello por debajo de esto, pero
+ * sin cavitar. Calibrado sobre la grilla de los sliders: con agua hay unas
+ * 10 combinaciones de caudal y cuello que lo logran (más o menos una por
+ * cada radio angosto), así que se encuentra ajustando, no de casualidad.
+ */
+const EDGE_PRESSURE = 30000;
+
+/** Debajo de este Reynolds el flujo es laminar. Con agua es imposible en el
+ *  rango de los sliders: hay que darse cuenta de que el fluido importa. */
+const LAMINAR_REYNOLDS = 2300;
 
 export interface VenturiEngine extends ExperimentEngine {
   getRuntime: () => VenturiRuntime;
@@ -100,7 +136,69 @@ export function createVenturiEngine(): VenturiEngine {
     cavitating: false,
     reynolds: 0,
     flowPhase: 0,
+    challenges: {
+      nueve: { done: false, progress: 0, held: 0, result: "" },
+      borde: { done: false, progress: 0, held: 0, result: "" },
+      laminar: { done: false, progress: 0, held: 0, result: "" },
+    },
   };
+
+  /**
+   * Avanza un reto: `closeness` (0–1) alimenta la barra mientras no se
+   * cumple; si se cumple, cuenta el tiempo sostenido hasta HOLD_SECONDS.
+   */
+  function track(id: ChallengeId, met: boolean, closeness: number, dt: number, result: string) {
+    const c = runtime.challenges[id];
+    if (c.done) return;
+    if (met) {
+      c.held += dt;
+      c.progress = Math.min(1, 0.9 + (0.1 * c.held) / HOLD_SECONDS);
+      if (c.held >= HOLD_SECONDS) {
+        c.done = true;
+        c.progress = 1;
+        c.result = result;
+      }
+    } else {
+      c.held = 0;
+      c.progress = Math.max(0, Math.min(0.85, closeness));
+    }
+  }
+
+  function updateChallenges(dt: number) {
+    const fluid = getFluid(lastVariables.fluido ?? "agua");
+    const throat = Number(lastVariables.cuello ?? 0.03);
+    // "Agua (20 °C)" → "agua": sin el paréntesis, que en minúsculas queda "°c".
+    const name = fluid.label.split(" (")[0].toLowerCase();
+
+    const ratio = runtime.v1 > 0 ? runtime.v2 / runtime.v1 : 1;
+    const ratioError = Math.abs(ratio - SPEED_RATIO_TARGET) / SPEED_RATIO_TARGET;
+    track(
+      "nueve",
+      ratioError <= SPEED_RATIO_TOLERANCE,
+      1 - ratioError,
+      dt,
+      `Cuello de ${(throat * 100).toFixed(1)} cm: un tercio del radio, ${ratio.toFixed(1)} veces más rápido.`,
+    );
+
+    const liquid = fluid.id !== "aire";
+    track(
+      "borde",
+      liquid && !runtime.cavitating && runtime.p2 < EDGE_PRESSURE,
+      liquid && !runtime.cavitating
+        ? (INLET_PRESSURE - runtime.p2) / (INLET_PRESSURE - EDGE_PRESSURE)
+        : 0,
+      dt,
+      `${(runtime.p2 / 1000).toFixed(1)} kPa en el cuello con ${name}, sin cavitar.`,
+    );
+
+    track(
+      "laminar",
+      runtime.reynolds < LAMINAR_REYNOLDS,
+      runtime.reynolds > 0 ? LAMINAR_REYNOLDS / runtime.reynolds : 0,
+      dt,
+      `Re = ${Math.round(runtime.reynolds)} con ${name}.`,
+    );
+  }
 
   function recompute(variables: VariablesState) {
     const fluid = getFluid(variables.fluido ?? "agua");
@@ -152,6 +250,7 @@ export function createVenturiEngine(): VenturiEngine {
       // mueve las partículas. Se mantiene acotado para que no pierda
       // precisión después de un rato largo abierto.
       runtime.flowPhase = (runtime.flowPhase + dt) % 1000;
+      updateChallenges(dt);
     },
 
     reset() {
@@ -183,6 +282,44 @@ export function createVenturiEngine(): VenturiEngine {
           "número de Reynolds",
         ],
       };
+    },
+
+    getChallenges(): ChallengeStatus[] {
+      const { nueve, borde, laminar } = runtime.challenges;
+      const view = (c: ChallengeProgress, hint: string) => ({
+        done: c.done,
+        progress: c.progress,
+        detail: c.done ? c.result : hint,
+      });
+      return [
+        {
+          id: "nueve",
+          title: "Nueve veces más rápido",
+          ...view(nueve, "Que el fluido vaya 9 veces más rápido en el cuello que en el tubo."),
+        },
+        {
+          id: "borde",
+          title: "Al borde de la cavitación",
+          ...view(
+            borde,
+            "Con un líquido, baja la presión del cuello a menos de 30 kPa sin que cavite.",
+          ),
+        },
+        {
+          id: "laminar",
+          title: "Flujo laminar",
+          ...view(laminar, "Que el flujo en el cuello sea laminar (Reynolds menor que 2300)."),
+        },
+      ];
+    },
+
+    resetChallenges() {
+      Object.values(runtime.challenges).forEach((c) => {
+        c.done = false;
+        c.progress = 0;
+        c.held = 0;
+        c.result = "";
+      });
     },
 
     getRuntime() {

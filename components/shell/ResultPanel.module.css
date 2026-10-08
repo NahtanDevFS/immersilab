@@ -5,7 +5,7 @@
   z-index: 10;
   min-width: 160px;
   padding: 0.7rem 0.85rem;
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--lab-glass);
   border: 0.5px solid var(--lab-panel-border);
   border-radius: 10px;
   backdrop-filter: blur(6px);

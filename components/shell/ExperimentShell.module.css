@@ -40,7 +40,7 @@
   font-family: var(--font-sans);
   font-size: 0.85rem;
   color: var(--lab-danger);
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--lab-glass);
   padding: 0.4rem 0.8rem;
   border-radius: 8px;
 }

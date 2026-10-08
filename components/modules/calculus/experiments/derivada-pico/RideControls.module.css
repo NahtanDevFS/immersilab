@@ -41,7 +41,7 @@
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
   border: 0.5px solid var(--lab-panel-border);
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--lab-glass);
   backdrop-filter: blur(6px);
   color: var(--lab-accent);
   font-family: var(--font-mono), monospace;

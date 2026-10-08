@@ -36,3 +36,42 @@ export function displayName(user: User): string {
   const name = (user.user_metadata as { full_name?: string } | undefined)?.full_name;
   return name?.trim() || user.email?.split("@")[0] || "Mi cuenta";
 }
+
+export interface RoleState {
+  /** "student", "teacher" o "admin"; null sin sesión o si no se pudo leer. */
+  role: string | null;
+  loading: boolean;
+}
+
+/**
+ * Rol de la cuenta, leído de `profiles`. Solo sirve para decidir qué mostrar:
+ * quien protege los datos es RLS en la base (`is_staff()`), no esta pantalla.
+ */
+export function useRole(user: User | null): RoleState {
+  const userId = user?.id ?? null;
+  const [fetched, setFetched] = useState<{ userId: string; role: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    createClient()
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive) setFetched({ userId, role: (data?.role as string | undefined) ?? null });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
+
+  if (!userId) return { role: null, loading: false };
+  if (fetched?.userId !== userId) return { role: null, loading: true };
+  return { role: fetched.role, loading: false };
+}
+
+export function isStaff(role: string | null): boolean {
+  return role === "teacher" || role === "admin";
+}

@@ -4,7 +4,43 @@
   right: calc(0.75rem + env(safe-area-inset-right));
   z-index: 10;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+/* Dos filas: la del paquete (camino, saltos, reiniciar) y la de los cortes. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.select {
+  max-width: 15rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-glass);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.warning {
+  max-width: 22rem;
+  margin: 0;
+  padding: 0.45rem 0.8rem;
+  border-radius: 10px;
+  border: 0.5px solid var(--lab-danger);
+  background: var(--lab-glass);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 .fireButton,
@@ -48,7 +84,7 @@
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
   border: 0.5px solid var(--lab-panel-border);
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--lab-glass);
   backdrop-filter: blur(6px);
   color: var(--lab-accent);
   font-family: var(--font-mono), monospace;
@@ -83,9 +119,14 @@
   padding: 0.5rem 0.8rem;
   border-radius: 999px;
   border: 0.5px solid var(--lab-panel-border);
-  background: transparent;
+  background: var(--lab-glass);
   color: var(--lab-text-muted);
   font-family: var(--font-sans);
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

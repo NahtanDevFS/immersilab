@@ -9,6 +9,11 @@ import styles from "./BriefingPanel.module.css";
 interface Props {
   experimentName: string;
   briefing: ExperimentBriefing;
+  /** Abierta o cerrada desde afuera (el recorrido guiado la controla). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Sin el botón "?" al cerrarse: durante el recorrido ese lugar es suyo. */
+  hideReopen?: boolean;
 }
 
 /**
@@ -31,10 +36,18 @@ const narratedAt = new Map<string, number>();
  * silencio, el audio no sirve — y además así el que ya sabe puede leerlo de
  * un vistazo y cerrar.
  */
-export function BriefingPanel({ experimentName, briefing }: Props) {
+export function BriefingPanel({
+  experimentName,
+  briefing,
+  open: controlledOpen,
+  onOpenChange,
+  hideReopen,
+}: Props) {
   const { status, speak, stop, voices, voiceName, setVoice, canPlayAudio } =
     useNarration();
-  const [open, setOpen] = useState(true);
+  const [ownOpen, setOwnOpen] = useState(true);
+  const open = controlledOpen ?? ownOpen;
+  const setOpen = onOpenChange ?? setOwnOpen;
   const pathname = usePathname();
 
   // El guion hablado es el mismo texto de la tarjeta, en orden: qué es, qué
@@ -59,7 +72,7 @@ export function BriefingPanel({ experimentName, briefing }: Props) {
     const now = Date.now();
     const alreadyNarrated = now - (narratedAt.get(pathname) ?? 0) < 3000;
 
-    if (canPlayAudio() && !alreadyNarrated) {
+    if (open && canPlayAudio() && !alreadyNarrated) {
       narratedAt.set(pathname, now);
       speak(script);
     }
@@ -74,6 +87,7 @@ export function BriefingPanel({ experimentName, briefing }: Props) {
   }, [pathname]);
 
   if (!open) {
+    if (hideReopen) return null;
     return (
       <button
         className={styles.reopen}

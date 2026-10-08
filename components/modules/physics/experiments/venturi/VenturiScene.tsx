@@ -210,7 +210,11 @@ export function VenturiScene({ engine, variables }: Props) {
       ))}
 
       {/* El fluido. */}
-      <instancedMesh
+      {/* frustumCulled={false}: three calcula UNA vez la esfera que envuelve las
+          instancias, cuando todavía están todas en el origen, y después recorta el
+          grupo entero si esa esfera chica queda fuera de cámara: los puntos
+          desaparecían al acercarse o al girar un poco. */}
+      <instancedMesh frustumCulled={false}
         ref={particlesRef}
         args={[undefined, undefined, PARTICLE_COUNT]}
       >

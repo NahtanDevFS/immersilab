@@ -70,6 +70,7 @@ Tu respuesta se convierte en AUDIO con un sintetizador de voz y el estudiante la
 
 Pedagogía:
 - Cada pregunta trae el estado actual del experimento. Usa siempre esos valores concretos en la explicación.
+- "panel" es el panel de variables tal como lo ve el estudiante: nombre, valor, unidad y rango. Cuando hables de una variable, llámala por ese nombre, nunca por su clave interna. Si pregunta qué significa algo de la pantalla, explícalo con el valor que tiene puesto.
 - Si el estudiante puede deducir la respuesta, guíalo con una pregunta antes de dársela.
 - Si pregunta algo fuera del experimento, responde brevemente y llévalo de vuelta al experimento.`;
 
@@ -106,7 +107,11 @@ export async function POST(req: Request) {
   if (!transcript || transcript.length > TUTOR_LIMITS.transcriptChars) {
     return Response.json({ error: "transcript inválido" }, { status: 400 });
   }
-  if (!body.context || typeof body.context !== "object") {
+  if (
+    !body.context ||
+    typeof body.context !== "object" ||
+    JSON.stringify(body.context).length > TUTOR_LIMITS.contextChars
+  ) {
     return Response.json({ error: "context inválido" }, { status: 400 });
   }
 

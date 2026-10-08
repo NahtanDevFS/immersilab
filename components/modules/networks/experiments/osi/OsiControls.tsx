@@ -31,20 +31,9 @@ export function OsiControls({ engine }: Props) {
     return () => window.clearInterval(id);
   }, [osi]);
 
-  const stack = runtime.stack;
-  const index =
-    runtime.phase === "bajando"
-      ? runtime.depth
-      : stack.length - 1 - runtime.depth;
-  const step = stack[index];
-
   return (
     <div className={styles.actions}>
-      {runtime.lastError && step && (
-        <p className={styles.readout}>
-          {runtime.lastError} no va aquí — esta capa {step.why.toLowerCase()}
-        </p>
-      )}
+      {runtime.errorNote && <p className={styles.note}>{runtime.errorNote}</p>}
 
       {runtime.phase === "viajando" && (
         <p className={styles.readout}>Viajando por el cable…</p>
@@ -67,6 +56,16 @@ export function OsiControls({ engine }: Props) {
           ))}
         </div>
       )}
+
+      {/* Empezar de nuevo en cualquier momento, no solo al entregar: un
+          error al principio arruina el intento sin errores, y antes había
+          que terminarlo entero para poder repetirlo. */}
+      {runtime.phase !== "entregado" &&
+        (runtime.depth > 0 || runtime.phase !== "bajando" || runtime.mistakes > 0) && (
+          <button className={styles.secondary} onClick={() => osi.restart()}>
+            Empezar de nuevo
+          </button>
+        )}
     </div>
   );
 }

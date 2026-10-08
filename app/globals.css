@@ -8,6 +8,12 @@
   --lab-bg: #0b1220; /* fondo general */
   --lab-panel: #131b2e; /* tarjetas / paneles flotantes */
   --lab-panel-border: #26344e;
+  /* Fondo de lo que flota sobre la escena 3D (paneles, botones, etiquetas):
+     el mismo azul que --lab-panel, translúcido para no tapar el experimento.
+     La versión "strong" es para tarjetas de texto largo, que tienen que
+     leerse bien sobre cualquier fondo. */
+  --lab-glass: rgba(19, 27, 46, 0.72);
+  --lab-glass-strong: rgba(19, 27, 46, 0.84);
   --lab-text: #e7ecf5;
   --lab-text-muted: #93a1be;
   --lab-accent: #2dd4bf; /* teal — datos, variables, elementos interactivos */

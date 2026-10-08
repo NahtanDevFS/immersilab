@@ -37,6 +37,9 @@ const FRAME_DEPTH = 0.09;
 interface Props {
   href: string;
   name: string;
+  /** Slug del área (physics, calculus, networks): da el color de la etiqueta. */
+  discipline: string;
+  disciplineName: string;
   position: [number, number, number];
   rotationY?: number;
 }
@@ -57,7 +60,14 @@ interface Props {
  * se lee como cartón; lo que la hace parecer madera pintada es justamente
  * que la rugosidad siga siendo la de la madera.
  */
-export function Door({ href, name, position, rotationY = 0 }: Props) {
+export function Door({
+  href,
+  name,
+  discipline,
+  disciplineName,
+  position,
+  rotationY = 0,
+}: Props) {
   const router = useRouter();
   const { camera } = useThree();
 
@@ -179,7 +189,10 @@ export function Door({ href, name, position, rotationY = 0 }: Props) {
       </mesh>
 
       <Html position={[0, DOOR_HEIGHT + 0.35, 0.06]} center>
-        <div className={styles.label}>{name}</div>
+        <div className={styles.label} data-discipline={discipline}>
+          <span className={styles.discipline}>{disciplineName}</span>
+          {name}
+        </div>
       </Html>
     </group>
   );

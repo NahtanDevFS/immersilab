@@ -141,7 +141,11 @@ export function QamScene({ engine, variables }: Props) {
       </mesh>
 
       {/* Símbolos ideales. */}
-      <instancedMesh ref={idealRef} args={[undefined, undefined, MAX_POINTS]}>
+      {/* frustumCulled={false}: three calcula UNA vez la esfera que envuelve las
+          instancias, cuando todavía están todas en el origen, y después recorta el
+          grupo entero si esa esfera chica queda fuera de cámara: los puntos
+          desaparecían al acercarse o al girar un poco. */}
+      <instancedMesh frustumCulled={false} ref={idealRef} args={[undefined, undefined, MAX_POINTS]}>
         <ringGeometry args={[0.07, 0.1, 16]} />
         <meshStandardMaterial
           color={IDEAL_COLOR}
@@ -153,15 +157,18 @@ export function QamScene({ engine, variables }: Props) {
       </instancedMesh>
 
       {/* Símbolos recibidos. */}
-      <instancedMesh ref={cloudRef} args={[undefined, undefined, MAX_POINTS]}>
+      {/* frustumCulled={false}: three calcula UNA vez la esfera que envuelve las
+          instancias, cuando todavía están todas en el origen, y después recorta el
+          grupo entero si esa esfera chica queda fuera de cámara: los puntos
+          desaparecían al acercarse o al girar un poco. */}
+      <instancedMesh frustumCulled={false} ref={cloudRef} args={[undefined, undefined, MAX_POINTS]}>
         <circleGeometry args={[0.045, 10]} />
-        <meshStandardMaterial
-          vertexColors
-          emissive="#ffffff"
-          emissiveIntensity={0.35}
-          toneMapped={false}
-          side={THREE.DoubleSide}
-        />
+        {/* Sin luces y sin vertexColors: el color de cada punto es el de
+            setColorAt (verde bien, rojo mal), tal cual. Con `vertexColors`
+            el material buscaba colores en el círculo, que no tiene, y un
+            emissive blanco encima dejaba todos los puntos grises: no se
+            distinguía cuáles llegaron mal, que es todo el experimento. */}
+        <meshBasicMaterial toneMapped={false} side={THREE.DoubleSide} />
       </instancedMesh>
 
       {/* Antena del receptor: da contexto físico al diagrama, que si no es

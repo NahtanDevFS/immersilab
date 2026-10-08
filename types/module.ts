@@ -15,6 +15,12 @@ export interface VariableDefinition {
   step?: number;
   default: number | boolean | string;
   options?: { label: string; value: string }[]; // solo para type: "select"
+  /**
+   * Subtítulo que agrupa variables seguidas en el panel ("Oscilador 1").
+   * Sin esto, tres osciladores con "Amplitud 1, Frecuencia 1, Fase 1…" se
+   * leían como nueve controles sueltos y era fácil cruzar los valores.
+   */
+  group?: string;
 }
 
 // El esquema completo de variables de un experimento.
@@ -36,6 +42,12 @@ export interface AIContext {
   variables: VariablesState;
   result?: Record<string, number | string>;
   conceptTags?: string[];
+  /**
+   * El panel de variables tal como lo ve el estudiante (nombre visible,
+   * valor, unidad, rango). Lo agrega el tutor, no el motor: ver
+   * lib/tutor/panel.ts.
+   */
+  panel?: string[];
 }
 
 /**

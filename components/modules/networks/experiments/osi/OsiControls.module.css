@@ -48,12 +48,29 @@
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
   border: 0.5px solid var(--lab-panel-border);
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--lab-glass);
   backdrop-filter: blur(6px);
   color: var(--lab-accent);
   font-family: var(--font-mono), monospace;
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* Por qué estuvo mal. Puede ser largo (qué capa es y qué hace), así que se
+   parte en varias líneas en vez de cortarse con "…" como la pantalla. */
+.note {
+  align-self: center;
+  max-width: 20rem;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  border: 0.5px solid var(--lab-danger);
+  background: var(--lab-glass);
+  backdrop-filter: blur(6px);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  line-height: 1.4;
 }
 
 /* Los saltos disponibles, como botones. Se envuelven en varias filas: con
@@ -83,7 +100,7 @@
   padding: 0.5rem 0.8rem;
   border-radius: 999px;
   border: 0.5px solid var(--lab-panel-border);
-  background: transparent;
+  background: var(--lab-glass);
   color: var(--lab-text-muted);
   font-family: var(--font-sans);
   font-size: 0.8rem;

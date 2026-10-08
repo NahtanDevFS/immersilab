@@ -51,8 +51,16 @@ export function useTutorSession(options: {
     setPending(false);
   }, []);
 
+  /**
+   * Manda una pregunta al tutor y va hablando la respuesta.
+   *
+   * `quiet`: para lo que el tutor dice por su cuenta (felicitar un reto), no
+   * para preguntas del alumno. Si falla, no dice "no me puedo conectar" ni
+   * marca error: nadie preguntó nada, y un aviso de error justo después de
+   * festejar un logro arruina el momento.
+   */
   const ask = useCallback(
-    async (transcript: string) => {
+    async (transcript: string, opts?: { quiet?: boolean }) => {
       abort();
       const controller = new AbortController();
       inFlight.current = controller;
@@ -108,6 +116,7 @@ export function useTutorSession(options: {
         // Manejado: se avisa por voz. warn y no error para no disparar el
         // overlay de Next en desarrollo.
         console.warn("[tutor]", error);
+        if (opts?.quiet) return;
         setFailed(true);
         // Si alcanzó a decir algo, se deja; si no, el mensaje sin conexión.
         if (!text.trim()) {

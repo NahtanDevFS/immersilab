@@ -37,6 +37,8 @@ export function formatUserTurn(transcript: string, context: AIContext): string {
 export const TUTOR_LIMITS = {
   transcriptChars: 600,
   hintsChars: 2000,
+  /** Estado del experimento + panel. El más grande (Ondas) ronda 1500. */
+  contextChars: 6000,
   historyTurns: 20,
   turnChars: 4000,
 } as const;

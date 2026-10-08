@@ -1,6 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useCallback, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { tourHref } from "@/lib/tour";
 import { Canvas } from "@react-three/fiber";
 import { Header } from "./Header";
 import { GyroCamera } from "./GyroCamera";
@@ -11,6 +13,16 @@ import { OrientationGate } from "./OrientationGate";
 import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
 import { LoadingOverlay } from "./LoadingOverlay";
+import { LobbyTutorial } from "./LobbyTutorial";
+import { TutorialProbe } from "./TutorialProbe";
+import {
+  getTutorialSeen,
+  getTutorialSeenOnServer,
+  markTutorialSeen,
+  resetTutorial,
+  subscribeTutorial,
+} from "./tutorialStore";
+import tutorialStyles from "./LobbyTutorial.module.css";
 import { useQualityTier } from "./useQualityTier";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { LobbyScene } from "@/components/lobby/LobbyScene";
@@ -29,6 +41,23 @@ export function LobbyShell() {
     useDeviceOrientation();
   const gyroActive = permission === "granted";
   const quality = useQualityTier();
+
+  // Tutorial de entrada: la primera vez en este dispositivo, o al pedirlo.
+  const tutorialSeen = useSyncExternalStore(
+    subscribeTutorial,
+    getTutorialSeen,
+    getTutorialSeenOnServer,
+  );
+  const [looked, setLooked] = useState(false);
+  const [walked, setWalked] = useState(false);
+  const onLook = useCallback(() => setLooked(true), []);
+  const onWalk = useCallback(() => setWalked(true), []);
+  const router = useRouter();
+  const reopenTutorial = () => {
+    setLooked(false);
+    setWalked(false);
+    resetTutorial();
+  };
 
   return (
     <OrientationGate>
@@ -52,7 +81,32 @@ export function LobbyShell() {
           <p className={styles.gyroNote}>Permiso de giroscopio denegado.</p>
         )}
 
-        {permission === "unsupported" && (
+        {!tutorialSeen && (
+          <LobbyTutorial
+            gyroActive={gyroActive}
+            looked={looked}
+            walked={walked}
+            onClose={markTutorialSeen}
+          />
+        )}
+        {tutorialSeen && (
+          <div className={tutorialStyles.lobbyActions}>
+            <button type="button" className={tutorialStyles.reopen} onClick={reopenTutorial}>
+              ¿Cómo me muevo?
+            </button>
+            {/* Demo corta para mostrar el laboratorio en clase (lib/tour.ts). */}
+            <button
+              type="button"
+              className={tutorialStyles.tour}
+              onClick={() => router.push(tourHref(0))}
+            >
+              Recorrido guiado
+            </button>
+          </div>
+        )}
+
+        {/* Mientras está el tutorial, este aviso repetiría lo mismo. */}
+        {permission === "unsupported" && tutorialSeen && (
           <p className={styles.gyroNote}>
             {insecure
               ? // Este caso confunde muchísimo si no se dice: el teléfono
@@ -96,6 +150,7 @@ export function LobbyShell() {
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
           <MovementController />
+          {!tutorialSeen && <TutorialProbe onLook={onLook} onWalk={onWalk} />}
           {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
 
           <PostFX quality={quality} />

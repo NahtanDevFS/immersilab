@@ -24,6 +24,7 @@ interface RecognitionLike {
   interimResults: boolean;
   onresult: ((event: { resultIndex: number; results: SpeechRecognitionResultList }) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
+  onstart: (() => void) | null;
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;
@@ -31,6 +32,12 @@ interface RecognitionLike {
 }
 
 type RecognitionCtor = new () => RecognitionLike;
+
+/**
+ * Tope de una grabación. Es continua (una pausa para pensar no la corta), así
+ * que si el "soltar" se pierde, sin esto quedaría escuchando para siempre.
+ */
+const MAX_LISTEN_MS = 30000;
 
 function getRecognitionCtor(): RecognitionCtor | null {
   const w = window as unknown as {
@@ -57,6 +64,11 @@ export function useSpeechInput(onFinal: (text: string) => void) {
   const [error, setError] = useState<SpeechInputError>(null);
 
   const recognition = useRef<RecognitionLike | null>(null);
+  /** Ya arrancó de verdad (llegó `onstart`). */
+  const started = useRef(false);
+  /** Se pidió parar antes de que arrancara: se para apenas arranque. */
+  const stopPending = useRef(false);
+  const maxTimer = useRef<number | null>(null);
   const finalText = useRef("");
   const onFinalRef = useRef(onFinal);
   useEffect(() => {
@@ -99,16 +111,30 @@ export function useSpeechInput(onFinal: (text: string) => void) {
             : "other",
       );
     };
+    rec.onstart = () => {
+      started.current = true;
+      // Chrome ignora stop() si llega antes de este evento: un clic corto, o
+      // el cartel de permiso del micrófono tapando el "soltar". Sin esto la
+      // grabación seguía sola y el botón no la podía apagar.
+      if (stopPending.current) rec.stop();
+    };
     rec.onend = () => {
       recognition.current = null;
+      started.current = false;
+      stopPending.current = false;
+      if (maxTimer.current !== null) window.clearTimeout(maxTimer.current);
+      maxTimer.current = null;
       setListening(false);
       onFinalRef.current(finalText.current.trim());
     };
 
     recognition.current = rec;
+    started.current = false;
+    stopPending.current = false;
     try {
       rec.start();
       setListening(true);
+      maxTimer.current = window.setTimeout(() => recognition.current?.stop(), MAX_LISTEN_MS);
     } catch {
       // start() tira si ya hay otro reconocimiento en curso.
       recognition.current = null;
@@ -116,11 +142,15 @@ export function useSpeechInput(onFinal: (text: string) => void) {
   }, []);
 
   const stop = useCallback(() => {
-    recognition.current?.stop();
+    const rec = recognition.current;
+    if (!rec) return;
+    if (started.current) rec.stop();
+    else stopPending.current = true;
   }, []);
 
   useEffect(() => {
     return () => {
+      if (maxTimer.current !== null) window.clearTimeout(maxTimer.current);
       const rec = recognition.current;
       if (!rec) return;
       rec.onend = null;

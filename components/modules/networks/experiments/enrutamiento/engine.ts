@@ -81,6 +81,8 @@ export interface RoutingRuntime {
   bestCost: number;
   /** Enlaces caídos, por índice en LINKS. */
   downLinks: number[];
+  /** ¿Queda algún camino al destino con los enlaces caídos? */
+  reachable: boolean;
   arrived: boolean;
   /** Cuántos paquetes se entregaron y cuántos por el camino óptimo. */
   delivered: number;
@@ -94,8 +96,12 @@ export interface RoutingEngine extends ExperimentEngine {
   hop: (nodeId: string) => void;
   /** Devuelve el paquete al origen sin tocar el marcador. */
   restart: () => void;
-  /** Tira abajo un enlace al azar (o lo levanta) para forzar a reconverger. */
-  toggleFailure: () => void;
+  /** Corta un enlace (o lo repara si ya estaba cortado). */
+  toggleLink: (index: number) => void;
+  /** Corta un enlace al azar del mejor camino actual. */
+  cutRandom: () => void;
+  /** Repara todos los enlaces. */
+  repairAll: () => void;
   getRuntime: () => RoutingRuntime;
 }
 
@@ -217,6 +223,7 @@ export function createRoutingEngine(): RoutingEngine {
     bestPath: [],
     bestCost: 0,
     downLinks: [],
+    reachable: true,
     arrived: false,
     delivered: 0,
     optimal: 0,
@@ -238,6 +245,17 @@ export function createRoutingEngine(): RoutingEngine {
     const best = shortestPath(metric, runtime.downLinks);
     runtime.bestPath = best.path;
     runtime.bestCost = best.cost;
+    runtime.reachable = best.path.length > 0;
+  }
+
+  /**
+   * Después de cortar o reparar: el mejor camino cambia y el paquete vuelve
+   * al origen, porque el que iba en camino pudo quedar parado en un enlace
+   * que ya no existe.
+   */
+  function linksChanged() {
+    recomputeBest();
+    restart();
   }
 
   function restart() {
@@ -343,28 +361,37 @@ export function createRoutingEngine(): RoutingEngine {
 
     restart,
 
-    toggleFailure() {
-      if (runtime.downLinks.length > 0) {
-        runtime.downLinks = [];
-      } else {
-        // Se cae un enlace del camino ÓPTIMO actual: tirar uno cualquiera casi
-        // siempre no cambia nada, y entonces no se ve la reconvergencia, que
-        // es lo que este botón tiene que enseñar.
-        const best = runtime.bestPath;
-        const candidates: number[] = [];
-        for (let i = 1; i < best.length; i += 1) {
-          const found = findLink(best[i - 1], best[i]);
-          if (found) candidates.push(found.index);
-        }
-        if (candidates.length > 0) {
-          runtime.downLinks = [
-            candidates[Math.floor(Math.random() * candidates.length)],
-          ];
-        }
-      }
+    toggleLink(index) {
+      if (index < 0 || index >= LINKS.length) return;
+      runtime.downLinks = runtime.downLinks.includes(index)
+        ? runtime.downLinks.filter((i) => i !== index)
+        : [...runtime.downLinks, index];
+      linksChanged();
+    },
 
-      recomputeBest();
-      restart();
+    cutRandom() {
+      // Del camino ÓPTIMO actual: tirar uno cualquiera casi siempre no cambia
+      // nada, y entonces no se ve la reconvergencia, que es lo que este botón
+      // tiene que enseñar. Se puede apretar varias veces: cada corte obliga a
+      // buscar el siguiente mejor camino.
+      const best = runtime.bestPath;
+      const candidates: number[] = [];
+      for (let i = 1; i < best.length; i += 1) {
+        const found = findLink(best[i - 1], best[i]);
+        if (found && !runtime.downLinks.includes(found.index)) candidates.push(found.index);
+      }
+      if (candidates.length === 0) return;
+      runtime.downLinks = [
+        ...runtime.downLinks,
+        candidates[Math.floor(Math.random() * candidates.length)],
+      ];
+      linksChanged();
+    },
+
+    repairAll() {
+      if (runtime.downLinks.length === 0) return;
+      runtime.downLinks = [];
+      linksChanged();
     },
 
     resetChallenges() {
