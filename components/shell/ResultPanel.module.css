@@ -4,6 +4,12 @@
   right: calc(0.75rem + env(safe-area-inset-right));
   z-index: 10;
   min-width: 160px;
+  /* Tope de ancho: con valores largos (la lista de zócalos de las compuertas,
+     el mensaje recibido de QAM) el panel se estiraba hasta tapar la escena.
+     Los valores largos pasan a varias líneas. */
+  max-width: min(22rem, 45vw);
+  max-height: calc(100% - 9rem);
+  overflow-y: auto;
   padding: 0.7rem 0.85rem;
   background: var(--lab-glass);
   border: 0.5px solid var(--lab-panel-border);
@@ -32,12 +38,16 @@
 }
 
 .label {
+  flex-shrink: 0;
   font-size: 0.75rem;
   color: var(--lab-text-muted);
 }
 
 .value {
   margin: 0;
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono), monospace;
   font-size: 0.78rem;
   color: var(--lab-accent);

@@ -1,0 +1,25 @@
+/* Etiqueta de cada objeto: nombre y masa. A propósito no dice de qué es
+   magnético y qué no: descubrirlo es parte del experimento. */
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-glass);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.label span {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.58rem;
+  font-weight: 400;
+  color: var(--lab-text-muted);
+}

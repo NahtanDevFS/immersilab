@@ -452,6 +452,50 @@ en la defensa.
 > voz, ruido constante). **Pendiente**: calibrar umbrales con voces reales en
 > el celular objetivo.
 
+### 3.3b Electromagnetismo y Electrónica (Fase G, 2026-10-08) ✅
+
+Los cuatro están hechos, con su motor probado en Node, escena, retos,
+pistas del tutor, acciones para la vista VR y puerta en el lobby (el área
+Electrónica tiene color violeta). El recorrido guiado suma una parada por
+cada módulo nuevo (nueve en total).
+
+Pedido del equipo: más física del curso (electromagnetismo) y electrónica de
+la carrera. Cuatro experimentos nuevos, en este orden:
+
+**E1 · Electroimán → "La grúa electromagnética"** *(Física · Electromagnetismo)*
+- **Concepto**: campo de un solenoide B = μ₀·μr·N·I/L (Ampère), el núcleo
+  ferromagnético, fuerza de atracción ∝ B² que cae rápido con la distancia,
+  calor en la bobina P = I²R. Solo los ferromagnéticos se atraen.
+- **Mecánica**: una grúa con un electroimán sobre un patio de chatarra (lata
+  de acero, bloque de hierro, olla de aluminio, tubo de cobre, motor, carro).
+  Se levanta si la fuerza magnética supera m·g; cortar la corriente suelta.
+- **Variables**: corriente, vueltas, núcleo (aire, hierro dulce, acero),
+  altura sobre el objeto.
+- **Retos**: levanta la lata; separa la chatarra (solo lo magnético al
+  contenedor); levanta el carro sin recalentar la bobina.
+
+Slugs ya cargados en Supabase (`supabase/migrations/20261008130000_electronica.sql`,
+con nombre y descripción): área `electronics`, módulos `electronica-circuitos`
+y `electronica-digital`, experimentos `protoboard`, `fuente-poder` y
+`compuertas`. Al construirlos hay que usar exactamente esos slugs y textos.
+
+**C1 · Ohm y Kirchhoff → "Arma el circuito"** *(Electrónica · Circuitos)*
+- Protoboard con batería de 9 V, resistencias comerciales con código de
+  colores, LED y multímetro. Retos: enciende el LED sin quemarlo (10–20 mA);
+  saca 3.3 V de 9 V con un divisor; comprueba Kirchhoff en paralelo.
+
+**C2 · Fuente de poder → "La fuente de poder"** *(Electrónica · Circuitos)*
+- 120 V AC → transformador → rectificador → capacitor → 5 V, con osciloscopio
+  por etapa. Retos: 5 V para un cargador USB; rizado menor al 5 %; el mismo
+  rizado con la mitad de capacitor usando el puente de diodos.
+
+**C3 · Compuertas lógicas → "Arma la lógica"** *(Electrónica · Electrónica digital)*
+- Entrenador digital: interruptores A, B, C, zócalos con chips reales
+  (7408, 7432, 7404), cables que se encienden con un 1, LED de salida y tabla
+  de verdad. Se elige la compuerta de cada zócalo y se prueba la tabla
+  completa. Niveles: la alarma (A·B), el portón ((A+B)·C̄), los tres jueces
+  (AB+AC+BC). Reto extra: el nivel 3 sin un intento fallido.
+
 ### 3.4 Capa de juego compartida (transversal)
 
 En vez de programar puntaje dentro de cada experimento, se extiende el contrato

@@ -23,7 +23,8 @@ insert into public.disciplines (slug, name)
 values
   ('physics', 'Física'),
   ('calculus', 'Cálculo'),
-  ('networks', 'Redes y Telecomunicaciones')
+  ('networks', 'Redes y Telecomunicaciones'),
+  ('electronics', 'Electrónica')
 on conflict (slug) do update set name = excluded.name;
 
 insert into public.modules (discipline_id, slug, name, order_index)
@@ -31,10 +32,13 @@ select d.id, v.slug, v.name, v.ord
 from (values
   ('fisica-nucleo-a', 'physics', 'Núcleo A', 0),
   ('fisica-fluidos', 'physics', 'Fluidos', 1),
+  ('fisica-electromagnetismo', 'physics', 'Electromagnetismo', 2),
   ('calculo-nucleo-a', 'calculus', 'Núcleo A', 0),
   ('redes-capa-fisica', 'networks', 'Capa física', 0),
   ('redes-capa-de-red', 'networks', 'Capa de red', 1),
-  ('redes-arquitectura', 'networks', 'Arquitectura', 2)
+  ('redes-arquitectura', 'networks', 'Arquitectura', 2),
+  ('electronica-circuitos', 'electronics', 'Circuitos', 0),
+  ('electronica-digital', 'electronics', 'Electrónica digital', 1)
 ) as v(slug, discipline, name, ord)
 join public.disciplines d on d.slug = v.discipline
 on conflict (slug) do update
@@ -50,6 +54,7 @@ from (values
   ('pendulo', 'fisica-nucleo-a', 'Sincroniza los relojes', 'Ajusta tu péndulo hasta que oscile al mismo ritmo que el de referencia, y descubre de qué depende (y de qué no) su período.', array['péndulo simple', 'período', 'conservación de la energía', 'oscilaciones', 'amortiguamiento']::text[]),
   ('ondas', 'fisica-nucleo-a', 'El sintonizador', 'Suma tres ondas senoidales hasta reproducir una onda objetivo: batidos, ondas cuadradas y de sierra salen de sumar senoidales.', array['superposición', 'interferencia', 'batido', 'series de Fourier', 'armónicos']::text[]),
   ('venturi', 'fisica-fluidos', 'Tubo de Venturi', 'Angosta el tubo y mira lo que nadie espera: el fluido se acelera y la presión CAE justo donde va más rápido.', array['mecánica de fluidos', 'ecuación de continuidad', 'principio de Bernoulli', 'cavitación', 'número de Reynolds']::text[]),
+  ('electroiman', 'fisica-electromagnetismo', 'La grúa electromagnética', 'Una corriente en una bobina crea un imán que se puede prender y apagar. Úsalo para levantar chatarra… y descubre qué metales no se dejan.', array['electromagnetismo', 'ley de Ampère', 'solenoide', 'permeabilidad magnética', 'materiales ferromagnéticos', 'efecto Joule']::text[]),
   ('suma-riemann', 'calculo-nucleo-a', 'Suma de Riemann', 'Llena el área bajo la curva con bloques. El reto: bajar del 1% de error con la MENOR cantidad de bloques posible.', array['integral definida', 'suma de Riemann', 'convergencia', 'error de aproximación']::text[]),
   ('derivada-pico', 'calculo-nucleo-a', 'Frena en el pico', 'El vagón recorre la curva y el velocímetro marca f''(x). Frena exactamente donde la pendiente es cero.', array['derivada', 'pendiente instantánea', 'puntos críticos', 'máximos y mínimos']::text[]),
   ('solidos-revolucion', 'calculo-nucleo-a', 'Tornea la pieza', 'Moldea el perfil con los sliders y la curva gira para generar el sólido. El reto: igualar la pieza objetivo.', array['sólidos de revolución', 'método de discos', 'método de capas', 'integral definida', 'volumen']::text[]),
@@ -59,7 +64,10 @@ from (values
   ('espectro', 'redes-capa-fisica', 'Tu voz en el espectro', 'Habla, silba o canta y mira tu voz convertida en frecuencias, en una cascada 3D que avanza con el tiempo.', array['dominio de la frecuencia', 'transformada de Fourier', 'espectro de la voz', 'formantes', 'ancho de banda telefónico']::text[]),
   ('cobertura', 'redes-capa-fisica', 'Cubre el campus', 'Coloca hasta tres antenas en el campus, elige banda, potencia y canales, y mira el mapa de cobertura cambiar en vivo.', array['pérdida de trayecto', 'presupuesto de enlace', 'atenuación por obstáculos', 'interferencia cocanal', 'reutilización de frecuencias']::text[]),
   ('enrutamiento', 'redes-capa-de-red', 'Encuentra el camino', 'Eres el router: elige por dónde sale cada paquete y compite contra Dijkstra. Cambia la métrica y mira cómo cambia el mejor camino.', array['enrutamiento', 'métricas de enrutamiento', 'algoritmo de Dijkstra', 'convergencia', 'RIP vs OSPF']::text[]),
-  ('osi', 'redes-arquitectura', 'Arma el paquete', 'Baja el mensaje por la pila agregando cabeceras, cruza el cable y quítalas del otro lado. OSI y TCP/IP, lado a lado.', array['modelo OSI', 'modelo TCP/IP', 'encapsulación', 'cabeceras de protocolo', 'PDU']::text[])
+  ('osi', 'redes-arquitectura', 'Arma el paquete', 'Baja el mensaje por la pila agregando cabeceras, cruza el cable y quítalas del otro lado. OSI y TCP/IP, lado a lado.', array['modelo OSI', 'modelo TCP/IP', 'encapsulación', 'cabeceras de protocolo', 'PDU']::text[]),
+  ('protoboard', 'electronica-circuitos', 'Arma el circuito', 'Arma circuitos en una protoboard con resistencias comerciales y mídelos con el multímetro: enciende un LED sin quemarlo, saca 3.3 V de una batería de 9 V y comprueba las leyes de Kirchhoff.', array['ley de Ohm', 'leyes de Kirchhoff', 'divisor de voltaje', 'resistencias en serie y paralelo', 'código de colores', 'LED']::text[]),
+  ('fuente-poder', 'electronica-circuitos', 'La fuente de poder', 'Convierte los 120 V de alterna del enchufe en 5 V de continua para un cargador USB: transformador, rectificador y capacitor, mirando cada etapa en el osciloscopio.', array['transformador', 'diodo', 'rectificador', 'puente de diodos', 'capacitor de filtro', 'rizado']::text[]),
+  ('compuertas', 'electronica-digital', 'Arma la lógica', 'Elige qué compuerta lógica va en cada zócalo para resolver problemas reales, y comprueba la tabla de verdad completa con los interruptores.', array['compuertas lógicas', 'álgebra de Boole', 'tabla de verdad', 'circuitos combinacionales']::text[])
 ) as v(slug, module, name, description, tags)
 join public.modules m on m.slug = v.module
 on conflict (slug) do update

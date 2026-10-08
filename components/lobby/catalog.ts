@@ -4,6 +4,7 @@ import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
 import { venturiExperiment } from "@/components/modules/physics/experiments/venturi";
 import { ondasExperiment } from "@/components/modules/physics/experiments/ondas";
+import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
 import { taylorExperiment } from "@/components/modules/calculus/experiments/taylor";
@@ -13,6 +14,9 @@ import { osiExperiment } from "@/components/modules/networks/experiments/osi";
 import { espectroExperiment } from "@/components/modules/networks/experiments/espectro";
 import { modulacionExperiment } from "@/components/modules/networks/experiments/modulacion";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
+import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
+import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
+import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -51,12 +55,16 @@ const registry = [
   { href: "/lab/calculus/taylor", name: taylorExperiment.name },
   { href: "/lab/physics/venturi", name: venturiExperiment.name },
   { href: "/lab/physics/ondas", name: ondasExperiment.name },
+  { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
   { href: "/lab/networks/qam", name: qamExperiment.name },
   { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
   { href: "/lab/networks/osi", name: osiExperiment.name },
   { href: "/lab/networks/espectro", name: espectroExperiment.name },
   { href: "/lab/networks/modulacion", name: modulacionExperiment.name },
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
+  { href: "/lab/electronics/protoboard", name: protoboardExperiment.name },
+  { href: "/lab/electronics/fuente-poder", name: fuentePoderExperiment.name },
+  { href: "/lab/electronics/compuertas", name: compuertasExperiment.name },
 ];
 
 export const lobbyDoors: LobbyDoor[] = registry.map((entry, index) => {
