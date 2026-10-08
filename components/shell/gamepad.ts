@@ -19,12 +19,36 @@
  * y el mapeo del control: si un USB genérico mueve la cámara con el stick
  * equivocado, se corrige sin recompilar.
  *
+ * Control ESP32 del grupo ("ImmersiLab Control", Bluetooth): Chrome lo reporta
+ * SIN mapeo estándar y con 6 ejes [X, Y, Z, Rx, Ry, Rz]. Los que usamos son
+ * stick izq = axes[0],[1] y stick der = axes[2],[5] (Rx y Ry quedan fijos).
+ * Además los ejes pueden llegar en 0..1 con el reposo en 0.5, así que se
+ * normalizan a -1..1. Todo eso está en `readEsp32` más abajo.
+ *
+ * Botones del ESP32 (índices de buttons[]):
+ *   0 principal  → acción: clic / agarrar slider, A siguiente en el tutorial
+ *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
+ *   2 clic stick izquierdo, 3 clic stick derecho → libres por ahora
+ *
  * Overrides (quedan guardados en localStorage):
  *   ?stickL=0,1  ?stickR=2,3   índices de los ejes
  *   ?padDebug=1                muestra ejes y botones en vivo en el badge
+ *   ?pad=esp32                 fuerza el perfil del control ESP32 (por si
+ *                              Chrome no muestra el nombre "ImmersiLab")
  */
 
 const DEADZONE = 0.15;
+
+// Control ESP32: zona muerta un poco más grande, porque los potenciómetros
+// baratos oscilan y un bajón de voltaje mueve todos los ejes a la vez.
+const ESP32_DEADZONE = 0.2;
+const ESP32_AXES = { lx: 0, ly: 1, rx: 2, ry: 5 };
+
+/**
+ * Si al probar el ESP32 un stick va al revés (empujás hacia adelante y
+ * retrocede), poné en true el eje que corresponda.
+ */
+const ESP32_INVERT = { lx: true, ly: true, rx: false, ry: false };
 
 export interface PadAxes {
   x: number;
@@ -76,6 +100,8 @@ export function readPad(): PadState | null {
   const pad = getActivePad();
   if (!pad) return null;
 
+  if (isEsp32(pad)) return readEsp32(pad);
+
   const [lx, ly] = stickIndices("stickL", [0, 1]);
   const [rx, ry] = stickIndices("stickR", defaultRightStick(pad));
 
@@ -99,6 +125,108 @@ export function readPad(): PadState | null {
 
 function deadzone(value: number) {
   return Math.abs(value) < DEADZONE ? 0 : value;
+}
+
+// ---------------------------------------------------------------------------
+// Control ESP32 del grupo
+// ---------------------------------------------------------------------------
+
+const espPads = new Set<string>();
+
+/**
+ * Reconoce el control ESP32. Chrome no siempre muestra el nombre que le
+ * pusimos en el firmware, así que además del nombre se usa su "firma": sin
+ * mapeo estándar, 6 ejes, y en reposo los ejes 0, 1, 2 y 5 valen ~0.5 mientras
+ * que el 3 y el 4 valen 0. Un control genérico en reposo no se ve así.
+ * Una vez reconocido se recuerda, aunque después muevan los sticks.
+ */
+function isEsp32(pad: Gamepad): boolean {
+  if (pad.mapping === "standard") return false;
+  if (readOverride("pad") === "esp32") return true;
+  if (pad.id.toLowerCase().includes("immersilab")) return true;
+
+  const key = `${pad.index}:${pad.id}`;
+  if (espPads.has(key)) return true;
+
+  if (pad.axes.length === 6) {
+    const near = (v: number, target: number) => Math.abs(v - target) < 0.12;
+    const [a0, a1, a2, a3, a4, a5] = pad.axes;
+    if (
+      near(a0, 0.5) &&
+      near(a1, 0.5) &&
+      near(a2, 0.5) &&
+      near(a5, 0.5) &&
+      near(a3, 0) &&
+      near(a4, 0)
+    ) {
+      espPads.add(key);
+      return true;
+    }
+  }
+  return false;
+}
+
+type AxisRange = "unit" | "signed";
+const rangeByPad = new Map<string, AxisRange>();
+
+/**
+ * Averigua si el control reporta los ejes en 0..1 (reposo ≈ 0.5) o en -1..1
+ * (reposo ≈ 0). Se decide una sola vez, mirando el stick izquierdo quieto.
+ * Devuelve null si todavía no se puede saber (por ejemplo, si justo lo
+ * estaban moviendo al conectar) — mientras tanto los sticks valen 0.
+ */
+function esp32Range(pad: Gamepad): AxisRange | null {
+  const key = `${pad.index}:${pad.id}`;
+  const known = rangeByPad.get(key);
+  if (known) return known;
+
+  const x = pad.axes[ESP32_AXES.lx] ?? 0;
+  const y = pad.axes[ESP32_AXES.ly] ?? 0;
+  const near = (v: number, target: number) => Math.abs(v - target) < 0.12;
+
+  let range: AxisRange | null = null;
+  if (near(x, 0.5) && near(y, 0.5)) range = "unit";
+  else if (near(x, 0) && near(y, 0)) range = "signed";
+
+  if (range) rangeByPad.set(key, range);
+  return range;
+}
+
+/** Quita la zona muerta y re-escala para que arranque suave desde 0. */
+function esp32Deadzone(value: number): number {
+  const abs = Math.abs(value);
+  if (abs < ESP32_DEADZONE) return 0;
+  return Math.sign(value) * Math.min(1, (abs - ESP32_DEADZONE) / (1 - ESP32_DEADZONE));
+}
+
+function readEsp32(pad: Gamepad): PadState {
+  const range = esp32Range(pad);
+
+  const axis = (index: number, invert: boolean) => {
+    if (!range) return 0;
+    const raw = pad.axes[index] ?? 0;
+    const normalized = range === "unit" ? raw * 2 - 1 : raw;
+    return esp32Deadzone(invert ? -normalized : normalized);
+  };
+
+  return {
+    id: pad.id,
+    mapping: "ESP32",
+    left: {
+      x: axis(ESP32_AXES.lx, ESP32_INVERT.lx),
+      y: axis(ESP32_AXES.ly, ESP32_INVERT.ly),
+    },
+    right: {
+      x: axis(ESP32_AXES.rx, ESP32_INVERT.rx),
+      y: axis(ESP32_AXES.ry, ESP32_INVERT.ry),
+    },
+    action: pad.buttons[0]?.pressed ?? false,
+    // El ESP32 solo tiene 4 botones (no existe el índice 7 del R2), así que
+    // hablarle al tutor es el botón secundario, mantenido.
+    talk: pad.buttons[1]?.pressed ?? false,
+    rawAxes: pad.axes,
+    rawButtons: pad.buttons.map((b) => b.pressed),
+  };
 }
 
 /**
