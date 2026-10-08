@@ -39,6 +39,7 @@ CC0 es dominio público: no exige dar crédito. Se deja igual por orden.
 |---|---|---|
 | Space Grotesk | Google Fonts (cargada con `next/font`) | SIL Open Font License 1.1 |
 | JetBrains Mono | Google Fonts (cargada con `next/font`) | SIL Open Font License 1.1 |
+| Geist (`public/fonts/Geist-Regular.ttf`) | Vercel, copiada del paquete de Next. Se usa para el texto 3D de la vista VR, que no puede usar las fuentes de la página | SIL Open Font License 1.1 |
 
 ## Servicios
 

@@ -1,5 +1,5 @@
 import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createSpectrumEngine } from "./engine";
+import { createSpectrumEngine, type SpectrumEngine } from "./engine";
 import { SpectrumScene } from "./SpectrumScene";
 import { SpectrumControls } from "./SpectrumControls";
 
@@ -65,5 +65,18 @@ export const espectroExperiment: ExperimentDefinition = {
     "Si el estudiante no ve nada, sugiere subir la sensibilidad o acercarse al micrófono.",
   SceneComponent: SpectrumScene,
   ControlsComponent: SpectrumControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const s = engine as SpectrumEngine;
+    const listening = s.getRuntime().mic === "escuchando";
+    return [
+      {
+        id: "microfono",
+        label: listening ? "Apagar micrófono" : "Encender micrófono",
+        onSelect: () => (listening ? s.stopMic() : void s.startMic()),
+        primary: !listening,
+      },
+    ];
+  },
   createEngine: createSpectrumEngine,
 };

@@ -1,5 +1,5 @@
-import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createCollisionEngine } from "./engine";
+import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
+import { createCollisionEngine, type CollisionEngine } from "./engine";
 import { CollisionScene } from "./CollisionScene";
 import { CollisionControls } from "./CollisionControls";
 
@@ -96,5 +96,23 @@ export const colisiones1DExperiment: ExperimentDefinition = {
     "No le des los números de su predicción: guíalo a plantear la conservación de la cantidad de movimiento y, si es elástico, la de la energía o la velocidad relativa que se invierte.",
   SceneComponent: CollisionScene,
   ControlsComponent: CollisionControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const c = engine as CollisionEngine;
+    const r = c.getRuntime();
+    const actions: VrAction[] = [];
+    if (r.prediction?.score != null) {
+      actions.push({ id: "puntaje", label: `Tu predicción: ${r.prediction.score} pts`, info: true });
+    }
+    actions.push({
+      id: "soltar",
+      label: r.phase === "collided" ? "Soltar de nuevo" : "Soltar",
+      onSelect: () => c.start(),
+      disabled: r.phase === "moving",
+      primary: true,
+    });
+    if (r.phase !== "idle") actions.push({ id: "reiniciar", label: "Reiniciar", onSelect: () => c.reset() });
+    return actions;
+  },
   createEngine: createCollisionEngine,
 };

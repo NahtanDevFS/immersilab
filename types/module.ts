@@ -170,8 +170,29 @@ export interface ExperimentDefinition {
    * Se omite si el experimento no necesita acciones además de sus variables.
    */
   ControlsComponent?: React.ComponentType<{ engine: ExperimentEngine }>;
+  /**
+   * Opcional: las mismas acciones de ControlsComponent, para la vista VR.
+   * Ahí el HTML no se puede usar (se dibuja una sola vez y cada ojo vería
+   * medio panel), así que el shell las dibuja como botones 3D que se apuntan
+   * con la mira. Se vuelve a leer varias veces por segundo: las etiquetas
+   * pueden cambiar con el estado ("Soltar" → "Soltar de nuevo").
+   */
+  vrActions?: (engine: ExperimentEngine) => VrAction[];
   // Factoría que crea una nueva instancia del motor de este experimento.
   createEngine: () => ExperimentEngine;
+}
+
+/** Un botón (o una línea de texto) del panel de acciones de la vista VR. */
+export interface VrAction {
+  /** Estable entre lecturas. */
+  id: string;
+  label: string;
+  onSelect?: () => void;
+  disabled?: boolean;
+  /** La acción principal (Disparar, Soltar…): se destaca. */
+  primary?: boolean;
+  /** Solo texto, sin botón: un puntaje, el mensaje recibido, un error. */
+  info?: boolean;
 }
 
 // Un módulo agrupa varios experimentos bajo una disciplina.

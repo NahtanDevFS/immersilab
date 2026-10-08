@@ -1,5 +1,5 @@
-import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createProjectileEngine } from "./engine";
+import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
+import { createProjectileEngine, TARGETS_X, type ProjectileEngine } from "./engine";
 import { ProjectileScene } from "./ProjectileScene";
 import { ProjectileControls } from "./ProjectileControls";
 
@@ -78,5 +78,39 @@ export const tiroParabolicoExperiment: ExperimentDefinition = {
   cameraView: { position: [21, 7, 34], target: [21, 3, 0] },
   SceneComponent: ProjectileScene,
   ControlsComponent: ProjectileControls,
+  // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).
+  vrActions: (engine) => {
+    const p = engine as ProjectileEngine;
+    const r = p.getRuntime();
+    const game = r.mode !== "libre";
+    if (game && r.round.finished) {
+      return [
+        { id: "puntaje", label: `Ronda terminada: ${r.round.total} pts`, info: true },
+        { id: "ronda", label: "Nueva ronda", onSelect: () => p.newRound(), primary: true },
+      ];
+    }
+    const actions: VrAction[] = [];
+    if (game) {
+      actions.push({ id: "puntaje", label: `Blanco ${r.round.targetIndex + 1}/3 · ${r.round.total} pts`, info: true });
+    }
+    actions.push({
+      id: "disparar",
+      label: game
+        ? `Disparar al blanco ${r.round.targetIndex + 1} (${TARGETS_X[r.round.targetIndex]} m)`
+        : r.phase === "landed"
+          ? "Lanzar de nuevo"
+          : "Lanzar",
+      onSelect: () => p.fire(),
+      disabled: r.phase === "flying",
+      primary: true,
+    });
+    if (game && r.round.targetIndex > 0) {
+      actions.push({ id: "reiniciar", label: "Reiniciar ronda", onSelect: () => p.newRound() });
+    }
+    if (!game && r.phase !== "idle") {
+      actions.push({ id: "reiniciar", label: "Reiniciar", onSelect: () => p.reset() });
+    }
+    return actions;
+  },
   createEngine: createProjectileEngine,
 };
