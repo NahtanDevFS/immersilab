@@ -4,6 +4,7 @@ import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
 import { venturiExperiment } from "@/components/modules/physics/experiments/venturi";
 import { ondasExperiment } from "@/components/modules/physics/experiments/ondas";
+import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
 import { taylorExperiment } from "@/components/modules/calculus/experiments/taylor";
@@ -51,6 +52,7 @@ const registry = [
   { href: "/lab/calculus/taylor", name: taylorExperiment.name },
   { href: "/lab/physics/venturi", name: venturiExperiment.name },
   { href: "/lab/physics/ondas", name: ondasExperiment.name },
+  { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
   { href: "/lab/networks/qam", name: qamExperiment.name },
   { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
   { href: "/lab/networks/osi", name: osiExperiment.name },

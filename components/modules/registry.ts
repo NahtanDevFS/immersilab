@@ -4,6 +4,7 @@ import { colisiones1DExperiment } from "@/components/modules/physics/experiments
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
 import { ondasExperiment } from "@/components/modules/physics/experiments/ondas";
 import { venturiExperiment } from "@/components/modules/physics/experiments/venturi";
+import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments/suma-riemann";
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
@@ -27,6 +28,7 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     penduloExperiment,
     ondasExperiment,
     venturiExperiment,
+    electroimanExperiment,
     sumaRiemannExperiment,
     derivadaPicoExperiment,
     solidosRevolucionExperiment,

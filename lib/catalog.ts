@@ -39,6 +39,7 @@ export const DISCIPLINES: DisciplineEntry[] = [
 export const MODULES: ModuleEntry[] = [
   { slug: "fisica-nucleo-a", discipline: "physics", name: "Núcleo A", order: 0 },
   { slug: "fisica-fluidos", discipline: "physics", name: "Fluidos", order: 1 },
+  { slug: "fisica-electromagnetismo", discipline: "physics", name: "Electromagnetismo", order: 2 },
   { slug: "calculo-nucleo-a", discipline: "calculus", name: "Núcleo A", order: 0 },
   { slug: "redes-capa-fisica", discipline: "networks", name: "Capa física", order: 0 },
   { slug: "redes-capa-de-red", discipline: "networks", name: "Capa de red", order: 1 },
@@ -51,6 +52,7 @@ export const EXPERIMENTS: ExperimentEntry[] = [
   { slug: "pendulo", module: "fisica-nucleo-a", href: "/lab/physics/pendulo" },
   { slug: "ondas", module: "fisica-nucleo-a", href: "/lab/physics/ondas" },
   { slug: "venturi", module: "fisica-fluidos", href: "/lab/physics/venturi" },
+  { slug: "electroiman", module: "fisica-electromagnetismo", href: "/lab/physics/electroiman" },
   { slug: "suma-riemann", module: "calculo-nucleo-a", href: "/lab/calculus/suma-riemann" },
   { slug: "derivada-pico", module: "calculo-nucleo-a", href: "/lab/calculus/derivada-pico" },
   { slug: "solidos-revolucion", module: "calculo-nucleo-a", href: "/lab/calculus/solidos-revolucion" },

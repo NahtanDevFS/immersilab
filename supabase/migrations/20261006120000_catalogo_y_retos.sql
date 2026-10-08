@@ -31,6 +31,7 @@ select d.id, v.slug, v.name, v.ord
 from (values
   ('fisica-nucleo-a', 'physics', 'Núcleo A', 0),
   ('fisica-fluidos', 'physics', 'Fluidos', 1),
+  ('fisica-electromagnetismo', 'physics', 'Electromagnetismo', 2),
   ('calculo-nucleo-a', 'calculus', 'Núcleo A', 0),
   ('redes-capa-fisica', 'networks', 'Capa física', 0),
   ('redes-capa-de-red', 'networks', 'Capa de red', 1),
@@ -50,6 +51,7 @@ from (values
   ('pendulo', 'fisica-nucleo-a', 'Sincroniza los relojes', 'Ajusta tu péndulo hasta que oscile al mismo ritmo que el de referencia, y descubre de qué depende (y de qué no) su período.', array['péndulo simple', 'período', 'conservación de la energía', 'oscilaciones', 'amortiguamiento']::text[]),
   ('ondas', 'fisica-nucleo-a', 'El sintonizador', 'Suma tres ondas senoidales hasta reproducir una onda objetivo: batidos, ondas cuadradas y de sierra salen de sumar senoidales.', array['superposición', 'interferencia', 'batido', 'series de Fourier', 'armónicos']::text[]),
   ('venturi', 'fisica-fluidos', 'Tubo de Venturi', 'Angosta el tubo y mira lo que nadie espera: el fluido se acelera y la presión CAE justo donde va más rápido.', array['mecánica de fluidos', 'ecuación de continuidad', 'principio de Bernoulli', 'cavitación', 'número de Reynolds']::text[]),
+  ('electroiman', 'fisica-electromagnetismo', 'La grúa electromagnética', 'Una corriente en una bobina crea un imán que se puede prender y apagar. Úsalo para levantar chatarra… y descubre qué metales no se dejan.', array['electromagnetismo', 'ley de Ampère', 'solenoide', 'permeabilidad magnética', 'materiales ferromagnéticos', 'efecto Joule']::text[]),
   ('suma-riemann', 'calculo-nucleo-a', 'Suma de Riemann', 'Llena el área bajo la curva con bloques. El reto: bajar del 1% de error con la MENOR cantidad de bloques posible.', array['integral definida', 'suma de Riemann', 'convergencia', 'error de aproximación']::text[]),
   ('derivada-pico', 'calculo-nucleo-a', 'Frena en el pico', 'El vagón recorre la curva y el velocímetro marca f''(x). Frena exactamente donde la pendiente es cero.', array['derivada', 'pendiente instantánea', 'puntos críticos', 'máximos y mínimos']::text[]),
   ('solidos-revolucion', 'calculo-nucleo-a', 'Tornea la pieza', 'Moldea el perfil con los sliders y la curva gira para generar el sólido. El reto: igualar la pieza objetivo.', array['sólidos de revolución', 'método de discos', 'método de capas', 'integral definida', 'volumen']::text[]),
