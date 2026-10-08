@@ -452,7 +452,12 @@ en la defensa.
 > voz, ruido constante). **Pendiente**: calibrar umbrales con voces reales en
 > el celular objetivo.
 
-### 3.3b Electromagnetismo y Electrónica (Fase G, 2026-10-08)
+### 3.3b Electromagnetismo y Electrónica (Fase G, 2026-10-08) ✅
+
+Los cuatro están hechos, con su motor probado en Node, escena, retos,
+pistas del tutor, acciones para la vista VR y puerta en el lobby (el área
+Electrónica tiene color violeta). El recorrido guiado suma una parada por
+cada módulo nuevo (nueve en total).
 
 Pedido del equipo: más física del curso (electromagnetismo) y electrónica de
 la carrera. Cuatro experimentos nuevos, en este orden:

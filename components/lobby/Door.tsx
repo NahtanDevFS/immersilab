@@ -16,6 +16,7 @@ const AREA_COLOR: Record<string, string> = {
   physics: "#f2a65a",
   calculus: "#2dd4bf",
   networks: "#9fd8ff",
+  electronics: "#c084fc",
 };
 
 /*

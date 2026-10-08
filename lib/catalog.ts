@@ -34,6 +34,7 @@ export const DISCIPLINES: DisciplineEntry[] = [
   { slug: "physics", name: "Física" },
   { slug: "calculus", name: "Cálculo" },
   { slug: "networks", name: "Redes y Telecomunicaciones" },
+  { slug: "electronics", name: "Electrónica" },
 ];
 
 export const MODULES: ModuleEntry[] = [
@@ -44,6 +45,8 @@ export const MODULES: ModuleEntry[] = [
   { slug: "redes-capa-fisica", discipline: "networks", name: "Capa física", order: 0 },
   { slug: "redes-capa-de-red", discipline: "networks", name: "Capa de red", order: 1 },
   { slug: "redes-arquitectura", discipline: "networks", name: "Arquitectura", order: 2 },
+  { slug: "electronica-circuitos", discipline: "electronics", name: "Circuitos", order: 0 },
+  { slug: "electronica-digital", discipline: "electronics", name: "Electrónica digital", order: 1 },
 ];
 
 export const EXPERIMENTS: ExperimentEntry[] = [
@@ -63,4 +66,7 @@ export const EXPERIMENTS: ExperimentEntry[] = [
   { slug: "cobertura", module: "redes-capa-fisica", href: "/lab/networks/cobertura" },
   { slug: "enrutamiento", module: "redes-capa-de-red", href: "/lab/networks/enrutamiento" },
   { slug: "osi", module: "redes-arquitectura", href: "/lab/networks/osi" },
+  { slug: "protoboard", module: "electronica-circuitos", href: "/lab/electronics/protoboard" },
+  { slug: "fuente-poder", module: "electronica-circuitos", href: "/lab/electronics/fuente-poder" },
+  { slug: "compuertas", module: "electronica-digital", href: "/lab/electronics/compuertas" },
 ];

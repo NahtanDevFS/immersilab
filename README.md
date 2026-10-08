@@ -10,14 +10,17 @@ Gemini) que responde con los valores actuales del experimento.
 
 ## Qué incluye
 
-- **15 experimentos** en tres áreas, con **47 retos** en total:
+- **19 experimentos** en cuatro áreas, con **60 retos** en total:
   - **Física:** tiro parabólico (artillería), colisiones 1D (predice el
-    resultado), péndulo, ondas y superposición, tubo de Venturi.
+    resultado), péndulo, ondas y superposición, tubo de Venturi, la grúa
+    electromagnética (electroimán).
   - **Cálculo:** derivada (frena en el pico), suma de Riemann, sólidos de
     revolución, series de Taylor.
   - **Redes y Telecomunicaciones:** modulación AM/FM, constelación QAM,
     propagación y cobertura, enrutamiento (contra Dijkstra), encapsulación
     OSI/TCP-IP, espectro de tu voz en vivo (FFT del micrófono).
+  - **Electrónica:** protoboard con multímetro (Ohm y Kirchhoff), fuente de
+    poder con osciloscopio (de alterna a continua), compuertas lógicas.
 - **Lobby** en 3D con una puerta por experimento: se entra caminando.
 - **Tutor por voz:** se mantiene presionado el botón del micrófono (o el
   gatillo R2 del control), se pregunta en voz alta y responde hablando.
@@ -28,7 +31,7 @@ Gemini) que responde con los valores actuales del experimento.
 - **Vista docente** (`/docente`): avance de la clase, retos más difíciles y
   descarga en CSV. Solo para cuentas con rol de docente.
 - **Tutorial de entrada** de 30 segundos y **recorrido guiado** por un
-  experimento de cada módulo (seis), para mostrar el laboratorio en clase.
+  experimento de cada módulo (nueve), para mostrar el laboratorio en clase.
 
 ## Requisitos
 

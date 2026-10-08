@@ -15,6 +15,9 @@ import { espectroExperiment } from "@/components/modules/networks/experiments/es
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
 import { enrutamientoExperiment } from "@/components/modules/networks/experiments/enrutamiento";
 import { osiExperiment } from "@/components/modules/networks/experiments/osi";
+import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
+import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
+import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
 
 /**
  * Todas las definiciones de experimento, por slug. Lo usa la pantalla de
@@ -39,6 +42,9 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     coberturaExperiment,
     enrutamientoExperiment,
     osiExperiment,
+    protoboardExperiment,
+    fuentePoderExperiment,
+    compuertasExperiment,
   ].map((definition) => [definition.slug, definition]),
 );
 

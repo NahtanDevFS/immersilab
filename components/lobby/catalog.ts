@@ -14,6 +14,9 @@ import { osiExperiment } from "@/components/modules/networks/experiments/osi";
 import { espectroExperiment } from "@/components/modules/networks/experiments/espectro";
 import { modulacionExperiment } from "@/components/modules/networks/experiments/modulacion";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
+import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
+import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
+import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -59,6 +62,9 @@ const registry = [
   { href: "/lab/networks/espectro", name: espectroExperiment.name },
   { href: "/lab/networks/modulacion", name: modulacionExperiment.name },
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
+  { href: "/lab/electronics/protoboard", name: protoboardExperiment.name },
+  { href: "/lab/electronics/fuente-poder", name: fuentePoderExperiment.name },
+  { href: "/lab/electronics/compuertas", name: compuertasExperiment.name },
 ];
 
 export const lobbyDoors: LobbyDoor[] = registry.map((entry, index) => {

@@ -3,7 +3,7 @@ import type { VariablesState } from "@/types/module";
 /**
  * Recorrido guiado: una demo del laboratorio, pensada para mostrarlo en
  * clase (PLAN_DESARROLLO.md, Fase F.4). Pasa por un experimento de cada
- * MÓDULO (seis), en el orden del catálogo, y termina en la pantalla de
+ * MÓDULO (nueve), en el orden del catálogo, y termina en la pantalla de
  * progreso para mostrar que lo logrado queda guardado. Recorrer los quince
  * experimentos tomaría más de media hora y dejaría de ser una demo.
  *
@@ -44,6 +44,14 @@ export const TOUR: TourStop[] = [
       "Angosta el cuello y mira las dos columnas: la de la derecha baja. Si te pasas con el agua, aparece la cavitación.",
   },
   {
+    slug: "electroiman",
+    href: "/lab/physics/electroiman",
+    name: "La grúa electromagnética",
+    say:
+      "Ahora electromagnetismo. Una corriente en una bobina crea un campo magnético, y un núcleo de hierro lo multiplica: eso es un electroimán. " +
+      "Baja el imán cerca de la lata, enciéndelo y levántala. Después prueba con la olla de aluminio: no todos los metales se pegan.",
+  },
+  {
     slug: "solidos-revolucion",
     href: "/lab/calculus/solidos-revolucion",
     name: "Tornea la pieza",
@@ -72,8 +80,24 @@ export const TOUR: TourStop[] = [
     href: "/lab/networks/osi",
     name: "Arma el paquete",
     say:
-      "Última parada: la arquitectura de la red. Un mensaje baja por las capas del emisor y cada una le agrega su cabecera; del otro lado, el receptor las saca en orden inverso. " +
+      "Ahora la arquitectura de la red. Un mensaje baja por las capas del emisor y cada una le agrega su cabecera; del otro lado, el receptor las saca en orden inverso. " +
       "Elige en cada capa un protocolo que trabaje ahí, y al subir saca exactamente los que pusiste.",
+  },
+  {
+    slug: "protoboard",
+    href: "/lab/electronics/protoboard",
+    name: "Arma el circuito",
+    say:
+      "Pasamos a Electrónica. En esta protoboard, la ley de Ohm decide cuánta corriente pasa por el LED. " +
+      "Elige la resistencia para que encienda sin quemarse: entre diez y veinte miliamperios. El multímetro te dice cuánto pasa.",
+  },
+  {
+    slug: "compuertas",
+    href: "/lab/electronics/compuertas",
+    name: "Arma la lógica",
+    say:
+      "Última parada: electrónica digital. Cada problema trae un circuito con zócalos vacíos: elige qué compuerta lógica va en cada uno. " +
+      "Mueve los interruptores y mira los cables encenderse, y después prueba la tabla de verdad completa.",
   },
 ];
 

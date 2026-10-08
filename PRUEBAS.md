@@ -32,7 +32,7 @@ limpio, en la consola del navegador: `localStorage.clear()`.
       experimento.
 - [ ] No se atraviesan las paredes.
 
-## 2. En cada experimento (los 15)
+## 2. En cada experimento (los 19)
 
 Para cada uno:
 
@@ -46,7 +46,7 @@ Para cada uno:
       experimento.
 - [ ] "← Lobby" vuelve al pasillo.
 
-Retos para probar (47 en total):
+Retos para probar (60 en total):
 
 | Experimento | Retos |
 |---|---|
@@ -55,6 +55,7 @@ Retos para probar (47 en total):
 | Péndulo | Sincroniza los relojes · ¿Y la masa? · El doble de lento |
 | Ondas | Una sola onda · Batido · Onda cuadrada · Onda de sierra |
 | Tubo de Venturi | Nueve veces más rápido · Al borde de la cavitación · Flujo laminar |
+| La grúa electromagnética | Levanta la lata · Separa la chatarra · Levanta el carro sin recalentar |
 | Suma de Riemann | Menos de 1 % de error · Con 6 bloques o menos · En las cuatro funciones |
 | Derivada | Frena en un pico o un valle · Frenado perfecto · En las tres pistas |
 | Sólidos de revolución | Copa · Pesa de gimnasio · Trompo · Jarrón |
@@ -65,10 +66,23 @@ Retos para probar (47 en total):
 | Cobertura | Cubre el campus · Wi-Fi en 2.4 GHz · Reutiliza canales |
 | Enrutamiento | Gánale a Dijkstra · Con las tres métricas · Re-enruta |
 | OSI | Sin errores en OSI · Sin errores en TCP/IP |
+| Arma el circuito | Enciende el LED sin quemarlo · Saca 3.3 V de 9 V · Comprueba Kirchhoff |
+| La fuente de poder | Carga el celular · Rizado menor al 5 % con media onda · Lo mismo con la mitad de capacitor |
+| Arma la lógica | La alarma · El portón · Los tres jueces · Sin probar a ciegas |
 
 Pistas de lo nuevo en Venturi: 9× sale con el cuello de 2 cm; al borde, por
 ejemplo agua a 12 L/s con cuello de 1.25 cm; laminar con agua es imposible,
 con aceite sí.
+
+Pistas de los experimentos nuevos:
+- **Grúa:** la lata con separación de 1 cm; el carro con hierro dulce, 1000
+  vueltas, 12 A y 1 cm (1440 W, dentro de lo nominal). La olla de aluminio y
+  el tubo de cobre no suben nunca.
+- **Protoboard:** LED rojo con 470 Ω (15 mA); divisor con 4.7 kΩ y 2.7 kΩ
+  (3.28 V); Kirchhoff con R2 y R3 distintas, midiendo las tres corrientes.
+- **Fuente:** con 250 mA, media onda con 34 espiras y 22 000 µF; puente con
+  38 espiras y 10 000 µF.
+- **Compuertas:** alarma AND; portón OR, NOT, AND; jueces tres AND y dos OR.
 
 *Visor:* el panel de variables aparece dentro de la escena; el cursor se
 mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
@@ -110,14 +124,15 @@ estudiante con algún reto logrado.
 ## 6. Recorrido guiado
 
 - [ ] En el lobby, "Recorrido guiado" lleva a Tiro parabólico con la tarjeta
-      "Recorrido · 1 de 6", que se lee en voz alta.
+      "Recorrido · 1 de 9", que se lee en voz alta.
 - [ ] El cañón arranca en modo artillería (tres blancos).
 - [ ] No aparece la explicación larga; "Explicación completa" la abre.
 - [ ] "Ver el experimento" pliega la tarjeta a una pastilla arriba al centro;
-      "1/6 · Ver texto" la vuelve a abrir.
+      "1/9 · Ver texto" la vuelve a abrir.
 - [ ] "Siguiente" recorre un experimento por módulo: Tubo de Venturi →
-      Tornea la pieza → Tu voz en el espectro → Encuentra el camino →
-      Arma el paquete → `/progreso`.
+      La grúa electromagnética → Tornea la pieza → Tu voz en el espectro →
+      Encuentra el camino → Arma el paquete → Arma el circuito →
+      Arma la lógica → `/progreso`.
 - [ ] "Salir del recorrido" deja el experimento normal, con el "?" de la
       explicación.
 - [ ] Recargar en una parada no saca del recorrido.

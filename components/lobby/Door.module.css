@@ -31,6 +31,10 @@
   --area: #9fd8ff;
 }
 
+.label[data-discipline="electronics"] {
+  --area: #c084fc;
+}
+
 .discipline {
   font-size: 0.62rem;
   font-weight: 700;
