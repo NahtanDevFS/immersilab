@@ -81,7 +81,8 @@ export function TourPanel({ index, onPreset, onExit, onShowBriefing }: Props) {
           onClick={() => setExpanded(true)}
           aria-label="Ver el texto de esta parada"
         >
-          {index + 1}/{TOUR.length} ?
+          {/* Antes decía solo "2/4 ?", y el "?" se leía como un error. */}
+          {index + 1}/{TOUR.length} · Ver texto
         </button>
         <button type="button" className={styles.pillNext} onClick={goNext}>
           {nextLabel}

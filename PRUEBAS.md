@@ -110,13 +110,14 @@ estudiante con algún reto logrado.
 ## 6. Recorrido guiado
 
 - [ ] En el lobby, "Recorrido guiado" lleva a Tiro parabólico con la tarjeta
-      "Recorrido · 1 de 4", que se lee en voz alta.
+      "Recorrido · 1 de 6", que se lee en voz alta.
 - [ ] El cañón arranca en modo artillería (tres blancos).
 - [ ] No aparece la explicación larga; "Explicación completa" la abre.
 - [ ] "Ver el experimento" pliega la tarjeta a una pastilla arriba al centro;
-      "1/4 ?" la vuelve a abrir.
-- [ ] "Siguiente" recorre: Tornea la pieza → Tu voz en el espectro →
-      Encuentra el camino → `/progreso`.
+      "1/6 · Ver texto" la vuelve a abrir.
+- [ ] "Siguiente" recorre un experimento por módulo: Tubo de Venturi →
+      Tornea la pieza → Tu voz en el espectro → Encuentra el camino →
+      Arma el paquete → `/progreso`.
 - [ ] "Salir del recorrido" deja el experimento normal, con el "?" de la
       explicación.
 - [ ] Recargar en una parada no saca del recorrido.

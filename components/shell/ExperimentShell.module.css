@@ -1,3 +1,22 @@
+/*
+ * Vista VR (pantalla partida para el visor). Todo lo que es HTML se dibuja
+ * UNA vez sobre la pantalla entera, así que en el visor cada panel quedaría
+ * visible para un solo ojo y cortado. Por ahora se oculta todo menos la
+ * escena y la salida; los paneles en 3D vienen en la etapa 2.
+ *
+ * Los componentes siguen montados (solo ocultos): el tutor sigue
+ * escuchando el gatillo R2 y hablando, y los retos se siguen registrando.
+ */
+.container[data-view="vr"] > :not([data-vr-keep]) {
+  display: none !important;
+}
+
+/* Las etiquetas <Html> de drei se montan dentro del contenedor del Canvas,
+   junto al div que tiene el <canvas>. */
+.container[data-view="vr"] [data-vr-scene] > :not(:has(canvas)) {
+  display: none !important;
+}
+
 .container {
   position: relative;
   /* 100vh en un celular NO descuenta la barra de direcciones ni la de

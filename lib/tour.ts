@@ -1,10 +1,11 @@
 import type { VariablesState } from "@/types/module";
 
 /**
- * Recorrido guiado: una demo corta del laboratorio, pensada para mostrarlo
- * en clase (PLAN_DESARROLLO.md, Fase F.4). Pasa por un experimento de cada
- * área, en un orden que va de lo más conocido a lo más vistoso, y termina
- * en la pantalla de progreso para mostrar que lo logrado queda guardado.
+ * Recorrido guiado: una demo del laboratorio, pensada para mostrarlo en
+ * clase (PLAN_DESARROLLO.md, Fase F.4). Pasa por un experimento de cada
+ * MÓDULO (seis), en el orden del catálogo, y termina en la pantalla de
+ * progreso para mostrar que lo logrado queda guardado. Recorrer los quince
+ * experimentos tomaría más de media hora y dejaría de ser una demo.
  *
  * El estado vive en la URL (`?recorrido=2`): así se puede abrir directo una
  * parada, recargar sin perderse, y no hace falta estado global. Fuera del
@@ -35,6 +36,14 @@ export const TOUR: TourStop[] = [
     preset: { modo: "blancos" },
   },
   {
+    slug: "venturi",
+    href: "/lab/physics/venturi",
+    name: "Tubo de Venturi",
+    say:
+      "Seguimos en Física, ahora con fluidos. Por este tubo pasa siempre el mismo caudal, así que donde se angosta el fluido tiene que ir más rápido, y por Bernoulli la presión baja justo ahí. " +
+      "Angosta el cuello y mira las dos columnas: la de la derecha baja. Si te pasas con el agua, aparece la cavitación.",
+  },
+  {
     slug: "solidos-revolucion",
     href: "/lab/calculus/solidos-revolucion",
     name: "Tornea la pieza",
@@ -55,8 +64,16 @@ export const TOUR: TourStop[] = [
     href: "/lab/networks/enrutamiento",
     name: "Encuentra el camino",
     say:
-      "Última parada. Tú eres el router: elige por qué enlace sale el paquete hasta llegar al destino, y al final se compara tu camino con el que habría elegido el algoritmo de Dijkstra. " +
-      "Prueba cambiar la métrica a saltos y mira cómo cambia el mejor camino.",
+      "Tú eres el router: elige por qué enlace sale el paquete hasta llegar al destino, y al final se compara tu camino con el que habría elegido el algoritmo de Dijkstra. " +
+      "Prueba cambiar la métrica a saltos, o corta un enlace tocándolo, y mira cómo cambia el mejor camino.",
+  },
+  {
+    slug: "osi",
+    href: "/lab/networks/osi",
+    name: "Arma el paquete",
+    say:
+      "Última parada: la arquitectura de la red. Un mensaje baja por las capas del emisor y cada una le agrega su cabecera; del otro lado, el receptor las saca en orden inverso. " +
+      "Elige en cada capa un protocolo que trabaje ahí, y al subir saca exactamente los que pusiste.",
   },
 ];
 

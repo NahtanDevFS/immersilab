@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AccountChip } from "@/components/progress/AccountChip";
@@ -10,6 +11,8 @@ interface Props {
   showBackLink?: boolean;
   /** Muestra el acceso a la cuenta y al progreso (en el lobby). */
   showAccount?: boolean;
+  /** Botones extra al final (el del visor). */
+  actions?: ReactNode;
 }
 
 /**
@@ -17,7 +20,7 @@ interface Props {
  * logo de la universidad, el nombre del laboratorio, y opcionalmente un
  * subtítulo y un link de vuelta al lobby.
  */
-export function Header({ subtitle, showBackLink, showAccount }: Props) {
+export function Header({ subtitle, showBackLink, showAccount, actions }: Props) {
   return (
     <header className={styles.header}>
       <Image
@@ -37,6 +40,7 @@ export function Header({ subtitle, showBackLink, showAccount }: Props) {
         </Link>
       )}
       {showAccount && <AccountChip />}
+      {actions}
     </header>
   );
 }

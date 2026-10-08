@@ -12,6 +12,9 @@ import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
 import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
+import { StereoView } from "./StereoView";
+import { VrButton, VrExit } from "./VrControls";
+import { useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { LobbyTutorial } from "./LobbyTutorial";
 import { TutorialProbe } from "./TutorialProbe";
@@ -40,6 +43,8 @@ export function LobbyShell() {
   const { orientation, permission, requestPermission, insecure } =
     useDeviceOrientation();
   const gyroActive = permission === "granted";
+  const view = useViewMode();
+  const vr = view === "vr";
   const quality = useQualityTier();
 
   // Tutorial de entrada: la primera vez en este dispositivo, o al pedirlo.
@@ -61,8 +66,14 @@ export function LobbyShell() {
 
   return (
     <OrientationGate>
-      <div className={styles.container}>
-        <Header subtitle="Elige un experimento — camina hacia una puerta" showAccount />
+      <div className={styles.container} data-view={view}>
+        <Header
+          subtitle="Elige un experimento — camina hacia una puerta"
+          showAccount
+          actions={
+            <VrButton onBeforeEnter={permission === "prompt" ? requestPermission : undefined} />
+          }
+        />
 
         {gyroActive && <GamepadStatus />}
 
@@ -118,6 +129,8 @@ export function LobbyShell() {
         )}
 
         <Canvas
+          data-vr-keep
+          data-vr-scene
           /* Contexto de apilamiento propio (z-index 0): las etiquetas <Html>
              de drei se montan junto al canvas con z-index calculados que
              pueden ser enormes, y se dibujaban ENCIMA de los paneles del
@@ -153,8 +166,10 @@ export function LobbyShell() {
           {!tutorialSeen && <TutorialProbe onLook={onLook} onWalk={onWalk} />}
           {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
 
-          <PostFX quality={quality} />
+          {vr ? <StereoView /> : <PostFX quality={quality} />}
         </Canvas>
+
+        {vr && <VrExit />}
 
         <LoadingOverlay label="ImmersiLab" />
       </div>
