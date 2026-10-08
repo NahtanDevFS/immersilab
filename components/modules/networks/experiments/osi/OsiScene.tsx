@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -122,6 +122,28 @@ export function OsiScene({ engine, variables }: Props) {
   const stack = getStack(variables.modelo ?? "osi");
   const model = String(variables.modelo ?? "osi");
 
+  // Qué mostrar en cada etiqueta. Antes cada placa decía de entrada qué
+  // cabecera llevaba y el juego se resolvía leyendo. Ahora la cabecera
+  // aparece cuando se acierta: en el emisor al ponerla, en el receptor al
+  // sacarla.
+  const [reveal, setReveal] = useState<{ chosen: Array<string | null>; removed: number }>({
+    chosen: [],
+    removed: 0,
+  });
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const r = osi.getRuntime();
+      const removed =
+        r.phase === "subiendo" ? r.depth : r.phase === "entregado" ? r.stack.length : 0;
+      setReveal((prev) =>
+        prev.removed === removed && prev.chosen.join("|") === r.chosen.join("|")
+          ? prev
+          : { chosen: [...r.chosen], removed },
+      );
+    }, 150);
+    return () => window.clearInterval(id);
+  }, [osi]);
+
   return (
     <group position={[CENTER_X, 0, 0]}>
       {/* Las dos torres. */}
@@ -129,6 +151,11 @@ export function OsiScene({ engine, variables }: Props) {
         <group key={side} position={[side * TOWER_X, 0, 0]}>
           {stack.map((step, i) => {
             const index = side < 0 ? i : stack.length + i;
+            const header = reveal.chosen[i];
+            // En el receptor se saca de abajo hacia arriba: la capa i ya se
+            // sacó si está entre las últimas `removed`.
+            const shown =
+              side < 0 ? Boolean(header) : i >= stack.length - reveal.removed && Boolean(header);
             return (
               // La pila viene de arriba hacia abajo (índice 0 = Aplicación),
               // así que se dibuja al revés: Aplicación arriba y la capa
@@ -164,8 +191,15 @@ export function OsiScene({ engine, variables }: Props) {
                     <span className={styles.osi}>
                       {model === "osi" ? step.osi : step.tcpip}
                     </span>
-                    <span className={styles.header}>+{step.header}</span>
-                    <span className={styles.pdu}>{step.pdu}</span>
+                    {shown && (
+                      <>
+                        <span className={styles.header}>
+                          {side < 0 ? "+" : "−"}
+                          {header}
+                        </span>
+                        <span className={styles.pdu}>{step.pdu}</span>
+                      </>
+                    )}
                   </div>
                 </Html>
               </group>

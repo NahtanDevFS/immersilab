@@ -10,8 +10,11 @@ export interface LayerStep {
   osi: string;
   /** Capa equivalente en el modelo TCP/IP. */
   tcpip: string;
-  /** La cabecera que se agrega al bajar por esta capa. */
-  header: string;
+  /**
+   * Protocolos reales de esta capa: cualquiera vale al bajar. Antes había uno
+   * solo por capa y la etiqueta lo mostraba, así que bastaba con leerla.
+   */
+  protocols: string[];
   /** Cómo se llama la unidad de datos cuando sale de esta capa. */
   pdu: string;
   /** Una línea de por qué existe esta capa. */
@@ -36,7 +39,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "7 · Aplicación",
     tcpip: "Aplicación",
-    header: "HTTP",
+    protocols: ["HTTP", "DNS", "SMTP", "FTP"],
     pdu: "Datos",
     why: "El programa arma el mensaje: aquí vive el GET que pide una página.",
     color: "#2dd4bf",
@@ -44,7 +47,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "6 · Presentación",
     tcpip: "Aplicación",
-    header: "TLS",
+    protocols: ["TLS", "ASCII", "JPEG"],
     pdu: "Datos",
     why: "Cifra y da formato. En Internet real la hace TLS, no una capa aparte.",
     color: "#4ec9c0",
@@ -52,7 +55,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "5 · Sesión",
     tcpip: "Aplicación",
-    header: "Sesión",
+    protocols: ["NetBIOS", "RPC", "SOCKS"],
     pdu: "Datos",
     why: "Abre y cierra la conversación. TCP/IP no le da una capa propia.",
     color: "#6cbfd4",
@@ -60,7 +63,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "4 · Transporte",
     tcpip: "Transporte",
-    header: "TCP",
+    protocols: ["TCP", "UDP"],
     pdu: "Segmento",
     why: "Puertos, orden y retransmisión: que llegue todo y en orden.",
     color: "#7aa7e8",
@@ -68,7 +71,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "3 · Red",
     tcpip: "Internet",
-    header: "IP",
+    protocols: ["IPv4", "IPv6"],
     pdu: "Paquete",
     why: "La dirección IP de destino: por dónde ruta el paquete entre redes.",
     color: "#a48ae8",
@@ -76,7 +79,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "2 · Enlace",
     tcpip: "Acceso al medio",
-    header: "Ethernet",
+    protocols: ["Ethernet", "Wi-Fi", "PPP"],
     pdu: "Trama",
     why: "La MAC del siguiente salto y el control de errores del cable.",
     color: "#d98ac4",
@@ -84,7 +87,7 @@ export const OSI_STACK: LayerStep[] = [
   {
     osi: "1 · Física",
     tcpip: "Acceso al medio",
-    header: "Bits",
+    protocols: ["Cable UTP", "Fibra óptica", "Radio"],
     pdu: "Bits",
     why: "Voltajes, luz o radio: el mensaje se vuelve señal en el medio.",
     color: "#f2a65a",
@@ -96,7 +99,7 @@ export const TCPIP_STACK: LayerStep[] = [
   {
     osi: "7-6-5 · Aplicación",
     tcpip: "Aplicación",
-    header: "HTTP",
+    protocols: ["HTTP", "DNS", "SMTP", "FTP"],
     pdu: "Datos",
     why: "Una sola capa junta lo que OSI parte en aplicación, presentación y sesión.",
     color: "#2dd4bf",
@@ -106,7 +109,7 @@ export const TCPIP_STACK: LayerStep[] = [
   {
     osi: "2-1 · Enlace + Física",
     tcpip: "Acceso al medio",
-    header: "Ethernet",
+    protocols: ["Ethernet", "Wi-Fi", "PPP"],
     pdu: "Trama",
     why: "TCP/IP no separa el cable de la trama: para él es una sola capa.",
     color: "#d98ac4",
@@ -132,6 +135,10 @@ export interface OsiRuntime {
   mistakes: number;
   /** Última cabecera equivocada, para poder explicarla. */
   lastError: string | null;
+  /** Por qué estuvo mal, en una línea. */
+  errorNote: string | null;
+  /** Lo que el jugador puso en cada capa al bajar (por índice de la pila). */
+  chosen: Array<string | null>;
   /** Progreso del viaje por el cable, 0 → 1. */
   travel: number;
 }
@@ -146,13 +153,17 @@ export interface OsiEngine extends ExperimentEngine {
 /** Cuánto tarda el paquete en cruzar el cable, en segundos. */
 const TRAVEL_TIME = 1.4;
 
-/** Baraja estable por índice: no usa Math.random en el render, así que la
- *  lista de opciones no baila entre frames. */
-function shuffle<T>(items: T[], seed: number): T[] {
+/** Baraja. Se llama al pasar de capa, nunca en el render: las opciones no
+ *  cambian entre frames. */
+function shuffle<T>(items: T[]): T[] {
   return items
-    .map((item, i) => ({ item, key: Math.sin(seed + i * 12.9898) }))
+    .map((item) => ({ item, key: Math.random() }))
     .sort((a, b) => a.key - b.key)
     .map((entry) => entry.item);
+}
+
+function pick<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 /**
@@ -174,7 +185,6 @@ export function createOsiEngine(): OsiEngine {
   /** Modelos en los que se entregó el mensaje sin un solo error. */
   const cleanModels = new Set<string>();
   let stack: LayerStep[] = OSI_STACK;
-  let seed = 1;
 
   const runtime: OsiRuntime = {
     stack,
@@ -184,44 +194,91 @@ export function createOsiEngine(): OsiEngine {
     correct: 0,
     mistakes: 0,
     lastError: null,
+    errorNote: null,
+    chosen: [],
     travel: 0,
   };
 
+  function currentIndex(): number {
+    return runtime.phase === "bajando"
+      ? runtime.depth
+      : stack.length - 1 - runtime.depth;
+  }
+
+  function layerName(step: LayerStep): string {
+    return String(lastVariables.modelo ?? "osi") === "tcpip" ? step.tcpip : step.osi;
+  }
+
   /**
-   * Tres opciones: la correcta y dos distractoras tomadas de la MISMA pila.
+   * Tres opciones, todas protocolos reales.
    *
-   * Las distractoras son otras cabeceras reales y no inventadas: el error que
-   * hay que poder cometer es "TCP antes que IP", que es el malentendido de
-   * verdad. Con opciones absurdas se acierta por descarte sin entender nada.
+   * Bajando: uno de esta capa (cualquiera de los suyos) y dos de otras capas.
+   * El error que hay que poder cometer es "UDP en la capa de red", que es el
+   * malentendido de verdad; con opciones absurdas se acierta por descarte.
+   *
+   * Subiendo: lo que el emisor puso en esta capa, OTRO protocolo de la misma
+   * capa y uno de otra. El receptor no elige qué protocolo usar: lee el que
+   * llegó. Si abajo se puso UDP, sacar TCP es un error aunque sea de la
+   * misma capa.
    */
   function refreshOptions() {
-    const index =
-      runtime.phase === "bajando"
-        ? runtime.depth
-        : stack.length - 1 - runtime.depth;
-
-    const correct = stack[index]?.header;
-    if (!correct) {
+    const index = currentIndex();
+    const step = stack[index];
+    if (!step) {
       runtime.options = [];
       return;
     }
 
-    const others = stack
-      .map((step) => step.header)
-      .filter((header) => header !== correct);
+    const otherLayers = stack.filter((_, i) => i !== index);
+    let correct: string;
+    const distractors: string[] = [];
 
-    seed += 1;
-    const distractors = shuffle(others, seed).slice(0, 2);
-    runtime.options = shuffle([correct, ...distractors], seed + 7);
+    if (runtime.phase === "bajando") {
+      correct = pick(step.protocols);
+      shuffle(otherLayers)
+        .slice(0, 2)
+        .forEach((layer) => distractors.push(pick(layer.protocols)));
+    } else {
+      correct = runtime.chosen[index] ?? step.protocols[0];
+      const siblings = step.protocols.filter((p) => p !== correct);
+      if (siblings.length > 0) distractors.push(pick(siblings));
+      for (const layer of shuffle(otherLayers)) {
+        if (distractors.length >= 2) break;
+        distractors.push(pick(layer.protocols));
+      }
+    }
+
+    runtime.options = shuffle([correct, ...distractors]);
   }
 
+  /**
+   * Un intento nuevo, con los contadores en cero. Antes los errores se
+   * arrastraban de un mensaje al siguiente (y de OSI a TCP/IP): con un solo
+   * error en cualquier intento, los retos "sin errores" quedaban imposibles
+   * hasta recargar la página.
+   */
   function restart() {
     runtime.stack = stack;
     runtime.phase = "bajando";
     runtime.depth = 0;
     runtime.travel = 0;
     runtime.lastError = null;
+    runtime.errorNote = null;
+    runtime.chosen = stack.map(() => null);
+    runtime.correct = 0;
+    runtime.mistakes = 0;
     refreshOptions();
+  }
+
+  /** La explicación del error, según qué se eligió y dónde. */
+  function explain(header: string, index: number): string {
+    const step = stack[index];
+    const owner = stack.find((s) => s.protocols.includes(header));
+    if (runtime.phase === "subiendo" && owner === step) {
+      return `${header} es de esta capa, pero no es lo que puso el emisor: llegó ${runtime.chosen[index]}. El receptor lee la cabecera que vino, no elige otra.`;
+    }
+    const where = owner ? `${header} es de ${layerName(owner)}` : `${header} no va aquí`;
+    return `${where}. Esta capa (${layerName(step)}): ${step.why.charAt(0).toLowerCase()}${step.why.slice(1)}`;
   }
 
   return {
@@ -270,6 +327,7 @@ export function createOsiEngine(): OsiEngine {
                 capas_correctas: runtime.correct,
                 de_un_total_de: total,
                 errores: runtime.mistakes,
+                cabeceras: runtime.chosen.filter(Boolean).join(" + "),
                 modelo: String(lastVariables.modelo ?? "osi"),
                 ...(runtime.mistakes === 0
                   ? { estado: "¡Mensaje entregado sin un solo error!" }
@@ -289,19 +347,24 @@ export function createOsiEngine(): OsiEngine {
     choose(header) {
       if (runtime.phase === "viajando" || runtime.phase === "entregado") return;
 
-      const index =
+      const index = currentIndex();
+      const step = stack[index];
+      if (!step) return;
+      const valid =
         runtime.phase === "bajando"
-          ? runtime.depth
-          : stack.length - 1 - runtime.depth;
-      const expected = stack[index]?.header;
+          ? step.protocols.includes(header)
+          : header === runtime.chosen[index];
 
-      if (header !== expected) {
+      if (!valid) {
         runtime.mistakes += 1;
         runtime.lastError = header;
+        runtime.errorNote = explain(header, index);
         return;
       }
 
+      if (runtime.phase === "bajando") runtime.chosen[index] = header;
       runtime.lastError = null;
+      runtime.errorNote = null;
       runtime.correct += 1;
       runtime.depth += 1;
 

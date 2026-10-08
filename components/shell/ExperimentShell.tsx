@@ -155,7 +155,11 @@ export function ExperimentShell({
 
         {/* Tutor por voz: R2 o el botón para preguntar. Se remonta con cada
             experimento, así que cada uno arranca con memoria nueva. */}
-        <VoiceTutor engine={engine} hints={experiment.tutorHints} />
+        <VoiceTutor
+          engine={engine}
+          hints={experiment.tutorHints}
+          schema={experiment.variablesSchema}
+        />
 
         {/* El botón aparece SIEMPRE que el sensor todavía no entregó datos.
             En Android el enganche automático lo pone en "granted" en

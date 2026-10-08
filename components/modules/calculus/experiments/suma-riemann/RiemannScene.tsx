@@ -141,7 +141,11 @@ export function RiemannScene({ engine, variables }: Props) {
       {/* Los bloques de la suma. Translúcidos a propósito: opacos taparían la
           curva y el alumno no vería el trozo que sobra o falta en cada uno,
           que es exactamente el error que el experimento mide. */}
-      <instancedMesh
+      {/* frustumCulled={false}: three calcula UNA vez la esfera que envuelve las
+          instancias, cuando todavía están todas en el origen, y después recorta el
+          grupo entero si esa esfera chica queda fuera de cámara: los puntos
+          desaparecían al acercarse o al girar un poco. */}
+      <instancedMesh frustumCulled={false}
         ref={barsRef}
         args={[undefined, undefined, MAX_BARS]}
         castShadow

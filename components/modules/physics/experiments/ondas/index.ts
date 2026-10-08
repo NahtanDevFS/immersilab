@@ -7,7 +7,8 @@ import { WavesControls } from "./WavesControls";
 function oscillator(i: number, defaults: { a: number; f: number }): VariablesSchema {
   const amplitude: VariableDefinition = {
     type: "number",
-    label: `Amplitud ${i}`,
+    label: "Amplitud",
+    group: `Oscilador ${i}`,
     min: 0,
     max: 1,
     step: 0.01,
@@ -15,7 +16,8 @@ function oscillator(i: number, defaults: { a: number; f: number }): VariablesSch
   };
   const frequency: VariableDefinition = {
     type: "number",
-    label: `Frecuencia ${i}`,
+    label: "Frecuencia",
+    group: `Oscilador ${i}`,
     unit: "Hz",
     min: 0,
     max: 8,
@@ -26,7 +28,8 @@ function oscillator(i: number, defaults: { a: number; f: number }): VariablesSch
   };
   const phase: VariableDefinition = {
     type: "number",
-    label: `Fase ${i}`,
+    label: "Fase",
+    group: `Oscilador ${i}`,
     unit: "°",
     min: 0,
     max: 360,

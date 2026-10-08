@@ -1,18 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import type { ExperimentEngine } from "@/types/module";
+import type { ExperimentEngine, VariablesSchema } from "@/types/module";
 import { readPad } from "@/components/shell/gamepad";
 import { onChallengeCompleted, type ChallengeCompletedEvent } from "@/lib/tutor/events";
 import { useSpeechInput } from "./useSpeechInput";
 import { useSpeechOutput } from "./useSpeechOutput";
 import { useTutorSession } from "./useTutorSession";
 import { TutorHUD, type TutorStatus } from "./TutorHUD";
+import { describePanel } from "@/lib/tutor/panel";
 
 interface Props {
   engine: ExperimentEngine;
   /** `ExperimentDefinition.tutorHints`. */
   hints?: string;
+  /** Para describirle al tutor el panel tal como se ve en pantalla. */
+  schema?: VariablesSchema;
 }
 
 /**
@@ -46,11 +49,14 @@ function challengePrompt(event: ChallengeCompletedEvent): string {
   ).slice(0, 580);
 }
 
-export function VoiceTutor({ engine, hints }: Props) {
+export function VoiceTutor({ engine, hints, schema }: Props) {
   const output = useSpeechOutput();
 
   const session = useTutorSession({
-    getContext: () => engine.getState(),
+    getContext: () => {
+      const state = engine.getState();
+      return schema ? { ...state, panel: describePanel(schema, state.variables) } : state;
+    },
     hints,
     onSentence: output.enqueue,
   });

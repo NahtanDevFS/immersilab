@@ -38,7 +38,7 @@
   align-self: center;
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
-  background: rgba(19, 27, 46, 0.92);
+  background: var(--lab-glass);
   border: 0.5px solid var(--lab-accent-warm);
   color: var(--lab-accent-warm);
   font-family: var(--font-mono), monospace;

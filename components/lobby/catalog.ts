@@ -14,10 +14,15 @@ import { espectroExperiment } from "@/components/modules/networks/experiments/es
 import { modulacionExperiment } from "@/components/modules/networks/experiments/modulacion";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
 import { doorPlacement } from "./corridor";
+import { DISCIPLINES } from "@/lib/catalog";
 
 export interface LobbyDoor {
   href: string;
   name: string;
+  /** Slug del área (physics, calculus, networks), para el color. */
+  discipline: string;
+  /** Nombre del área, tal como se muestra. */
+  disciplineName: string;
   /** Centro de la puerta dentro del pasillo (x, y, z). */
   position: [number, number, number];
   /** Rotación Y (radianes): las puertas miran hacia el centro del pasillo. */
@@ -54,7 +59,14 @@ const registry = [
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
 ];
 
-export const lobbyDoors: LobbyDoor[] = registry.map((entry, index) => ({
-  ...entry,
-  ...doorPlacement(index),
-}));
+export const lobbyDoors: LobbyDoor[] = registry.map((entry, index) => {
+  // El área sale de la ruta (/lab/<área>/<experimento>): así no hay que
+  // declararla dos veces en cada línea de arriba.
+  const discipline = entry.href.split("/")[2];
+  return {
+    ...entry,
+    discipline,
+    disciplineName: DISCIPLINES.find((d) => d.slug === discipline)?.name ?? "",
+    ...doorPlacement(index),
+  };
+});

@@ -32,6 +32,12 @@ export interface CollisionEngine extends ExperimentEngine {
 
 const START_X1 = -6;
 const START_X2 = 6;
+/**
+ * Medio largo del riel (mide 16 m). En cada punta hay un tope que frena al
+ * carrito que llega: antes no había nada y, después del choque, los
+ * carritos salían del riel y seguían para siempre.
+ */
+export const RAIL_HALF = 8;
 // Mitad del ancho que DIBUJA la escena (0.6 + 0.2·m): antes el motor usaba
 // 0.05 por kg y la escena 0.2, así que con masas grandes los carritos se
 // encimaban en pantalla antes de "chocar".
@@ -76,10 +82,13 @@ interface CollisionResult {
  * derecha) y/o la velocidad 2 negativa (hacia la izquierda).
  *
  * Al detectar contacto (según el "ancho" de cada carrito, proporcional a
- * su masa), se resuelve el choque una sola vez con la fórmula de
- * restitución, y después los carritos siguen moviéndose a sus nuevas
- * velocidades — no hay una segunda colisión simulada en este primer
- * experimento (alcanza para mostrar el concepto).
+ * su masa), se resuelve el choque con la fórmula de restitución. El primero
+ * es el que cuenta (resultado y puntaje de la predicción); si después se
+ * vuelven a tocar (uno rebota en un tope y alcanza al otro), se resuelve
+ * igual para que no se atraviesen, pero ya no cambia el resultado.
+ *
+ * Los topes de las puntas frenan en seco al carrito que llega. Cuando los
+ * dos quedan quietos, el intento terminó.
  */
 export function createCollisionEngine(): CollisionEngine {
   let lastVariables: VariablesState = {};
@@ -122,31 +131,36 @@ export function createCollisionEngine(): CollisionEngine {
       runtime.pos1 += runtime.vel1 * dt;
       runtime.pos2 += runtime.vel2 * dt;
 
-      if (runtime.phase === "moving") {
-        const m1 = Number(variables.mass1 ?? 1);
-        const m2 = Number(variables.mass2 ?? 1);
-        const gap = runtime.pos2 - runtime.pos1;
-        const minGap = halfWidth(m1) + halfWidth(m2);
+      const m1 = Number(variables.mass1 ?? 1);
+      const m2 = Number(variables.mass2 ?? 1);
+      const gap = runtime.pos2 - runtime.pos1;
+      const minGap = halfWidth(m1) + halfWidth(m2);
 
-        if (gap <= minGap) {
-          const overlap = minGap - gap;
-          runtime.pos1 -= overlap / 2;
-          runtime.pos2 += overlap / 2;
+      if (gap <= minGap) {
+        const overlap = minGap - gap;
+        runtime.pos1 -= overlap / 2;
+        runtime.pos2 += overlap / 2;
+      }
 
-          const e = Number(variables.restitution ?? 1);
-          const v1 = runtime.vel1;
-          const v2 = runtime.vel2;
+      // Se tocan y se acercan: hay choque. Si ya se están separando (justo
+      // después de un choque), solo se corrige la superposición de arriba.
+      if (gap <= minGap && runtime.vel1 > runtime.vel2) {
+        const e = Number(variables.restitution ?? 1);
+        const v1 = runtime.vel1;
+        const v2 = runtime.vel2;
 
-          const v1f = ((m1 - e * m2) * v1 + (1 + e) * m2 * v2) / (m1 + m2);
-          const v2f = ((m2 - e * m1) * v2 + (1 + e) * m1 * v1) / (m1 + m2);
+        const v1f = ((m1 - e * m2) * v1 + (1 + e) * m2 * v2) / (m1 + m2);
+        const v2f = ((m2 - e * m1) * v2 + (1 + e) * m1 * v1) / (m1 + m2);
+        runtime.vel1 = v1f;
+        runtime.vel2 = v2f;
+
+        if (runtime.phase === "moving") {
 
           const keBefore = 0.5 * m1 * v1 * v1 + 0.5 * m2 * v2 * v2;
           const keAfter = 0.5 * m1 * v1f * v1f + 0.5 * m2 * v2f * v2f;
           const energyLostPct =
             keBefore > 0 ? ((keBefore - keAfter) / keBefore) * 100 : 0;
 
-          runtime.vel1 = v1f;
-          runtime.vel2 = v2f;
           runtime.phase = "collided";
           collisionResult = { v1: v1f, v2: v2f, energyLostPct };
 
@@ -163,6 +177,25 @@ export function createCollisionEngine(): CollisionEngine {
             }
           }
         }
+      }
+
+      // Topes: el carrito 1 siempre queda a la izquierda del 2, así que
+      // solo puede llegar al tope izquierdo, y el 2 al derecho.
+      const leftStop = -RAIL_HALF + halfWidth(m1);
+      if (runtime.pos1 < leftStop) {
+        runtime.pos1 = leftStop;
+        if (runtime.vel1 < 0) runtime.vel1 = 0;
+      }
+      const rightStop = RAIL_HALF - halfWidth(m2);
+      if (runtime.pos2 > rightStop) {
+        runtime.pos2 = rightStop;
+        if (runtime.vel2 > 0) runtime.vel2 = 0;
+      }
+
+      // Si se soltaron alejándose (o quietos), nunca chocan: cuando los dos
+      // quedan frenados en los topes, el intento terminó igual.
+      if (runtime.phase === "moving" && runtime.vel1 === 0 && runtime.vel2 === 0) {
+        runtime.phase = "collided";
       }
     },
 

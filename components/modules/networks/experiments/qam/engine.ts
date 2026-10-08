@@ -37,12 +37,39 @@ export interface QamRuntime {
 
 export interface QamEngine extends ExperimentEngine {
   transmit: () => void;
+  /** Cambia el mensaje a transmitir. Devuelve cómo quedó tras limpiarlo. */
+  setMessage: (text: string) => string;
+  getMessage: () => string;
   getRuntime: () => QamRuntime;
 }
 
 /** El mensaje que viaja. Corto a propósito: tiene que caber en la pantalla
  *  del panel y notarse letra por letra cuando el ruido lo rompe. */
-const MESSAGE = "HOLA UMG";
+export const DEFAULT_MESSAGE = "HOLA UMG";
+
+/** Largo máximo del mensaje: tiene que caber en la pantalla del receptor. */
+export const MAX_MESSAGE_LENGTH = 24;
+
+/**
+ * Largo mínimo para que una transmisión cuente en los retos. Con menos
+ * letras hay menos símbolos y menos oportunidades de error: con una sola
+ * letra, 64-QAM sin errores saldría casi regalado.
+ */
+export const MIN_CHALLENGE_LENGTH = 8;
+
+/**
+ * Deja el mensaje en caracteres de 8 bits imprimibles. Las tildes y la ñ se
+ * convierten a su letra base: en UTF-8 ocupan dos bytes, y un bit errado en
+ * uno de ellos rompe la letra entera de una forma que confunde más de lo
+ * que enseña. Así cada letra es exactamente un byte, como en el diagrama.
+ */
+export function normalizeMessage(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7e]/g, "")
+    .slice(0, MAX_MESSAGE_LENGTH);
+}
 
 /** Símbolos por segundo (baudios) de la simulación. Es el reloj del enlace:
  *  con 4 bits por símbolo, 30 baudios son 120 bits/s. Lento a propósito —
@@ -144,6 +171,9 @@ export function createQamEngine(): QamEngine {
   let lastVariables: VariablesState = {};
   /** Mayor cantidad de bits por símbolo con la que llegó un mensaje intacto. */
   let cleanBits = 0;
+  let message = DEFAULT_MESSAGE;
+  /** El mensaje con que se hizo la transmisión en curso (o la última). */
+  let sentMessage = DEFAULT_MESSAGE;
   let bitsQueue: number[] = [];
   let clock = 0;
   let noiseSigma = 0;
@@ -177,7 +207,8 @@ export function createQamEngine(): QamEngine {
     runtime.ideal = buildConstellation(mod.bits);
     runtime.bitsPerSymbol = mod.bits;
 
-    const bits = textToBits(MESSAGE);
+    sentMessage = message.trim() ? message : DEFAULT_MESSAGE;
+    const bits = textToBits(sentMessage);
     // Relleno hasta completar un símbolo entero: un enlace real nunca manda
     // medio símbolo.
     while (bits.length % mod.bits !== 0) bits.push(0);
@@ -258,7 +289,9 @@ export function createQamEngine(): QamEngine {
     if (runtime.bitErrors === 0 && runtime.throughput > runtime.bestThroughput) {
       runtime.bestThroughput = runtime.throughput;
     }
-    if (runtime.bitErrors === 0) cleanBits = Math.max(cleanBits, runtime.bitsPerSymbol);
+    if (runtime.bitErrors === 0 && sentMessage.length >= MIN_CHALLENGE_LENGTH) {
+      cleanBits = Math.max(cleanBits, runtime.bitsPerSymbol);
+    }
   }
 
   return {
@@ -312,7 +345,7 @@ export function createQamEngine(): QamEngine {
         result:
           runtime.phase === "terminado"
             ? {
-                mensaje_enviado: MESSAGE,
+                mensaje_enviado: sentMessage,
                 mensaje_recibido: runtime.receivedText,
                 bits_por_simbolo: mod.bits,
                 bits_errados: runtime.bitErrors,
@@ -328,6 +361,15 @@ export function createQamEngine(): QamEngine {
           "tasa de error de bit",
         ],
       };
+    },
+
+    setMessage(text) {
+      message = normalizeMessage(text);
+      return message;
+    },
+
+    getMessage() {
+      return message;
     },
 
     transmit() {
@@ -350,7 +392,11 @@ export function createQamEngine(): QamEngine {
         progress: Math.min(1, cleanBits / bits),
       });
       return [
-        level(1, "Mensaje intacto", "Transmite HOLA UMG sin un solo bit errado."),
+        level(
+          1,
+          "Mensaje intacto",
+          `Transmite un mensaje de ${MIN_CHALLENGE_LENGTH} caracteres o más sin un solo bit errado.`,
+        ),
         level(4, "Intacto en 16-QAM", "Cuatro bits por símbolo sin errores: el doble que QPSK."),
         level(6, "Intacto en 64-QAM", "La máxima velocidad sin errores: necesitas un canal muy limpio."),
       ];

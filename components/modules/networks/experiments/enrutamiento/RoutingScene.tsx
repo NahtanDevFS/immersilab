@@ -155,6 +155,31 @@ export function RoutingScene({ engine, variables }: Props) {
               />
             </mesh>
 
+            {/* Zona para tocar el enlace: el cilindro visible mide 9 cm de
+                ancho y es casi imposible de acertar con el mouse. Este es
+                invisible y bastante más grueso. Tocarlo corta el enlace, o lo
+                repara si ya estaba cortado. */}
+            <mesh
+              position={mid}
+              quaternion={quaternion}
+              onClick={(event) => {
+                // Un arrastre para mirar alrededor no es un clic.
+                if (event.delta > 6) return;
+                event.stopPropagation();
+                routing.toggleLink(index);
+              }}
+              onPointerOver={(event) => {
+                event.stopPropagation();
+                document.body.style.cursor = "pointer";
+              }}
+              onPointerOut={() => {
+                document.body.style.cursor = "";
+              }}
+            >
+              <cylinderGeometry args={[0.22, 0.22, Math.max(0.1, length - 1), 6]} />
+              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
+
             {/* La etiqueta del enlace: lo que el jugador tiene que mirar para
                 decidir. Sin el dato a la vista, elegir un salto sería adivinar. */}
             <Html position={[mid.x, mid.y + 0.3, mid.z]} center>

@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  background: rgba(19, 27, 46, 0.92);
+  background: var(--lab-glass);
   border: 0.5px solid var(--lab-accent);
   border-radius: 12px;
   backdrop-filter: blur(6px);
@@ -119,7 +119,7 @@
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
   border: 0.5px solid var(--lab-panel-border);
-  background: rgba(19, 27, 46, 0.85);
+  background: var(--lab-glass);
   color: var(--lab-text-muted);
   font-family: var(--font-sans);
   font-size: 0.75rem;
