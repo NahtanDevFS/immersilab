@@ -1,13 +1,14 @@
 "use client";
 
 import { useRef } from "react";
-import { Html } from "@react-three/drei";
+
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { RAIL_HALF, type CollisionEngine } from "./engine";
 import styles from "./CollisionScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 const RAIL_LENGTH = RAIL_HALF * 2;
 const RAIL_HEIGHT = 0.1;
@@ -81,14 +82,14 @@ export function CollisionScene({ engine, variables }: Props) {
   return (
     <group position={[CENTER_X, 0, 0]}>
       <group ref={label1Ref} visible={false}>
-        <Html center>
+        <SceneLabel center>
           <div ref={text1Ref} className={styles.label} />
-        </Html>
+        </SceneLabel>
       </group>
       <group ref={label2Ref} visible={false}>
-        <Html center>
+        <SceneLabel center>
           <div ref={text2Ref} className={styles.label} />
-        </Html>
+        </SceneLabel>
       </group>
 
       {/* Riel: aluminio anodizado. metalness alto + roughness bajo hace que

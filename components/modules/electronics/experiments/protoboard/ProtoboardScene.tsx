@@ -7,6 +7,7 @@ import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { VrText } from "@/components/vr/VrText";
 import {
+  balanceLines,
   colorBands,
   formatOhms,
   getLed,
@@ -22,7 +23,8 @@ import {
  * 16 cm. A tamaño real no se distinguirían las bandas de una resistencia, ni
  * desde la compu ni (sobre todo) con el visor puesto.
  */
-const TABLE_Y = 0.85;
+/** Altura de la mesa: la de un escritorio. Con 85 cm quedaba muy alta. */
+const TABLE_Y = 0.72;
 const BOARD_W = 2.4;
 const BOARD_D = 0.9;
 const TOP = TABLE_Y + 0.07; // superficie de la protoboard
@@ -79,6 +81,12 @@ const LAYOUTS: Record<Level, Layout> = {
 /** Los dos extremos donde se apoyan las puntas del multímetro. */
 function probeTargets(layout: Layout, point: MeasurePoint): [Vec, Vec] | null {
   switch (point) {
+    case "v_bat":
+      // Los dos bornes de la batería (ver Battery).
+      return [
+        [BATTERY_POS[0] - 0.05, BATTERY_POS[1] + 0.36, BATTERY_POS[2]],
+        [BATTERY_POS[0] + 0.05, BATTERY_POS[1] + 0.36, BATTERY_POS[2]],
+      ];
     case "v_r1":
     case "i_total":
       return layout.r1;
@@ -94,6 +102,7 @@ function probeTargets(layout: Layout, point: MeasurePoint): [Vec, Vec] | null {
 }
 
 const MULTIMETER: Vec = [1.45, TABLE_Y + 0.2, 0.2];
+const BATTERY_POS: Vec = [-1.65, TABLE_Y, -0.1];
 const BURNED_LED = new THREE.Color("#222222");
 
 interface Props {
@@ -136,6 +145,7 @@ export function ProtoboardScene({ engine, variables }: Props) {
       ))}
 
       <Multimeter engine={board} label={MEASURE_POINTS.find((p) => p.id === point)?.label ?? ""} />
+      <Balance engine={board} level={level} />
       {probes && (
         <>
           <Wire points={[[MULTIMETER[0] - 0.05, MULTIMETER[1] - 0.12, MULTIMETER[2] + 0.12], lift(probes[0])]} color="#e0201b" radius={0.008} sag />
@@ -144,7 +154,9 @@ export function ProtoboardScene({ engine, variables }: Props) {
       )}
 
       <Suspense fallback={null}>
-        <VrText position={[-BOARD_W / 2, TOP + 0.02, -BOARD_D / 2 - 0.08]} rotation={[-Math.PI / 2, 0, 0]} fontSize={0.07} color="#93a1be">
+        {/* Textos flotantes en blanco o ámbar con contorno oscuro: se leen sobre
+            la protoboard blanca, la madera o el cielo. */}
+        <VrText position={[-BOARD_W / 2, TOP + 0.02, -BOARD_D / 2 - 0.08]} rotation={[-Math.PI / 2, 0, 0]} fontSize={0.07} color="#fbbf24" outlineWidth={0.006} outlineColor="#0b1220">
           {level === "led"
             ? "Nivel 1 · R1 en serie con el LED"
             : level === "divisor"
@@ -153,6 +165,40 @@ export function ProtoboardScene({ engine, variables }: Props) {
         </VrText>
       </Suspense>
     </group>
+  );
+}
+
+/**
+ * El balance de voltajes (y de corrientes, en paralelo), escrito sobre la
+ * mesa frente a la protoboard. Se lee unas veces por segundo.
+ */
+function Balance({ engine, level }: { engine: ProtoboardEngine; level: Level }) {
+  const [lines, setLines] = useState<string[]>(() => balanceLines(level, engine.getRuntime().solution));
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const next = balanceLines(level, engine.getRuntime().solution);
+      setLines((prev) => (prev.join("|") === next.join("|") ? prev : next));
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [engine, level]);
+
+  return (
+    <Suspense fallback={null}>
+      {lines.map((line, i) => (
+        <VrText
+          key={i}
+          position={[-BOARD_W / 2, TABLE_Y + 0.004, BOARD_D / 2 + 0.12 + i * 0.1]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={0.065}
+          maxWidth={BOARD_W + 1}
+          color={i === 0 ? "#ffffff" : "#fbbf24"}
+          outlineWidth={0.006}
+          outlineColor="#0b1220"
+        >
+          {line}
+        </VrText>
+      ))}
+    </Suspense>
   );
 }
 
@@ -245,7 +291,7 @@ function Breadboard() {
 
 function Battery() {
   return (
-    <group position={[-1.65, TABLE_Y, -0.1]}>
+    <group position={BATTERY_POS}>
       <mesh position={[0, 0.2, 0]} castShadow>
         <boxGeometry args={[0.26, 0.4, 0.14]} />
         <meshStandardMaterial color="#1f2937" metalness={0.3} roughness={0.5} />
@@ -317,10 +363,10 @@ function Resistor({
         </mesh>
       ))}
       <Suspense fallback={null}>
-        <VrText position={[mid[0], TOP + 0.2, mid[2]]} anchorX="center" fontSize={0.06}>
+        <VrText position={[mid[0], TOP + 0.2, mid[2]]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           {`${id.toUpperCase()} · ${formatOhms(ohms)}`}
         </VrText>
-        <VrText position={[mid[0], TOP + 0.14, mid[2]]} anchorX="center" fontSize={0.035} color="#93a1be">
+        <VrText position={[mid[0], TOP + 0.14, mid[2]]} anchorX="center" fontSize={0.035} color="#fbbf24" outlineWidth={0.006} outlineColor="#0b1220">
           {bands.names.join(" · ")}
         </VrText>
       </Suspense>
@@ -365,7 +411,7 @@ function Led({ ends, color, engine }: { ends: [Vec, Vec]; color: string; engine:
       <Wire points={[[a[0], TOP, a[2]], [mid[0] - 0.03, TOP + 0.1, mid[2]]]} color="#b8bcc4" radius={0.006} />
       <Wire points={[[b[0], TOP, b[2]], [mid[0] + 0.03, TOP + 0.1, mid[2]]]} color="#b8bcc4" radius={0.006} />
       <Suspense fallback={null}>
-        <VrText position={[mid[0], TOP + 0.38, mid[2]]} anchorX="center" fontSize={0.06}>
+        <VrText position={[mid[0], TOP + 0.38, mid[2]]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           LED
         </VrText>
       </Suspense>

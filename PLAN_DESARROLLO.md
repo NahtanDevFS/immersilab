@@ -462,6 +462,20 @@ cada módulo nuevo (nueve en total).
 Pedido del equipo: más física del curso (electromagnetismo) y electrónica de
 la carrera. Cuatro experimentos nuevos, en este orden:
 
+**Ajustes pedidos al probar (2026-10-08):**
+1. ✅ Mesas a 72 cm (protoboard y fuente de poder), la altura de un escritorio.
+2. ✅ Textos flotantes en blanco o ámbar con contorno oscuro (protoboard y
+   fuente): se leen sobre la protoboard blanca, la madera o el cielo.
+3. Descartado por el equipo: las resistencias siguen como lista de valores
+   comerciales.
+4. ✅ Pizarrón 3D reutilizable (`components/shell/Whiteboard.tsx`, campo
+   `whiteboard` de la definición): fórmulas a la izquierda y lugar para las
+   cuentas a la derecha, con plumones de tres colores y borrador. Con mouse o
+   dedo se dibuja arrastrando (el pizarrón escucha el canvas antes que la
+   cámara, así que la vista no gira); en la vista VR, mirándolo y manteniendo
+   A. Está en la protoboard, la fuente de poder y la grúa; para agregarlo a
+   otro experimento alcanza con escribir sus fórmulas y su posición.
+
 **E1 · Electroimán → "La grúa electromagnética"** *(Física · Electromagnetismo)*
 - **Concepto**: campo de un solenoide B = μ₀·μr·N·I/L (Ampère), el núcleo
   ferromagnético, fuerza de atracción ∝ B² que cae rápido con la distancia,
@@ -934,7 +948,95 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      siguen la vista solo si se gira más de 55°. Las puertas del lobby
      también tienen su etiqueta en 3D. Texto con troika y una fuente local
      (Geist), para que funcione sin internet.
-   - ⏳ Etapa 3: etiquetas de cada experimento como texto 3D.
+   - ✅ Etapa 3: etiquetas de cada experimento como texto 3D. `SceneLabel`
+     (components/vr/SceneLabel.tsx) reemplaza a drei `<Html>` en las 11
+     escenas que lo usaban (47 etiquetas): en la vista 360 dibuja el HTML de
+     siempre; en la VR copia su texto varias veces por segundo y lo dibuja
+     como texto 3D de frente al jugador, con tamaño según la distancia. Al
+     copiar el texto del HTML, las etiquetas que la escena escribe en cada
+     cuadro (período del péndulo, velocidad de los carritos) funcionan sin
+     tocarlas. Los experimentos nuevos (protoboard, fuente, compuertas) ya
+     usaban texto 3D, y las puertas del lobby tienen el suyo.
+   - ✅ Paneles a los costados, fuera de la vista (`components/vr/VrDashboard.tsx`,
+     `VrHud.tsx`). Primero iban adelante a la altura de los ojos y después
+     abajo como un atril; aun así quedaban en la visión periférica y
+     estorbaban. Ahora empiezan a 45° de cada lado (el visor muestra unos
+     ±37°): mirando al frente solo se ve la escena, y para usarlos se gira la
+     cabeza. A la izquierda las variables; a la derecha los retos y las
+     acciones y, más allá (desde unos 89°), el **resultado** (los mismos
+     valores y la mini gráfica del cuadro HTML) con los botones generales
+     (**Ver la explicación**, **Preguntar al tutor**, **Centrar la vista**,
+     **Volver al lobby**). Cada panel crece hacia afuera, así nunca se mete
+     al frente. Siguen al cuerpo solo si uno se da vuelta más de 140° (con
+     55°, girar la cabeza para mirar un panel lo empujaba más lejos). Al
+     empezar, un aviso dice dónde está cada cosa. Se muestran u ocultan con
+     el botón 3 del control (Y en uno estándar, clic del stick derecho en el
+     ESP32). Mirando una variable, el stick derecho la ajusta de forma
+     continua (a fondo recorre el rango en unos 3 s) y en las listas pasa
+     de opción con repetición.
+   - ✅ Todo lo de la PC, también en el visor:
+     - Tarjetas de lectura 3D (`VrCard`) adelante, a la altura de los ojos:
+       la explicación del experimento (abierta al entrar, con Escuchar; es el
+       mismo estado que la tarjeta HTML) y la parada del recorrido (Ver el
+       experimento, Escuchar, Salir del recorrido).
+     - Recorrido: "Siguiente parada" y "Salir del recorrido" en las
+       acciones; al terminar, sale del visor para mostrar el progreso.
+     - Tutor: botón 3D que empieza a escuchar y, tocándolo de nuevo, envía
+       la pregunta (`toggleTutor` en `lib/tutor/hudStore.ts`).
+     - Lobby (`LobbyVrHud`): a la derecha, "Cómo moverte" según haya
+       control o no, "Empezar el recorrido guiado" y "Centrar la vista".
+     - Cobertura: la leyenda del piso y el aviso de interferencia como
+       acciones de texto. QAM: "Cambiar el mensaje" pasa por una lista
+       (no hay teclado en el visor).
+     - Pantalla de carga: una copia para cada ojo.
+     - Tutor: además de preguntar/enviar, "Cancelar la pregunta" (descarta
+       lo dicho sin enviarlo: `cancel` en `useSpeechInput`), "Callar al
+       tutor" mientras responde, "Ocultar los subtítulos" y los avisos del
+       micrófono (sin permiso, sin internet) en el panel, debajo de los
+       botones, junto con lo que está haciendo el tutor ("Te escucho…").
+       Lo pegado a la vista (subtítulos, avisos) se dibuja a 1 m, delante
+       de los paneles: a 1.6 m el panel lo tapaba y parecía que "Preguntar
+       al tutor" no hacía nada.
+     - Retos: "Reiniciar los retos" y el aviso de progreso sin cuenta.
+     - Explicación: "Cambiar la voz" (el selector de voz de la PC).
+     - Lobby: Mi progreso, Mi cuenta / Ingresar y Vista docente (salen del
+       visor, porque son páginas HTML).
+     - Enrutamiento: cortar o reparar un enlace concreto mirándolo y
+       presionando A (`components/vr/GazeMesh.tsx`: objetos de la escena que
+       responden a la mira).
+   - ✅ Conversación con el tutor, desplegable (en la PC y en el visor).
+     Antes solo había subtítulos: al cerrarlos o a los pocos segundos, lo
+     que había dicho el tutor no se podía volver a leer. Ahora
+     `useTutorSession` guarda la conversación para mostrarla (`log`: cada
+     pregunta, cada respuesta mientras llega, cortadas y errores, y los
+     "Reto logrado" que el tutor festeja), aparte del historial que va a
+     Gemini. En la PC, el botón "Conversación (n)" al lado del micrófono
+     abre una ventana tipo chat con todo, que se minimiza; minimizada
+     siguen los subtítulos de la respuesta en curso. En el visor es un
+     panel más, a la izquierda después de las variables (o encima de
+     ellas si ocupan dos columnas), con "Minimizar" y "Ver anteriores".
+     Abierta o minimizada se recuerda en el dispositivo
+     (`lib/tutor/chatPreference.ts`), y vale para los dos modos. Dura lo
+     que dura el experimento, igual que la memoria del tutor.
+   - ✅ Paneles que se arrastran (`SidePanel` en `VrDashboard.tsx`,
+     `lib/view/panelPlacement.ts`). Cada panel tiene una barra arriba:
+     mirándola y manteniendo A (o el dedo en la pantalla, `isSelectHeld` en
+     `lib/view/gaze.ts`), el panel sigue a la mira hasta soltar. Se mueve
+     sobre una esfera alrededor del jugador, así siempre queda de frente.
+     El lugar se guarda en el dispositivo, por panel; "Acomodar los
+     paneles" los devuelve a su lugar. En el pizarrón también se puede
+     dibujar con el dedo apoyado (antes solo con A).
+   - ✅ Frente alineado con el experimento (`lib/view/recenter.ts`). El
+     giroscopio da el rumbo de la brújula, así que se aparecía mirando hacia
+     el "norte" del celular, a veces de espaldas a todo. Ahora GyroCamera
+     corrige el rumbo al entrar para quedar de frente al `cameraView.target`
+     del experimento (en el lobby, al pasillo), y de nuevo con "Centrar la
+     vista" o el clic del stick izquierdo (botón 2: X / cuadrado en un
+     control estándar). Los paneles se acomodan al nuevo frente de una vez.
+   - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
+     muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
+     Y = paneles, stick derecho = ajustar la variable mirada). En el visor
+     el control no se ve, y las funciones cambian según el contexto.
 
 ---
 

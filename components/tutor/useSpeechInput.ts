@@ -148,6 +148,22 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     else stopPending.current = true;
   }, []);
 
+  /** Deja de escuchar SIN enviar lo dicho (el "Cancelar" de la vista VR). */
+  const cancel = useCallback(() => {
+    if (maxTimer.current !== null) window.clearTimeout(maxTimer.current);
+    maxTimer.current = null;
+    const rec = recognition.current;
+    recognition.current = null;
+    started.current = false;
+    stopPending.current = false;
+    finalText.current = "";
+    setTranscript("");
+    setListening(false);
+    if (!rec) return;
+    rec.onend = null;
+    rec.abort();
+  }, []);
+
   useEffect(() => {
     return () => {
       if (maxTimer.current !== null) window.clearTimeout(maxTimer.current);
@@ -158,5 +174,5 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     };
   }, []);
 
-  return { supported, listening, transcript, error, start, stop };
+  return { supported, listening, transcript, error, start, stop, cancel };
 }

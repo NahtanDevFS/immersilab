@@ -2,12 +2,13 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { FIT_GOAL, WINDOW_S, sumAt, type WavesEngine } from "./engine";
 import styles from "./WavesScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * Un solo panel de pie, como un osciloscopio grande:
@@ -155,11 +156,11 @@ export function WavesScene({ engine, variables }: Props) {
         />
       ))}
       {ROWS.map((y, k) => (
-        <Html key={k} position={[X0 - 0.35, y, Z]} center>
+        <SceneLabel key={k} position={[X0 - 0.35, y, Z]} center>
           <div className={styles.rowLabel} data-row={k}>
             {k + 1}
           </div>
-        </Html>
+        </SceneLabel>
       ))}
 
       {/* Separador entre las componentes y la suma. */}
@@ -179,12 +180,12 @@ export function WavesScene({ engine, variables }: Props) {
         />
       </mesh>
       <primitive ref={sumRef} object={lines.sum} />
-      <Html position={[X0 + 0.7, SUM_Y + 1.0, Z]} center>
+      <SceneLabel position={[X0 + 0.7, SUM_Y + 1.0, Z]} center>
         <div className={styles.sumLabel}>
           <span data-sum>Tu suma</span>
           <span data-target>Objetivo</span>
         </div>
-      </Html>
+      </SceneLabel>
 
       {/* Medidor de ajuste. */}
       <mesh position={[GAUGE_X, GAUGE_Y + GAUGE_HEIGHT / 2, Z]}>
@@ -199,12 +200,12 @@ export function WavesScene({ engine, variables }: Props) {
         <boxGeometry args={[0.7, 0.03, 0.03]} />
         <meshBasicMaterial color={new THREE.Color(2, 2, 2.2)} toneMapped={false} />
       </mesh>
-      <Html position={[GAUGE_X, GAUGE_Y - 0.35, Z]} center>
+      <SceneLabel position={[GAUGE_X, GAUGE_Y - 0.35, Z]} center>
         <div ref={fitLabelRef} className={styles.fit} />
-      </Html>
-      <Html position={[GAUGE_X + 0.75, GAUGE_Y + GAUGE_HEIGHT * FIT_GOAL, Z]} center>
+      </SceneLabel>
+      <SceneLabel position={[GAUGE_X + 0.75, GAUGE_Y + GAUGE_HEIGHT * FIT_GOAL, Z]} center>
         <div className={styles.goal}>meta {Math.round(FIT_GOAL * 100)} %</div>
-      </Html>
+      </SceneLabel>
     </group>
   );
 }

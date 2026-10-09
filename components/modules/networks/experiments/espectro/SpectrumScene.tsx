@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
@@ -14,6 +14,7 @@ import {
   type SpectrumEngine,
 } from "./engine";
 import styles from "./SpectrumScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * La cascada se apoya en el piso y se aleja del jugador: la fila de adelante
@@ -221,37 +222,37 @@ export function SpectrumScene({ engine, variables }: Props) {
               />
             </mesh>
           ))}
-          <Html
+          <SceneLabel
             position={[(bandX[0] + bandEndX) / 2, HEIGHT + 0.45, Z_FRONT - Z_DEPTH / 2]}
             center
           >
             <div className={styles.bandLabel}>Banda telefónica · 300–3400 Hz</div>
-          </Html>
+          </SceneLabel>
         </group>
       )}
 
       {/* Eje de frecuencia, al pie de la fila actual. */}
       {ticks.map((hz) => (
-        <Html
+        <SceneLabel
           key={hz}
           position={[X_START + frequencyToUnit(hz, scale, maxHz) * X_SPAN, 0.05, Z_FRONT + 0.45]}
           center
         >
           <div className={styles.tick}>{formatHz(hz)}</div>
-        </Html>
+        </SceneLabel>
       ))}
-      <Html position={[X_START - 0.6, 0.05, Z_FRONT - Z_DEPTH]} center>
+      <SceneLabel position={[X_START - 0.6, 0.05, Z_FRONT - Z_DEPTH]} center>
         <div className={styles.axisNote}>← hace 3 s</div>
-      </Html>
+      </SceneLabel>
 
       <group ref={peakRef} visible={false}>
         <mesh position={[0, 0.12, 0]}>
           <coneGeometry args={[0.1, 0.22, 12]} />
           <meshBasicMaterial color={new THREE.Color(2.4, 2.4, 2.6)} toneMapped={false} />
         </mesh>
-        <Html position={[0, 0.5, 0]} center>
+        <SceneLabel position={[0, 0.5, 0]} center>
           <div ref={peakLabelRef} className={styles.peakLabel} />
-        </Html>
+        </SceneLabel>
       </group>
 
       {/* Micrófono de pie, adelante a la izquierda: el origen de todo lo que

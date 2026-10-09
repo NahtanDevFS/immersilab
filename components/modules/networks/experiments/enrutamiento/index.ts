@@ -71,6 +71,11 @@ export const enrutamientoExperiment: ExperimentDefinition = {
       }
     }
     actions.push({
+      id: "cortar-uno",
+      label: "Para cortar o reparar uno: míralo en la escena y presiona A (o toca la pantalla).",
+      info: true,
+    });
+    actions.push({
       id: "cortar",
       label: "Cortar un enlace al azar",
       onSelect: () => routing.cutRandom(),

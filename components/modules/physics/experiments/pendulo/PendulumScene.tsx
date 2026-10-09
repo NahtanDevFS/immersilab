@@ -2,12 +2,13 @@
 
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { REFERENCE, type PendulumEngine } from "./engine";
 import styles from "./PendulumScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * Un bastidor con los dos péndulos colgando lado a lado, a escala real (1
@@ -129,9 +130,9 @@ export function PendulumScene({ engine, variables }: Props) {
             <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
           </mesh>
         </group>
-        <Html position={[0, 0.45, 0]} center>
+        <SceneLabel position={[0, 0.45, 0]} center>
           <div ref={refLabel} className={styles.label} data-kind="ref" />
-        </Html>
+        </SceneLabel>
       </group>
 
       {/* Péndulo del jugador: turquesa, con longitud y masa variables. */}
@@ -153,14 +154,14 @@ export function PendulumScene({ engine, variables }: Props) {
             />
           </mesh>
         </group>
-        <Html position={[0, 0.45, 0]} center>
+        <SceneLabel position={[0, 0.45, 0]} center>
           <div ref={mineLabel} className={styles.label} data-kind="mine" />
-        </Html>
+        </SceneLabel>
       </group>
 
-      <Html position={[(REF_X + MINE_X) / 2, PIVOT_Y + 0.95, 0]} center>
+      <SceneLabel position={[(REF_X + MINE_X) / 2, PIVOT_Y + 0.95, 0]} center>
         <div ref={ratioLabel} className={styles.ratio} />
-      </Html>
+      </SceneLabel>
 
       {/* Barras de energía del péndulo del jugador. */}
       <mesh position={[BARS_X + 0.3, BARS_Y + BARS_HEIGHT / 2, -0.12]}>
@@ -179,14 +180,14 @@ export function PendulumScene({ engine, variables }: Props) {
         <boxGeometry args={[0.35, BARS_HEIGHT, 0.2]} />
         <meshBasicMaterial color={new THREE.Color(0.3, 2.2, 1.9)} toneMapped={false} />
       </mesh>
-      <Html position={[BARS_X + 0.3, BARS_Y - 0.35, 0]} center>
+      <SceneLabel position={[BARS_X + 0.3, BARS_Y - 0.35, 0]} center>
         <div className={styles.barsLegend}>
           <span className={styles.barsTitle}>Energía (línea = 100 % al soltar)</span>
           <span>
             <span data-k>Cinética</span> · <span data-p>Potencial</span>
           </span>
         </div>
-      </Html>
+      </SceneLabel>
     </group>
   );
 }

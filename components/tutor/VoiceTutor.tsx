@@ -7,9 +7,9 @@ import { onChallengeCompleted, type ChallengeCompletedEvent } from "@/lib/tutor/
 import { useSpeechInput } from "./useSpeechInput";
 import { useSpeechOutput } from "./useSpeechOutput";
 import { useTutorSession } from "./useTutorSession";
-import { TutorHUD, type TutorStatus } from "./TutorHUD";
+import { ERROR_LABEL, TutorHUD, type TutorStatus } from "./TutorHUD";
 import { describePanel } from "@/lib/tutor/panel";
-import { publishTutorHud } from "@/lib/tutor/hudStore";
+import { publishTutorHud, publishTutorLog, setTutorCommands } from "@/lib/tutor/hudStore";
 
 interface Props {
   engine: ExperimentEngine;
@@ -88,10 +88,28 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
   }, [input.listening, press, release]);
 
   // El loop del gamepad lee siempre la última versión de press/release.
-  const controls = useRef({ press, release });
+  // Cancelar: descarta lo que se estaba diciendo, corta la respuesta en
+  // camino y calla la voz.
+  const cancel = useCallback(() => {
+    input.cancel();
+    session.abort();
+    output.cancel();
+  }, [input, session, output]);
+
+  const controls = useRef({ press, release, toggle, cancel });
   useEffect(() => {
-    controls.current = { press, release };
-  }, [press, release]);
+    controls.current = { press, release, toggle, cancel };
+  }, [press, release, toggle, cancel]);
+
+  // Los botones del tutor en la vista VR (lib/tutor/hudStore.ts).
+  useEffect(
+    () =>
+      setTutorCommands({
+        toggle: () => controls.current.toggle(),
+        cancel: () => controls.current.cancel(),
+      }),
+    [],
+  );
 
   useEffect(() => {
     let rafId = 0;
@@ -122,8 +140,16 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
       heard: input.transcript,
       reply: session.reply,
       offline: session.failed,
+      note: !input.supported
+        ? "Este navegador no reconoce voz: abre el laboratorio en Chrome."
+        : input.error
+          ? ERROR_LABEL[input.error]
+          : null,
     });
-  }, [status, input.transcript, session.reply, session.failed]);
+  }, [status, input.transcript, session.reply, session.failed, input.supported, input.error]);
+
+  // La conversación, para el panel de la vista VR.
+  useEffect(() => publishTutorLog(session.log), [session.log]);
 
   // Reto logrado: el tutor lo festeja y explica por qué funcionó (Fase C).
   // Primero una frase fija, al instante y sin red; después Gemini agrega una
@@ -142,7 +168,10 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
         typeof window !== "undefined" && window.speechSynthesis?.speaking;
       if (statusRef.current !== "idle" || voiceBusy) return;
       output.enqueue("¡Reto logrado!");
-      void ask(challengePrompt(event), { quiet: true });
+      void ask(challengePrompt(event), {
+        quiet: true,
+        event: `Reto logrado: ${event.title.replace(/ ←$/, "")}`,
+      });
     });
   }, [ask, output]);
 
@@ -157,6 +186,7 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
       onPress={press}
       onRelease={release}
       onToggle={toggle}
+      log={session.log}
     />
   );
 }

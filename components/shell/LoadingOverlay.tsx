@@ -1,6 +1,7 @@
 "use client";
 
 import { useProgress } from "@react-three/drei";
+import { useViewMode } from "@/lib/view/viewMode";
 import styles from "./LoadingOverlay.module.css";
 
 /**
@@ -28,11 +29,10 @@ export function LoadingOverlay({ label }: { label: string }) {
   // ambos shells lo hacen. Una escena 100% procedural dejaría el overlay
   // pegado en 0%.)
   const done = !active && progress >= 100;
+  const vr = useViewMode() === "vr";
 
-  return (
-    // Siempre montado: se oculta con opacidad para poder hacer el fundido.
-    // Desmontarlo cortaría la transición de salida.
-    <div className={styles.overlay} data-done={done}>
+  const content = (
+    <>
       <p className={styles.title}>{label}</p>
       <p className={styles.subtitle}>Cargando el entorno…</p>
 
@@ -41,6 +41,22 @@ export function LoadingOverlay({ label }: { label: string }) {
       </div>
 
       <p className={styles.percent}>{Math.round(progress)}%</p>
+    </>
+  );
+
+  return (
+    // Siempre montado: se oculta con opacidad para poder hacer el fundido.
+    // Desmontarlo cortaría la transición de salida.
+    // En la vista VR va una copia para cada ojo (cada uno ve solo su mitad).
+    <div className={styles.overlay} data-done={done} data-vr={vr || undefined} data-vr-keep={vr || undefined}>
+      {vr ? (
+        <>
+          <div className={styles.eye}>{content}</div>
+          <div className={styles.eye}>{content}</div>
+        </>
+      ) : (
+        content
+      )}
     </div>
   );
 }

@@ -1,5 +1,11 @@
 import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
 import { createQamEngine, MODULATIONS, type QamEngine } from "./engine";
+
+/**
+ * Mensajes para elegir en el visor, donde no hay teclado. Todos con 8 letras
+ * o más, para que cuenten para los retos (MIN_CHALLENGE_LENGTH).
+ */
+const VR_MESSAGES = ["HOLA UMG", "TELECOMUNICACIONES", "SOS AUXILIO", "QAM 16 Y 64", "IMMERSILAB 2026"];
 import { QamScene } from "./QamScene";
 import { QamControls } from "./QamControls";
 
@@ -53,6 +59,16 @@ export const qamExperiment: ExperimentDefinition = {
     const transmitting = r.phase === "transmitiendo";
     const actions: VrAction[] = [
       { id: "mensaje", label: `Mensaje: ${q.getMessage() || "HOLA UMG"}`, info: true },
+      {
+        // Sin teclado en el visor: pasa al siguiente de una lista.
+        id: "cambiar-mensaje",
+        label: "Cambiar el mensaje",
+        disabled: transmitting,
+        onSelect: () => {
+          const current = VR_MESSAGES.indexOf(q.getMessage());
+          q.setMessage(VR_MESSAGES[(current + 1) % VR_MESSAGES.length]);
+        },
+      },
     ];
     if (r.phase === "terminado") {
       actions.push({ id: "recibido", label: `Recibido: ${r.receivedText}`, info: true });

@@ -10,7 +10,7 @@ interface Props {
 
 /** Convierte "altura_maxima_m" en "Altura maxima m" — legible sin acoplarse
  * a las claves exactas que use cada experimento. */
-function formatLabel(key: string): string {
+export function formatLabel(key: string): string {
   const withSpaces = key.replace(/_/g, " ");
   return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
 }

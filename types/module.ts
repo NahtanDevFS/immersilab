@@ -178,8 +178,26 @@ export interface ExperimentDefinition {
    * pueden cambiar con el estado ("Soltar" → "Soltar de nuevo").
    */
   vrActions?: (engine: ExperimentEngine) => VrAction[];
+  /**
+   * Opcional: un pizarrón en la escena con las fórmulas del experimento y
+   * espacio para hacer las cuentas a mano (components/shell/Whiteboard.tsx).
+   */
+  whiteboard?: WhiteboardSpec;
   // Factoría que crea una nueva instancia del motor de este experimento.
   createEngine: () => ExperimentEngine;
+}
+
+/** El pizarrón de un experimento: qué fórmulas lleva y dónde va. */
+export interface WhiteboardSpec {
+  title: string;
+  /** Una fórmula (o una línea de explicación) por renglón. */
+  formulas: string[];
+  /** Centro del pizarrón en la escena, m. */
+  position: [number, number, number];
+  /** Giro alrededor del eje vertical, para que mire hacia el jugador. */
+  rotationY?: number;
+  /** Ancho, m (el alto sale de la proporción). Por defecto 2.2. */
+  width?: number;
 }
 
 /** Un botón (o una línea de texto) del panel de acciones de la vista VR. */

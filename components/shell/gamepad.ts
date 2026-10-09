@@ -28,7 +28,11 @@
  * Botones del ESP32 (índices de buttons[]):
  *   0 principal  → acción: clic / agarrar slider, A siguiente en el tutorial
  *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
- *   2 clic stick izquierdo, 3 clic stick derecho → libres por ahora
+ *   2 clic stick izquierdo → centrar la vista hacia el experimento
+ *                            (X / cuadrado en un control estándar)
+ *   3 clic stick derecho   → mostrar u ocultar los paneles en la vista VR
+ *                            (es el mismo índice que la Y de un control
+ *                            estándar, así funciona igual en los dos)
  *
  * Overrides (quedan guardados en localStorage):
  *   ?stickL=0,1  ?stickR=2,3   índices de los ejes
@@ -45,8 +49,8 @@ const ESP32_DEADZONE = 0.2;
 const ESP32_AXES = { lx: 0, ly: 1, rx: 2, ry: 5 };
 
 /**
- * Si al probar el ESP32 un stick va al revés (empujás hacia adelante y
- * retrocede), poné en true el eje que corresponda.
+ * Si al probar el ESP32 un stick va al revés (empujas hacia adelante y
+ * retrocede), pon en true el eje que corresponda.
  */
 const ESP32_INVERT = { lx: true, ly: true, rx: false, ry: false };
 

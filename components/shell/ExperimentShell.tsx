@@ -10,7 +10,7 @@ import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
 import { StereoView } from "./StereoView";
 import { VrButton, VrExit } from "./VrControls";
-import { useViewMode } from "@/lib/view/viewMode";
+import { exitVr, useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { useQualityTier } from "./useQualityTier";
 import { VariablesPanel } from "./VariablesPanel";
@@ -20,6 +20,7 @@ import { BriefingPanel } from "./BriefingPanel";
 import { TourPanel } from "./TourPanel";
 import { TOUR, readTourIndex, tourHref } from "@/lib/tour";
 import { VrHud } from "@/components/vr/VrHud";
+import { Whiteboard } from "./Whiteboard";
 import { ChallengeHUD } from "./ChallengeHUD";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
@@ -102,14 +103,29 @@ export function ExperimentShell({
   // En la vista VR la tarjeta del recorrido no se ve (es HTML): el paso a la
   // siguiente parada va como un botón más del panel de acciones 3D.
   const nextStop = touring && tourIndex !== null ? TOUR[tourIndex + 1] : undefined;
+  const exitTour = () => {
+    setTourExited(true);
+    // Que siga cerrada al salir, con su "?" para abrirla.
+    setBriefingOpen((open) => open ?? false);
+    router.replace(pathname);
+  };
   const tourActions: VrAction[] =
     touring && tourIndex !== null
       ? [
           {
             id: "recorrido",
             label: nextStop ? `Siguiente parada: ${nextStop.name}` : "Terminar el recorrido",
-            onSelect: () => router.push(nextStop ? tourHref(tourIndex + 1) : "/progreso"),
+            onSelect: () => {
+              if (nextStop) {
+                router.push(tourHref(tourIndex + 1));
+                return;
+              }
+              // La pantalla de progreso es HTML: se ve sin el visor.
+              void exitVr();
+              router.push("/progreso");
+            },
           },
+          { id: "salir-recorrido", label: "Salir del recorrido", onSelect: () => exitTour() },
         ]
       : [];
 
@@ -157,12 +173,7 @@ export function ExperimentShell({
             onPreset={(preset) =>
               Object.entries(preset).forEach(([key, value]) => setValue(key, value))
             }
-            onExit={() => {
-              setTourExited(true);
-              // Que siga cerrada al salir, con su "?" para abrirla.
-              setBriefingOpen((open) => open ?? false);
-              router.replace(pathname);
-            }}
+            onExit={exitTour}
             onShowBriefing={() => setBriefingOpen(true)}
           />
         )}
@@ -267,7 +278,11 @@ export function ExperimentShell({
             resolution={quality === "high" ? 512 : 256}
           />
 
-          <GyroCamera orientation={orientation} enabled={gyroActive} />
+          <GyroCamera
+            orientation={orientation}
+            enabled={gyroActive}
+            faceTarget={experiment.cameraView?.target ?? [5, 1, 0]}
+          />
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
           <MovementController />
@@ -279,11 +294,21 @@ export function ExperimentShell({
               se apaga: los dos quieren tomar el dibujo de cada cuadro. */}
           {vr ? <StereoView /> : <PostFX quality={quality} />}
 
+          {/* Pizarrón con fórmulas y lugar para hacer cuentas, si el experimento lo trae. */}
+          {experiment.whiteboard && <Whiteboard spec={experiment.whiteboard} />}
+
           {/* La interfaz de la vista VR, dentro de la escena. */}
           {vr && (
             <VrHud
               engine={engine}
               experimentSlug={experiment.slug}
+              experimentName={experiment.name}
+              briefing={experiment.briefing}
+              briefingOpen={briefingOpen ?? !touring}
+              onBriefingOpenChange={setBriefingOpen}
+              tourIndex={touring ? tourIndex : null}
+              onExitTour={exitTour}
+              onBackToLobby={() => router.push("/lab")}
               schema={experiment.variablesSchema}
               values={values}
               onChange={setValue}

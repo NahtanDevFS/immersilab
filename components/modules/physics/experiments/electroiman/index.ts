@@ -64,6 +64,21 @@ export const electroimanExperiment: ExperimentDefinition = {
   variablesSchema,
   // El patio mide unos 20 m: se entra mirando la grúa entera de costado.
   cameraView: { position: [8.5, 5, 14], target: [8.5, 1.4, 0] },
+  whiteboard: {
+    title: "La grúa electromagnética",
+    formulas: [
+      "Campo: B = μ0 · N · I / (L/μr + 2·g)",
+      "μ0 = 4π × 10⁻⁷ T·m/A, L = 1 m",
+      "Fuerza: F = B² · A / (2·μ0)",
+      "Levanta si F > m · g",
+      "Bobina: R = 0.01 Ω por vuelta",
+      "Potencia: P = I² · R (nominal: 1500 W)",
+      "Mismo N·I con más vueltas: el mismo campo con menos potencia",
+    ],
+    // Detrás de la chatarra, a la mitad del patio.
+    position: [8.5, 1.7, -3.6],
+    width: 2.8,
+  },
   conceptTags: [
     "electromagnetismo",
     "ley de Ampère",

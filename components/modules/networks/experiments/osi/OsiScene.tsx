@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { getStack, type OsiEngine } from "./engine";
 import styles from "./OsiScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * Dos torres, una por host: el emisor a la izquierda y el receptor a la
@@ -186,7 +187,7 @@ export function OsiScene({ engine, variables }: Props) {
 
                 {/* La etiqueta va del lado de afuera de cada torre para no
                     taparse con el paquete, que viaja por el centro. */}
-                <Html position={[side * 1.7, 0.12, 0]} center>
+                <SceneLabel position={[side * 1.7, 0.12, 0]} center>
                   <div className={styles.layer}>
                     <span className={styles.osi}>
                       {model === "osi" ? step.osi : step.tcpip}
@@ -201,17 +202,17 @@ export function OsiScene({ engine, variables }: Props) {
                       </>
                     )}
                   </div>
-                </Html>
+                </SceneLabel>
               </group>
             );
           })}
 
           {/* Etiqueta de host. */}
-          <Html position={[0, BASE_Y + stack.length * LAYER_HEIGHT + 0.6, 0]} center>
+          <SceneLabel position={[0, BASE_Y + stack.length * LAYER_HEIGHT + 0.6, 0]} center>
             <div className={styles.host}>
               {side < 0 ? "Emisor" : "Receptor"}
             </div>
-          </Html>
+          </SceneLabel>
         </group>
       ))}
 

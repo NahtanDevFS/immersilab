@@ -6,7 +6,7 @@ import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { useCollider } from "@/lib/collision/useCollider";
-import { Html } from "@react-three/drei";
+
 import {
   BULLSEYE_RADIUS,
   TARGETS_X,
@@ -25,6 +25,7 @@ import {
   TRUNNION_Y,
   TRUNNION_Z,
 } from "./Cannon";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 const DEG = Math.PI / 180;
 const MAX_TRAIL_POINTS = 300;
@@ -243,12 +244,12 @@ function Targets({ engine }: { engine: ProjectileEngine }) {
               <cylinderGeometry args={[0.05, 0.05, 2, 8]} />
               <meshStandardMaterial color="#8e9bb0" metalness={0.8} roughness={0.3} />
             </mesh>
-            <Html position={[0, 2.4, -BULLSEYE_RADIUS * 3 - 0.2]} center>
+            <SceneLabel position={[0, 2.4, -BULLSEYE_RADIUS * 3 - 0.2]} center>
               <div className={styles.target} data-active={active} data-done={Boolean(shot)}>
                 Blanco {i + 1} · {x} m
                 {shot && <span>{shot.points} pts</span>}
               </div>
-            </Html>
+            </SceneLabel>
           </group>
         );
       })}
@@ -263,20 +264,20 @@ function Targets({ engine }: { engine: ProjectileEngine }) {
               toneMapped={false}
             />
           </mesh>
-          <Html position={[0, 0.95, 0]} center>
+          <SceneLabel position={[0, 0.95, 0]} center>
             <div className={styles.mark}>
               {shot.miss <= BULLSEYE_RADIUS ? "¡Impacto!" : `${shot.miss.toFixed(1)} m`}
             </div>
-          </Html>
+          </SceneLabel>
         </group>
       ))}
 
       {view.mode === "viento" && (
-        <Html position={[6, 3.4, 0]} center>
+        <SceneLabel position={[6, 3.4, 0]} center>
           <div className={styles.wind}>
             Viento {round.wind > 0 ? "a favor →" : "← en contra"} · {Math.abs(round.wind).toFixed(1)} m/s²
           </div>
-        </Html>
+        </SceneLabel>
       )}
     </group>
   );
