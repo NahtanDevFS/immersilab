@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
@@ -14,6 +14,7 @@ import {
 } from "./series";
 import type { TaylorEngine } from "./engine";
 import styles from "./TaylorScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * La gráfica se para de canto, como en Riemann: x de 0 a 10 m, y de 0.3 a
@@ -182,12 +183,12 @@ export function TaylorScene({ engine, variables }: Props) {
 
       {/* Leyenda a la izquierda del panel, a media altura: arriba chocaba
           con la etiqueta del centro, que vive en el borde superior. */}
-      <Html position={[-0.5, PLOT_BASE + PLOT_HEIGHT * 0.6, 0]} center>
+      <SceneLabel position={[-0.5, PLOT_BASE + PLOT_HEIGHT * 0.6, 0]} center>
         <div className={styles.legend}>
           <span data-real>f(x) = {fn.label}</span>
           <span data-poly>polinomio de grado {degree}</span>
         </div>
-      </Html>
+      </SceneLabel>
 
       {/* Postes del intervalo objetivo. */}
       {[t0, t1].map((x, i) => (
@@ -196,28 +197,28 @@ export function TaylorScene({ engine, variables }: Props) {
           <meshBasicMaterial color={new THREE.Color(1.8, 1.8, 2)} toneMapped={false} transparent opacity={0.5} />
         </mesh>
       ))}
-      <Html position={[toX((t0 + t1) / 2), 0.05, STRIP_Z + STRIP_DEPTH + 0.3]} center>
+      <SceneLabel position={[toX((t0 + t1) / 2), 0.05, STRIP_Z + STRIP_DEPTH + 0.3]} center>
         <div className={styles.target}>
           Objetivo: [{t0.toFixed(2)}, {t1.toFixed(2)}] con error &lt; {TOLERANCE}
         </div>
-      </Html>
+      </SceneLabel>
 
       {/* Centro de la serie. */}
       <mesh position={[toX(center), (PLOT_BASE + PLOT_HEIGHT) / 2, 0.15]}>
         <boxGeometry args={[0.035, PLOT_BASE + PLOT_HEIGHT, 0.035]} />
         <meshBasicMaterial color={POLY_COLOR} toneMapped={false} />
       </mesh>
-      <Html position={[toX(center), PLOT_BASE + PLOT_HEIGHT + 0.25, 0.15]} center>
+      <SceneLabel position={[toX(center), PLOT_BASE + PLOT_HEIGHT + 0.25, 0.15]} center>
         <div className={styles.center}>a = {center.toFixed(1)}</div>
-      </Html>
+      </SceneLabel>
 
       {/* Franja de validez sobre el piso. */}
       <mesh geometry={scene.strip}>
         <meshBasicMaterial vertexColors toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
-      <Html position={[-0.5, 0.05, STRIP_Z + STRIP_DEPTH / 2]} center>
+      <SceneLabel position={[-0.5, 0.05, STRIP_Z + STRIP_DEPTH / 2]} center>
         <div className={styles.axisNote}>ya vale →</div>
-      </Html>
+      </SceneLabel>
 
       {/* Radio de convergencia: más allá, ningún grado alcanza. */}
       {Number.isFinite(radius) && radiusEnd > radiusStart && (
@@ -226,11 +227,11 @@ export function TaylorScene({ engine, variables }: Props) {
             <boxGeometry args={[toX(radiusEnd) - toX(radiusStart), 0.08, 0.32]} />
             <meshBasicMaterial color={new THREE.Color(1.6, 0.6, 2.6)} toneMapped={false} />
           </mesh>
-          <Html position={[(toX(radiusStart) + toX(radiusEnd)) / 2, 0.05, RADIUS_Z + 0.45]} center>
+          <SceneLabel position={[(toX(radiusStart) + toX(radiusEnd)) / 2, 0.05, RADIUS_Z + 0.45]} center>
             <div className={styles.radius}>
               Radio de convergencia R = {radius.toFixed(2)}: fuera de él la serie diverge
             </div>
-          </Html>
+          </SceneLabel>
         </group>
       )}
     </group>

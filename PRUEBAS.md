@@ -145,6 +145,45 @@ estudiante con algún reto logrado.
 - [ ] Fluidez aceptable en el lobby y en los experimentos más pesados
       (Cobertura, Espectro, Tiro parabólico). Si va lento, probar `?q=low`.
 - [ ] Los textos se leen bien a través de los lentes.
+- [ ] Vista VR: mirando al frente no se ve ningún panel, solo la escena
+      (y al empezar, un aviso de dónde está cada cosa). Girando la cabeza a
+      la izquierda, las variables; a la derecha, retos y acciones, y más a
+      la derecha el resultado y los botones generales. Al girar para mirar
+      un panel, el panel no se aleja.
+- [ ] Al entrar a un experimento aparece la explicación adelante;
+      "Entendido" la cierra y "Ver la explicación" (a la derecha) la reabre.
+- [ ] "Preguntar al tutor": tocarlo, hablar, tocarlo de nuevo; responde.
+      Mientras escucha, "Cancelar la pregunta" no envía nada; mientras
+      responde, "Callar al tutor" lo corta y oculta los subtítulos.
+- [ ] Conversación con el tutor: en la PC, "Conversación (n)" abre la
+      ventana con todas las preguntas y respuestas; "Minimizar" la cierra
+      (y quedan los subtítulos de la respuesta en curso). En el visor, el
+      panel "Conversación" a la izquierda: muestra lo mismo, se minimiza y
+      con "Ver anteriores" se leen los mensajes viejos.
+- [ ] Arrastrar un panel: mirar su barra de arriba, mantener A (o el dedo)
+      y girar la cabeza; al soltar queda ahí, también al volver a entrar.
+      "Acomodar los paneles" los devuelve a su lugar.
+- [ ] Enrutamiento en el visor: mirar un enlace y presionar A lo corta o
+      lo repara.
+- [ ] Lobby en el visor: Mi progreso / Mi cuenta salen del visor y abren
+      la página.
+- [ ] "Volver al lobby" regresa al pasillo sin salir del visor. En el
+      lobby, a la derecha, el panel "Cómo moverte" y "Empezar el recorrido
+      guiado".
+- [ ] Recorrido en el visor: tarjeta de cada parada, "Siguiente parada" y
+      "Salir del recorrido".
+- [ ] QAM: "Cambiar el mensaje" pasa por la lista. Cobertura: se ve la
+      leyenda del piso.
+- [ ] La pantalla de carga se ve en los dos ojos.
+- [ ] Al entrar con el giroscopio quedas de frente al experimento (no a
+      los árboles), sin importar hacia dónde apunte el celular.
+- [ ] Gira el cuerpo hacia otro lado y usa "Centrar la vista" (o el clic
+      del stick izquierdo): el experimento y los paneles vuelven al frente.
+- [ ] Botón Y (clic del stick derecho en el ESP32) oculta y vuelve a
+      mostrar los paneles; al ocultarlos aparece un aviso corto.
+- [ ] Mirar una variable la resalta; el stick derecho la cambia de forma
+      continua (lento con poco empuje, rápido a fondo). En las listas pasa
+      de una opción a otra; en Sí/No, derecha = Sí, izquierda = No.
 - [ ] Latencia del tutor: cuánto tarda en empezar a responder.
 
 ## Anotar lo que falle

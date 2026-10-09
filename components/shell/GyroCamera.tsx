@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { OrientationState } from "./useDeviceOrientation";
+import { readPad } from "./gamepad";
+import { publishAlignment, recenterRequests, requestRecenter } from "@/lib/view/recenter";
 
 const DEG = Math.PI / 180;
 
@@ -20,9 +22,21 @@ const DEG = Math.PI / 180;
  */
 const EYE_HEIGHT = 1.7;
 
+/** Clic del stick izquierdo en el ESP32 (X / cuadrado en un control
+ *  estándar): vuelve a centrar la vista hacia el experimento. */
+const RECENTER_BUTTON = 2;
+
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
 interface Props {
   orientation: OrientationState;
   enabled: boolean;
+  /**
+   * Hacia dónde queda el frente al entrar y al centrar la vista: el
+   * experimento. Sin esto, el frente era el norte de la brújula del
+   * celular, y se podía aparecer de espaldas a todo.
+   */
+  faceTarget?: [number, number, number];
 }
 
 /**
@@ -37,7 +51,7 @@ interface Props {
  * leyendo `screen.orientation.angle`; si no, la cámara solo queda derecha
  * sosteniendo el teléfono en vertical (el bug que estábamos viendo).
  */
-export function GyroCamera({ orientation, enabled }: Props) {
+export function GyroCamera({ orientation, enabled, faceTarget = [0, 0, -1000] }: Props) {
   const { camera } = useThree();
   const target = useRef(new THREE.Quaternion());
   const euler = useRef(new THREE.Euler());
@@ -64,8 +78,17 @@ export function GyroCamera({ orientation, enabled }: Props) {
   // si se forzara en cada frame, cualquier experimento que quiera mover la
   // cámara en vertical quedaría clavado sin explicación.
   const planted = useRef(false);
+  /** Corrección de rumbo: cuánto se gira lo que dice la brújula. */
+  const yawOffset = useRef<number | null>(null);
+  const lastRequest = useRef(recenterRequests());
+  const recenterWasPressed = useRef(true);
+  const yawEuler = useRef(new THREE.Euler());
+  const yawCorrection = useRef(new THREE.Quaternion());
   useEffect(() => {
-    if (!enabled) planted.current = false;
+    if (!enabled) {
+      planted.current = false;
+      yawOffset.current = null;
+    }
   }, [enabled]);
 
   useFrame(() => {
@@ -95,6 +118,27 @@ export function GyroCamera({ orientation, enabled }: Props) {
         -screenAngle.current,
       ),
     );
+
+    // Centrar la vista: al entrar, con el botón 3D o con el clic del stick
+    // izquierdo. Se calcula cuánto hay que girar el rumbo de la brújula para
+    // quedar de frente al experimento, y se aplica desde ahí en adelante.
+    const pressed = readPad()?.rawButtons[RECENTER_BUTTON] ?? false;
+    if (pressed && !recenterWasPressed.current) requestRecenter();
+    recenterWasPressed.current = pressed;
+    if (recenterRequests() !== lastRequest.current) {
+      lastRequest.current = recenterRequests();
+      yawOffset.current = null;
+    }
+    if (yawOffset.current === null) {
+      const sensorYaw = yawEuler.current.setFromQuaternion(target.current, "YXZ").y;
+      const desired = Math.atan2(
+        -(faceTarget[0] - camera.position.x),
+        -(faceTarget[2] - camera.position.z),
+      );
+      yawOffset.current = desired - sensorYaw;
+      publishAlignment(desired);
+    }
+    target.current.premultiply(yawCorrection.current.setFromAxisAngle(Y_AXIS, yawOffset.current));
 
     // Suavizado — evita que la cámara tiemble con el ruido del sensor.
     camera.quaternion.slerp(target.current, 0.15);

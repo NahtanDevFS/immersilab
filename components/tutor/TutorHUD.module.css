@@ -144,6 +144,127 @@
   white-space: nowrap;
 }
 
+/* El botón de hablar y, al lado, el de abrir la conversación. */
+.controls {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.chatToggle {
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-glass);
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.chatToggle:hover {
+  color: var(--lab-text);
+}
+
+/* La conversación desplegada: como un chat, con lo último abajo. */
+.chat {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--lab-glass);
+  border: 0.5px solid var(--lab-panel-border);
+  border-top: 1px solid var(--ring);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.chatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem 0.45rem 0.8rem;
+  border-bottom: 0.5px solid var(--lab-panel-border);
+}
+
+.chatTitle {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lab-text-muted);
+}
+
+.minimize {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: transparent;
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.minimize:hover {
+  color: var(--lab-text);
+  border-color: var(--lab-text-muted);
+}
+
+.chatList {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  max-height: min(16rem, 38vh);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.chatMessage {
+  max-width: 92%;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--lab-text);
+}
+
+.chatMessage[data-role="user"] {
+  align-self: flex-end;
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--lab-text);
+}
+
+.chatMessage[data-role="user"][data-state="streaming"] {
+  color: var(--lab-text-muted);
+  font-style: italic;
+}
+
+.chatMessage[data-state="error"] {
+  color: var(--lab-danger);
+}
+
+.chatMessage[data-state="interrupted"] {
+  color: var(--lab-text-muted);
+}
+
+.chatEvent {
+  align-self: center;
+  font-size: 0.72rem;
+  color: var(--lab-accent);
+}
+
+.chatEmpty {
+  color: var(--lab-text-muted);
+  font-size: 0.82rem;
+}
+
 .note {
   font-size: 0.75rem;
   color: var(--lab-accent-warm);

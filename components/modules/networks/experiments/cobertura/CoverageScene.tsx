@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
@@ -18,6 +18,7 @@ import {
 } from "./propagation";
 import { antennasFrom, type CoverageEngine } from "./engine";
 import styles from "./CoverageScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * El campus es una maqueta sobre el piso: las coordenadas del mapa (1 unidad
@@ -130,9 +131,9 @@ export function CoverageScene({ engine, variables }: Props) {
               <boxGeometry args={[x1 - x0, b.height, z1 - z0]} />
               <meshStandardMaterial color="#cbd5e1" roughness={0.75} transparent opacity={0.88} />
             </mesh>
-            <Html position={[(x0 + x1) / 2, b.height + 0.15, (z0 + z1) / 2]} center>
+            <SceneLabel position={[(x0 + x1) / 2, b.height + 0.15, (z0 + z1) / 2]} center>
               <div className={styles.building}>{b.name}</div>
-            </Html>
+            </SceneLabel>
           </group>
         );
       })}
@@ -148,14 +149,14 @@ export function CoverageScene({ engine, variables }: Props) {
               <cylinderGeometry args={[0.06, 0.06, 1.4, 10]} />
               <meshBasicMaterial color={color} toneMapped={false} />
             </mesh>
-            <Html position={[0, 1.55, 0]} center>
+            <SceneLabel position={[0, 1.55, 0]} center>
               <div className={styles.point} data-state={r.covered ? "ok" : r.interfered ? "interf" : "weak"}>
                 {p.name}
                 <span>
                   {Number.isFinite(r.bestDbm) ? `${Math.round(r.bestDbm)} dBm` : "—"}
                 </span>
               </div>
-            </Html>
+            </SceneLabel>
           </group>
         );
       })}
@@ -182,18 +183,18 @@ export function CoverageScene({ engine, variables }: Props) {
                     toneMapped={false}
                   />
                 </mesh>
-                <Html position={[0, 2.65, 0]} center>
+                <SceneLabel position={[0, 2.65, 0]} center>
                   <div className={styles.antenna}>
                     {indexes
                       .map((i) => `Antena ${i + 1} · canal ${antennas[i].channel}`)
                       .join(" / ")}
                   </div>
-                </Html>
+                </SceneLabel>
               </>
             ) : (
-              <Html position={[0, 0.85, 0]} center>
+              <SceneLabel position={[0, 0.85, 0]} center>
                 <div className={styles.site}>{s.name}</div>
-              </Html>
+              </SceneLabel>
             )}
           </group>
         );

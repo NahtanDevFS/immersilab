@@ -2,12 +2,13 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { CUTOFF_TEMP, ITEMS, type MagnetEngine } from "./engine";
 import styles from "./MagnetScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /** Dónde está cada objeto en el patio (x), y el contenedor al final. */
 const SLOT_X = [0, 2.4, 4.8, 7.2, 9.8, 13.2];
@@ -233,12 +234,12 @@ export function MagnetScene({ engine, variables }: Props) {
           position={[SLOT_X[i], 0, 0]}
         >
           <ScrapModel id={item.id} />
-          <Html position={[0, (HEIGHT[item.id] ?? 0.3) + 0.35, 0.6]} center>
+          <SceneLabel position={[0, (HEIGHT[item.id] ?? 0.3) + 0.35, 0.6]} center>
             <div className={styles.label}>
               {item.name}
               <span>{item.mass} kg</span>
             </div>
-          </Html>
+          </SceneLabel>
         </group>
       ))}
 
@@ -256,9 +257,9 @@ export function MagnetScene({ engine, variables }: Props) {
             <meshStandardMaterial color="#2f6b4f" metalness={0.5} roughness={0.6} />
           </mesh>
         ))}
-        <Html position={[0, 1.5, 1.1]} center>
+        <SceneLabel position={[0, 1.5, 1.1]} center>
           <div className={styles.label}>Contenedor</div>
-        </Html>
+        </SceneLabel>
       </group>
     </group>
   );

@@ -58,6 +58,22 @@ export const fuentePoderExperiment: ExperimentDefinition = {
     "Convierte los 120 V de alterna del enchufe en 5 V de continua para un cargador USB: transformador, rectificador y capacitor, mirando cada etapa en el osciloscopio.",
   variablesSchema,
   cameraView: { position: [0, 2.4, 3.2], target: [0, 1.3, -0.3] },
+  whiteboard: {
+    title: "La fuente de poder",
+    formulas: [
+      "Pico del enchufe: 120 V · √2 ≈ 169.7 V",
+      "Transformador: V2 = V1 · N2 / N1",
+      "Después de un diodo: V_pico − 0.7 V",
+      "Después del puente: V_pico − 1.4 V",
+      "Rizado ≈ I / (f · C)",
+      "f = 60 Hz con media onda, 120 Hz con el puente",
+      "USB: entre 4.75 V y 5.25 V",
+    ],
+    // A la izquierda de la mesa, girado hacia el jugador.
+    position: [-3.1, 1.5, -0.4],
+    rotationY: 0.6,
+    width: 2.1,
+  },
   conceptTags: [
     "transformador",
     "diodo",

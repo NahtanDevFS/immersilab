@@ -5,7 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { StereoEffect } from "three/examples/jsm/effects/StereoEffect.js";
 import { readPad } from "./gamepad";
-import { selectGazed, updateGaze } from "@/lib/view/gaze";
+import { selectGazed, setPadHeldReader, setScreenHeld, updateGaze } from "@/lib/view/gaze";
 
 /** Separación entre los ojos, en metros (la escena está en metros). */
 const EYE_SEPARATION = 0.064;
@@ -92,8 +92,10 @@ function GazeReticle() {
     let down: { x: number; y: number; t: number } | null = null;
     const onDown = (e: PointerEvent) => {
       down = { x: e.clientX, y: e.clientY, t: performance.now() };
+      setScreenHeld(true);
     };
     const onUp = (e: PointerEvent) => {
+      setScreenHeld(false);
       if (!down) return;
       const tap =
         performance.now() - down.t < TAP_MAX_MS &&
@@ -105,11 +107,14 @@ function GazeReticle() {
       if (e.key === "Enter" || e.key === " ") selectGazed();
     };
     canvas.addEventListener("pointerdown", onDown);
-    canvas.addEventListener("pointerup", onUp);
+    // En window: si el dedo se suelta fuera del canvas, igual cuenta.
+    window.addEventListener("pointerup", onUp);
     window.addEventListener("keydown", onKey);
+    setPadHeldReader(() => readPad()?.action ?? false);
     return () => {
+      setScreenHeld(false);
       canvas.removeEventListener("pointerdown", onDown);
-      canvas.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointerup", onUp);
       window.removeEventListener("keydown", onKey);
     };
   }, [canvas]);

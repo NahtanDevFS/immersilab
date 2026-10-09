@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { getGazed, registerGazeTarget } from "@/lib/view/gaze";
+import { useViewMode } from "@/lib/view/viewMode";
 import { VrText } from "./VrText";
 
 const BASE = new THREE.Color("#1d2a44");
@@ -47,6 +48,7 @@ export function GazeButton({
   primary = false,
 }: Props) {
   const meshRef = useRef<THREE.Mesh>(null); // la zona que se apunta
+  const vr = useViewMode() === "vr";
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   // La última versión de las props, para el registro (que se hace una vez).
   const latest = useRef({ onSelect, disabled });
@@ -72,7 +74,19 @@ export function GazeButton({
 
   return (
     <group position={position}>
-      <mesh ref={meshRef}>
+      <mesh
+        ref={meshRef}
+        // También con el mouse o el dedo (fuera del visor): los botones 3D del
+        // pizarrón se usan en la vista normal.
+        onClick={(event) => {
+          // En la vista VR un toque ya activa lo que marca la mira: si además
+          // contara el clic, el mismo toque podría activar dos botones.
+          if (vr) return;
+          if (event.delta > 6) return; // fue un arrastre para mirar
+          event.stopPropagation();
+          if (!latest.current.disabled) latest.current.onSelect();
+        }}
+      >
         <planeGeometry args={[width + HIT_MARGIN * 2, height + HIT_MARGIN * 2]} />
         {/* Invisible pero "visible" para three: un objeto con visible=false
             no se puede apuntar. */}

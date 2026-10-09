@@ -32,6 +32,8 @@ export function QamControls({ engine }: Props) {
       // muta), así que sin copiarlo React no ve ningún cambio y no
       // re-renderiza nunca.
       setRuntime({ ...qam.getRuntime() });
+      // El mensaje también puede cambiar desde el visor (lista de mensajes).
+      setMessage(qam.getMessage());
     }, 100);
     return () => window.clearInterval(id);
   }, [qam]);

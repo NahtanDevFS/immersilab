@@ -14,7 +14,7 @@ import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
 import { StereoView } from "./StereoView";
 import { VrButton, VrExit } from "./VrControls";
-import { useViewMode } from "@/lib/view/viewMode";
+import { exitVr, useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { LobbyTutorial } from "./LobbyTutorial";
 import { TutorialProbe } from "./TutorialProbe";
@@ -29,6 +29,7 @@ import tutorialStyles from "./LobbyTutorial.module.css";
 import { useQualityTier } from "./useQualityTier";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { LobbyScene } from "@/components/lobby/LobbyScene";
+import { LobbyVrHud } from "@/components/vr/LobbyVrHud";
 import styles from "./ExperimentShell.module.css";
 
 /**
@@ -161,7 +162,8 @@ export function LobbyShell() {
             <LobbyScene />
           </Suspense>
 
-          <GyroCamera orientation={orientation} enabled={gyroActive} />
+          {/* De frente al pasillo (hacia -z, donde están las puertas). */}
+          <GyroCamera orientation={orientation} enabled={gyroActive} faceTarget={[0, 1.4, -1000]} />
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
           <MovementController />
@@ -169,6 +171,17 @@ export function LobbyShell() {
           {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
 
           {vr ? <StereoView /> : <PostFX quality={quality} />}
+
+          {/* En la vista VR, la ayuda y el recorrido van en 3D. */}
+          {vr && (
+            <LobbyVrHud
+              onStartTour={() => router.push(tourHref(0))}
+              onOpenPage={(href) => {
+                void exitVr();
+                router.push(href);
+              }}
+            />
+          )}
         </Canvas>
 
         {vr && <VrExit />}

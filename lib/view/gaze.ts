@@ -19,6 +19,8 @@ const targets = new Map<THREE.Object3D, GazeTarget>();
 const raycaster = new THREE.Raycaster();
 const CENTER = new THREE.Vector2(0, 0);
 let hovered: THREE.Object3D | null = null;
+/** Coordenadas de textura del punto mirado (para dibujar en el pizarrón). */
+let hoveredUv: THREE.Vector2 | null = null;
 
 export function registerGazeTarget(object: THREE.Object3D, target: GazeTarget): () => void {
   targets.set(object, target);
@@ -26,6 +28,11 @@ export function registerGazeTarget(object: THREE.Object3D, target: GazeTarget): 
     targets.delete(object);
     if (hovered === object) hovered = null;
   };
+}
+
+/** Dónde, dentro de lo mirado, cae la mira (coordenadas de textura). */
+export function getGazeUv(): THREE.Vector2 | null {
+  return hoveredUv;
 }
 
 /** Lo que se está mirando ahora (o null). */
@@ -47,7 +54,9 @@ export function updateGaze(camera: THREE.Camera): THREE.Object3D | null {
   targets.forEach((target, object) => {
     if (target.enabled() && isVisible(object)) candidates.push(object);
   });
-  hovered = raycaster.intersectObjects(candidates, false)[0]?.object ?? null;
+  const hit = raycaster.intersectObjects(candidates, false)[0];
+  hovered = hit?.object ?? null;
+  hoveredUv = hit?.uv ?? null;
   return hovered;
 }
 
@@ -58,3 +67,25 @@ export function selectGazed(): boolean {
   return true;
 }
 
+
+/*
+ * "Mantener apretado" en la vista VR: A del control o el dedo apoyado en la
+ * pantalla. Sirve para arrastrar paneles y dibujar en el pizarrón con la
+ * mira. El dedo lo informa StereoView (escucha el canvas); el control se
+ * lee acá mismo, para que quien pregunte no tenga que saber de dónde viene.
+ */
+let screenHeld = false;
+let padHeld: () => boolean = () => false;
+
+export function setScreenHeld(held: boolean) {
+  screenHeld = held;
+}
+
+/** Quién sabe leer el botón A (StereoView le pasa el lector del control). */
+export function setPadHeldReader(reader: () => boolean) {
+  padHeld = reader;
+}
+
+export function isSelectHeld(): boolean {
+  return screenHeld || padHeld();
+}

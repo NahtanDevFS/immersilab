@@ -50,14 +50,20 @@ export const LEVELS: Array<{ id: Level; label: string }> = [
   { id: "paralelo", label: "3 · Ramas en paralelo" },
 ];
 
-export type MeasurePoint = "v_r1" | "v_r2" | "v_r3" | "v_led" | "i_total" | "i_r2" | "i_r3";
+export type MeasurePoint = "v_bat" | "v_r1" | "v_r2" | "v_r3" | "v_led" | "i_total" | "i_r2" | "i_r3";
 
 export const MEASURE_POINTS: Array<{ id: MeasurePoint; label: string; unit: "V" | "A" }> = [
+  // Para ver que de la batería salen 9 V y que se reparten: sin esto, quien
+  // mide 7.2 V en R1 con el LED cree que el sistema está mal.
+  { id: "v_bat", label: "Voltaje de la batería", unit: "V" },
   { id: "v_r1", label: "Voltaje en R1", unit: "V" },
   { id: "v_r2", label: "Voltaje en R2", unit: "V" },
   { id: "v_r3", label: "Voltaje en R3", unit: "V" },
   { id: "v_led", label: "Voltaje en el LED", unit: "V" },
-  { id: "i_total", label: "Corriente total", unit: "A" },
+  // R1 está en serie con todo el resto en los tres circuitos: la corriente
+  // que pasa por R1 ES la total. El nombre dice las dos cosas, porque quien
+  // busca "corriente en R1" no la encontraba.
+  { id: "i_total", label: "Corriente por R1 (total)", unit: "A" },
   { id: "i_r2", label: "Corriente por R2", unit: "A" },
   { id: "i_r3", label: "Corriente por R3", unit: "A" },
 ];
@@ -188,6 +194,8 @@ export function solve(
 export function reading(level: Level, point: MeasurePoint, s: Solution): number | null {
   const has = (k: "r1" | "r2" | "r3") => LEVEL_RESISTORS[level].includes(k);
   switch (point) {
+    case "v_bat":
+      return BATTERY_V;
     case "v_r1":
       return s.vR1;
     case "v_r2":
@@ -203,6 +211,24 @@ export function reading(level: Level, point: MeasurePoint, s: Solution): number 
     case "i_r3":
       return has("r3") ? s.i3 : null;
   }
+}
+
+/**
+ * Cómo se reparten los 9 V de la batería (ley de voltajes de Kirchhoff) y,
+ * en paralelo, cómo se reparte la corriente. Se escribe sobre la mesa: sin
+ * esto, medir 7.2 V en R1 con el LED parecía un error, porque nadie veía
+ * adónde iban los otros 1.8 V.
+ */
+export function balanceLines(level: Level, s: Solution): string[] {
+  const v = (x: number) => `${x.toFixed(2)} V`;
+  const ma = (x: number) => `${(x * 1000).toFixed(2)} mA`;
+  if (s.total === 0) return ["Circuito abierto: no circula corriente (¿algo quemado?)"];
+  if (level === "led") return [`${BATTERY_V} V = ${v(s.vR1)} en R1 + ${v(s.vLed)} en el LED`];
+  if (level === "divisor") return [`${BATTERY_V} V = ${v(s.vR1)} en R1 + ${v(s.vR2)} en R2`];
+  return [
+    `${BATTERY_V} V = ${v(s.vR1)} en R1 + ${v(s.vR2)} en R2 y R3 (en paralelo tienen el mismo voltaje)`,
+    `I total ${ma(s.total)} = ${ma(s.i2)} por R2 + ${ma(s.i3)} por R3`,
+  ];
 }
 
 /** Texto del multímetro: con unidad y prefijo, como en uno de verdad. */

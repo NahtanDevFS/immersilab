@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+
 import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
@@ -15,6 +15,7 @@ import {
   type ModulationEngine,
 } from "./engine";
 import styles from "./ModulationScene.module.css";
+import { SceneLabel } from "@/components/vr/SceneLabel";
 
 /*
  * Tres zonas, para que cada idea tenga su lugar:
@@ -198,17 +199,17 @@ export function ModulationScene({ engine, variables }: Props) {
         <planeGeometry args={[WAVE_SPAN + 0.6, 3.6]} />
         <meshStandardMaterial color="#0b1220" transparent opacity={0.6} roughness={0.9} />
       </mesh>
-      <Html position={[WAVE_X0 - 0.4, WAVE_ROWS.moduladora, WAVE_Z]} center>
+      <SceneLabel position={[WAVE_X0 - 0.4, WAVE_ROWS.moduladora, WAVE_Z]} center>
         <div className={styles.waveLabel}>Moduladora (tu tono)</div>
-      </Html>
-      <Html position={[WAVE_X0 - 0.4, WAVE_ROWS.portadora, WAVE_Z]} center>
+      </SceneLabel>
+      <SceneLabel position={[WAVE_X0 - 0.4, WAVE_ROWS.portadora, WAVE_Z]} center>
         <div className={styles.waveLabel}>Portadora</div>
-      </Html>
-      <Html position={[WAVE_X0 - 0.4, WAVE_ROWS.modulada, WAVE_Z]} center>
+      </SceneLabel>
+      <SceneLabel position={[WAVE_X0 - 0.4, WAVE_ROWS.modulada, WAVE_Z]} center>
         <div className={styles.waveLabel} data-accent>
           Señal {band === "am" ? "AM" : "FM"}
         </div>
-      </Html>
+      </SceneLabel>
 
       {/* Dial: base, emisoras y filtro del receptor. */}
       <mesh position={[5, 0.03, DIAL_Z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -242,21 +243,21 @@ export function ModulationScene({ engine, variables }: Props) {
           toneMapped={false}
         />
       </mesh>
-      <Html position={[5, 1.8, DIAL_Z]} center>
+      <SceneLabel position={[5, 1.8, DIAL_Z]} center>
         <div className={styles.filterLabel}>
           Filtro del receptor · {CHANNEL_KHZ[band]} kHz
         </div>
-      </Html>
-      <Html position={[0.2, 0.05, DIAL_Z + 1.1]} center>
+      </SceneLabel>
+      <SceneLabel position={[0.2, 0.05, DIAL_Z + 1.1]} center>
         <div className={styles.axisNote}>
           −{band === "am" ? "20 kHz" : "400 kHz"}
         </div>
-      </Html>
-      <Html position={[9.8, 0.05, DIAL_Z + 1.1]} center>
+      </SceneLabel>
+      <SceneLabel position={[9.8, 0.05, DIAL_Z + 1.1]} center>
         <div className={styles.axisNote}>
           +{band === "am" ? "20 kHz" : "400 kHz"}
         </div>
-      </Html>
+      </SceneLabel>
 
       {/* Espectro de la emisora propia. */}
       <group>
@@ -278,18 +279,18 @@ export function ModulationScene({ engine, variables }: Props) {
         </mesh>
         {/* Título y fórmula DEBAJO de las rayas: arriba quedaban tapados por
             el panel de resultados del shell, que vive en esa esquina. */}
-        <Html position={[ZOOM_X, ZOOM_Y - 0.42, ZOOM_Z]} center>
+        <SceneLabel position={[ZOOM_X, ZOOM_Y - 0.42, ZOOM_Z]} center>
           <div className={styles.zoomTitle}>
             Espectro de tu emisora · ±{ZOOM_WINDOW_KHZ[band]} kHz
           </div>
-        </Html>
-        <Html position={[ZOOM_X, ZOOM_Y - 0.8, ZOOM_Z]} center>
+        </SceneLabel>
+        <SceneLabel position={[ZOOM_X, ZOOM_Y - 0.8, ZOOM_Z]} center>
           <div className={styles.filterLabel}>
             {band === "am"
               ? "Ancho de banda = 2 × tono"
               : "Ancho de banda (Carson) = 2 × (β + 1) × tono"}
           </div>
-        </Html>
+        </SceneLabel>
       </group>
 
       {/* La radio: el receptor del que sale el audio. A la derecha del
@@ -311,9 +312,9 @@ export function ModulationScene({ engine, variables }: Props) {
           <cylinderGeometry args={[0.012, 0.012, 1.1, 6]} />
           <meshStandardMaterial color="#c0c7d2" metalness={0.9} roughness={0.25} />
         </mesh>
-        <Html position={[0.25, 0.92, 0.27]} center>
+        <SceneLabel position={[0.25, 0.92, 0.27]} center>
           <div ref={displayRef} className={styles.display} />
-        </Html>
+        </SceneLabel>
       </group>
     </group>
   );

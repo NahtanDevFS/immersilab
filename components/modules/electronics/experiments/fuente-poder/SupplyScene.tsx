@@ -7,7 +7,8 @@ import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { VrText } from "@/components/vr/VrText";
 import { PRIMARY_TURNS, STAGES, type Stage, type SupplyEngine, type SupplyRuntime } from "./engine";
 
-const TABLE_Y = 0.85;
+/** Altura de la mesa: la de un escritorio. */
+const TABLE_Y = 0.72;
 /** Dónde está cada etapa sobre la mesa (x). */
 const X = { enchufe: -1.75, transformador: -1.0, diodos: -0.2, capacitor: 0.45, celular: 1.15 };
 /** El osciloscopio, atrás y elevado, mirando al jugador. */
@@ -91,22 +92,22 @@ export function SupplyScene({ engine, variables }: Props) {
       />
 
       <Suspense fallback={null}>
-        <VrText position={[X.enchufe, TABLE_Y + 0.55, 0]} anchorX="center" fontSize={0.06}>
+        <VrText position={[X.enchufe, TABLE_Y + 0.55, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           Enchufe
         </VrText>
-        <VrText position={[X.transformador, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06}>
+        <VrText position={[X.transformador, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           Transformador
         </VrText>
-        <VrText position={[X.transformador, TABLE_Y + 0.54, 0]} anchorX="center" fontSize={0.04} color="#93a1be">
+        <VrText position={[X.transformador, TABLE_Y + 0.54, 0]} anchorX="center" fontSize={0.04} color="#fbbf24" outlineWidth={0.006} outlineColor="#0b1220">
           {`${PRIMARY_TURNS} : ${turns} espiras`}
         </VrText>
-        <VrText position={[X.diodos, TABLE_Y + 0.4, 0]} anchorX="center" fontSize={0.06}>
+        <VrText position={[X.diodos, TABLE_Y + 0.4, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           {bridge ? "Puente de diodos" : "Un diodo"}
         </VrText>
-        <VrText position={[X.capacitor, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06}>
+        <VrText position={[X.capacitor, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           {capacitor > 0 ? `${capacitor.toLocaleString("es")} µF` : "Sin capacitor"}
         </VrText>
-        <VrText position={[X.celular, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06}>
+        <VrText position={[X.celular, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           {`Celular · ${Number(variables.carga ?? 250)} mA`}
         </VrText>
       </Suspense>

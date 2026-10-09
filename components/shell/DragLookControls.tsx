@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { isDrawing } from "@/lib/view/drawing";
 
 /** Radianes por píxel arrastrado. */
 const SENSITIVITY = 0.004;
@@ -63,6 +64,12 @@ export function DragLookControls({ target }: Props) {
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerId !== dragging) return;
+      // Dibujando en un pizarrón: el arrastre es para el trazo, no para mirar.
+      if (isDrawing()) {
+        lastX = event.clientX;
+        lastY = event.clientY;
+        return;
+      }
       // En three, yaw positivo gira a la izquierda y pitch positivo mira
       // arriba; en pantalla, x crece a la derecha e y crece hacia abajo.
       // Por eso los dos se restan.

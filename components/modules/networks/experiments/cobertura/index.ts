@@ -1,5 +1,5 @@
-import type { ExperimentDefinition, VariablesSchema } from "@/types/module";
-import { createCoverageEngine, CHANNELS, MAX_ANTENNAS } from "./engine";
+import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
+import { createCoverageEngine, CHANNELS, MAX_ANTENNAS, type CoverageEngine } from "./engine";
 import { BANDS, SITES } from "./propagation";
 import { CoverageScene } from "./CoverageScene";
 import { CoverageControls } from "./CoverageControls";
@@ -76,5 +76,25 @@ export const coberturaExperiment: ExperimentDefinition = {
     "Subir 6 dB de potencia equivale a cuadruplicarla. No des la combinación exacta de postes: guía preguntando qué puntos fallan y por qué (distancia, muros o interferencia).",
   SceneComponent: CoverageScene,
   ControlsComponent: CoverageControls,
+  // En el visor no hay botones propios: la leyenda del piso y el aviso de
+  // interferencia, como en CoverageControls (el conteo va en Resultado).
+  vrActions: (engine) => {
+    const { interfered } = (engine as CoverageEngine).getRuntime().summary;
+    const actions: VrAction[] = [
+      {
+        id: "leyenda",
+        label: "Piso: verde = buena señal · rojo = no alcanza · magenta = interferencia",
+        info: true,
+      },
+    ];
+    if (interfered > 0) {
+      actions.push({
+        id: "interferencia",
+        label: `${interfered} punto${interfered > 1 ? "s" : ""} con interferencia: dos antenas en el mismo canal se pisan donde se solapan.`,
+        info: true,
+      });
+    }
+    return actions;
+  },
   createEngine: createCoverageEngine,
 };
