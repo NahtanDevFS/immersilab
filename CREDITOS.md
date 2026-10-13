@@ -13,7 +13,7 @@ se genera por código.
 | `public/textures/grass/grass_005_*` | Grass005 | [ambientCG](https://ambientcg.com/view?id=Grass005) | CC0 |
 | `public/textures/lab-wall/fabric_081c_*` | Fabric081C | [ambientCG](https://ambientcg.com/view?id=Fabric081C) | CC0 |
 | `public/textures/door/wood_028_*` | Wood028 | [ambientCG](https://ambientcg.com/view?id=Wood028) | CC0 |
-| `public/textures/wood/red-oak*.jpg` | Madera de roble rojo (cañón) | **Por confirmar** | **Por confirmar** |
+| `public/textures/wood/red-oak*.jpg` | Madera de roble rojo (cañón), incluida en el pack del cañón | [Free3D: Naval Cannon](https://free3d.com/3d-model/naval-cannon-88974.html) | Personal Use License |
 
 CC0 es dominio público: no exige dar crédito. Se deja igual por orden.
 
@@ -21,11 +21,13 @@ CC0 es dominio público: no exige dar crédito. Se deja igual por orden.
 
 | Archivo | Recurso | Fuente | Licencia |
 |---|---|---|---|
-| `public/models/trees.glb` | Pack de 9 árboles (`22-trees_9_obj`), convertido y comprimido con `scripts/obj2glb.py` | **Por confirmar** | **Por confirmar** |
-| `public/models/cannon-barrel.glb`, `cannon-carriage.glb` | Cañón y cureña (convertidos de `.obj`) | **Por confirmar** | **Por confirmar** |
+| `public/models/trees.glb` | Trees 9, de kim (`trees_9_obj.zip`), convertido y comprimido con `scripts/obj2glb.py` | [Free3D: Trees 9](https://free3d.com/3d-model/trees-9-53338.html) | Personal Use License |
+| `public/models/cannon-barrel.glb`, `cannon-carriage.glb` | Naval Cannon, de lamarovsky (`NavalCannon.rar`, convertido de `.obj`) | [Free3D: Naval Cannon](https://free3d.com/3d-model/naval-cannon-88974.html) | Personal Use License |
 
-> Si alguno de estos tiene licencia CC-BY, hay que nombrar al autor aquí y
-> en el informe del proyecto.
+> El origen de los tres recursos de Free3D se identificó por los nombres de
+> los archivos originales (`NavalCannon/`, `trees_9_obj`) que aparecen en el
+> código y en los materiales de los modelos. Su licencia es de uso personal:
+> sirve para este proyecto académico, no para un uso comercial.
 
 ## Marca
 
