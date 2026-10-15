@@ -56,8 +56,8 @@ Lo que **falta**:
 - Capa de "juego": HUD de retos unificado y retos en los 15 experimentos
   (47 en total).
   Progreso guardado (dispositivo + Supabase, migración ya aplicada),
-  pantalla de progreso, comentario del tutor al lograr un reto y vista
-  docente (`/docente`): Fase C completa.
+  pantalla de progreso y comentario del tutor al lograr un reto: Fase C
+  completa. (La vista docente se hizo y después se quitó, ver punto 6.)
 - Calidad visual: ver sección 2.
 
 ---
@@ -869,7 +869,12 @@ actuales de los sliders.
    "¿cómo lo hice?", el tutor tiene el contexto). No interrumpe: si el tutor
    está hablando o escuchando, o se está leyendo la explicación, queda solo
    el aviso visual. Sin red se calla en vez de decir "no me puedo conectar".
-6. ✅ Vista docente (`/docente`), solo para cuentas con rol `teacher` o
+6. ❌ Quitada el 2026-10-14. Mostraba a todos los estudiantes registrados,
+   no a los de un docente (no hay grupos ni clases), y la idea del
+   laboratorio es que cada persona aprenda por su cuenta. Se borraron
+   `app/docente` y `lib/teacher`; las políticas `is_staff()` siguen en la
+   base pero ya nada las usa. Lo que hacía:
+   Vista docente (`/docente`), solo para cuentas con rol `teacher` o
    `admin`. Los datos los protege RLS (`is_staff()`); la página solo explica
    qué pasa si no hay sesión o permiso. Muestra: cantidad de estudiantes,
    retos logrados, promedio por estudiante y el reto que menos lograron;
@@ -999,8 +1004,8 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
        al tutor" no hacía nada.
      - Retos: "Reiniciar los retos" y el aviso de progreso sin cuenta.
      - Explicación: "Cambiar la voz" (el selector de voz de la PC).
-     - Lobby: Mi progreso, Mi cuenta / Ingresar y Vista docente (salen del
-       visor, porque son páginas HTML).
+     - Lobby: Mi progreso y Mi cuenta / Ingresar (salen del visor, porque
+       son páginas HTML).
      - Enrutamiento: cortar o reparar un enlace concreto mirándolo y
        presionando A (`components/vr/GazeMesh.tsx`: objetos de la escena que
        responden a la mira).

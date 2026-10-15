@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { readPad } from "@/components/shell/gamepad";
 import { requestRecenter } from "@/lib/view/recenter";
 import { resetPanelPlacements } from "@/lib/view/panelPlacement";
-import { displayName, isStaff, useRole, useSession } from "@/lib/progress/useSession";
+import { displayName, useSession } from "@/lib/progress/useSession";
 import { GazeButton } from "./GazeButton";
 import { SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
 import { VrText } from "./VrText";
@@ -25,12 +25,11 @@ export function LobbyVrHud({
   onOpenPage,
 }: {
   onStartTour: () => void;
-  /** Abre una página que no es 3D (progreso, cuenta, vista docente): sale del visor. */
+  /** Abre una página que no es 3D (progreso, cuenta): sale del visor. */
   onOpenPage: (href: string) => void;
 }) {
   const [pad, setPad] = useState(false);
   const { user } = useSession();
-  const { role } = useRole(user);
 
   // El control puede conectarse después de entrar: se revisa cada tanto.
   useEffect(() => {
@@ -58,7 +57,6 @@ export function LobbyVrHud({
   // La cuenta, como en el encabezado de la PC. Son páginas HTML: se abren
   // saliendo del visor.
   const accountButtons = [
-    ...(user && isStaff(role) ? [{ href: "/docente", label: "Vista docente" }] : []),
     { href: "/progreso", label: "Mi progreso" },
     { href: "/cuenta", label: user ? "Mi cuenta" : "Ingresar" },
   ];

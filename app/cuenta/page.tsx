@@ -122,8 +122,8 @@ export default function CuentaPage() {
             <p className={styles.lead}>
               No hace falta una cuenta para usar el laboratorio. Sin cuenta, tus retos se
               guardan solo en este dispositivo: si borras los datos del navegador, usas el
-              modo privado o cambias de celular, se pierden. Con cuenta quedan guardados y tu
-              docente puede ver tu avance.
+              modo privado o cambias de celular, se pierden. Con cuenta quedan guardados y los
+              ves desde cualquier dispositivo.
             </p>
 
             {guestCount > 0 && (

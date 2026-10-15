@@ -49,7 +49,7 @@ CC0 es dominio público: no exige dar crédito. Se deja igual por orden.
 |---|---|
 | Google Gemini (`@google/genai`) | Respuestas del tutor por voz |
 | Web Speech API del navegador | Reconocimiento de voz y voz del laboratorio |
-| Supabase | Cuentas, progreso y vista docente |
+| Supabase | Cuentas y progreso |
 
 ## Bibliotecas principales
 

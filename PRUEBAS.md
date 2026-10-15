@@ -106,22 +106,7 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
 - [ ] Lograr un reto sin conexión con sesión iniciada: al volver la conexión,
       se sube solo (en `/progreso` deja de decir "pendiente").
 
-## 5. Vista docente
-
-Necesita una cuenta con rol `teacher` (ver README) y al menos otra cuenta de
-estudiante con algún reto logrado.
-
-- [ ] Sin sesión, `/docente` pide ingresar. Con una cuenta de estudiante,
-      dice que no tiene permiso.
-- [ ] Con la cuenta de docente: el botón "Vista docente" aparece en el lobby.
-- [ ] Resumen: estudiantes, retos logrados, promedio y el reto más difícil.
-- [ ] La lista de estudiantes se filtra con el buscador; al tocar uno se ven
-      sus retos con fecha.
-- [ ] Porcentaje de la clase por reto; los de menos de 25 % en naranja.
-- [ ] "Descargar CSV" baja un archivo que Excel abre con los acentos bien.
-- [ ] La cuenta del docente no cuenta como estudiante.
-
-## 6. Recorrido guiado
+## 5. Recorrido guiado
 
 - [ ] En el lobby, "Recorrido guiado" lleva a Tiro parabólico con la tarjeta
       "Recorrido · 1 de 9", que se lee en voz alta.
@@ -137,7 +122,7 @@ estudiante con algún reto logrado.
       explicación.
 - [ ] Recargar en una parada no saca del recorrido.
 
-## 7. Celular y visor
+## 6. Celular y visor
 
 - [ ] Fuerza horizontal: en vertical pide girar el celular.
 - [ ] El giroscopio se activa (en iPhone, con el botón "Activar giroscopio").
