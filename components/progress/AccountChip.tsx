@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { displayName, isStaff, useRole, useSession } from "@/lib/progress/useSession";
+import { displayName, useSession } from "@/lib/progress/useSession";
 import styles from "./AccountChip.module.css";
 
 /**
@@ -11,19 +11,13 @@ import styles from "./AccountChip.module.css";
  */
 export function AccountChip() {
   const { user, loading } = useSession();
-  const { role } = useRole(user);
   if (loading) return null;
 
   return (
     <span className={styles.chip}>
       {user ? (
         <>
-          {isStaff(role) && (
-            <Link href="/docente" className={styles.primary}>
-              Vista docente
-            </Link>
-          )}
-          <Link href="/progreso" className={isStaff(role) ? styles.secondary : styles.primary}>
+          <Link href="/progreso" className={styles.primary}>
             Mi progreso
           </Link>
           <Link href="/cuenta" className={styles.secondary}>

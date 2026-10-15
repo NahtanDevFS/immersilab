@@ -28,8 +28,6 @@ Gemini) que responde con los valores actuales del experimento.
 - **Progreso:** sin cuenta se guarda en el dispositivo; con cuenta se guarda
   en Supabase y se ve desde cualquier lado (`/progreso`). Lo logrado como
   invitado pasa a la cuenta al ingresar.
-- **Vista docente** (`/docente`): avance de la clase, retos más difíciles y
-  descarga en CSV. Solo para cuentas con rol de docente.
 - **Tutorial de entrada** de 30 segundos y **recorrido guiado** por un
   experimento de cada módulo (nueve), para mostrar el laboratorio en clase.
 
@@ -72,12 +70,6 @@ Si cambia el catálogo de experimentos, la migración se regenera con:
 python scripts/generar_migracion_catalogo.py
 ```
 
-Para dar el rol de docente a una cuenta:
-
-```sql
-update public.profiles set role = 'teacher' where id = '<uuid de la cuenta>';
-```
-
 ## Probar en el celular con el visor
 
 El navegador solo entrega el giroscopio y el micrófono en **HTTPS** o en
@@ -111,13 +103,13 @@ npx tsc --noEmit -p .   # revisión de tipos
 ## Estructura
 
 ```
-app/                      rutas: lobby, experimentos, cuenta, progreso, docente, API del tutor
+app/                      rutas: lobby, experimentos, cuenta, progreso, API del tutor
 components/shell/         lo común a todos los experimentos: escena, paneles, controles, retos
 components/lobby/         el pasillo con las puertas
 components/modules/       un directorio por experimento: index.ts, engine.ts y la escena
 components/tutor/         tutor por voz (micrófono, voz, sesión con el servidor)
 components/progress/      chip de cuenta, sincronización del progreso
-lib/                      catálogo, progreso, Supabase, recorrido, cálculos de la vista docente
+lib/                      catálogo, progreso, Supabase, recorrido, vista y tutor
 types/module.ts           el contrato que implementa cada experimento
 supabase/migrations/      esquema de la base
 scripts/                  conversión de modelos 3D y generación de la migración
