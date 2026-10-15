@@ -1038,6 +1038,16 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      del experimento (en el lobby, al pasillo), y de nuevo con "Centrar la
      vista" o el clic del stick izquierdo (botón 2: X / cuadrado en un
      control estándar). Los paneles se acomodan al nuevo frente de una vez.
+   - ✅ Pantalla completa perdida sin salir del visor
+     (`components/shell/VrControls.tsx`). Antes, si el celular salía de
+     pantalla completa (gesto de atrás, barra de notificaciones), la app se
+     iba a la vista normal y había que sacar el teléfono del visor para
+     volver. Ahora, en el celular, se queda en el visor y avisa en cada ojo
+     que un toque en la pantalla la recupera (también se intenta con
+     cualquier botón del control, si el navegador lo acepta como gesto). En
+     la computadora se sigue saliendo del visor, como antes. Además, en el
+     celular, el botón 3 del control (clic del stick derecho en el ESP32, Y
+     en uno estándar) entra al visor desde la vista normal.
    - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
      muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
      Y = paneles, stick derecho = ajustar la variable mirada). En el visor

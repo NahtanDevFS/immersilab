@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import { enterVr, exitVr } from "@/lib/view/viewMode";
+import { useEffect, useState } from "react";
+import { enterFullscreen, enterVr, exitVr, isTouchDevice, useViewMode } from "@/lib/view/viewMode";
+import { readPad } from "./gamepad";
+
+/**
+ * Botón del control que entra al visor desde la vista normal: el 3 (clic del
+ * stick derecho en el ESP32, Y en un control estándar). Dentro del visor el
+ * mismo botón oculta y muestra los paneles (VrDashboard).
+ */
+const ENTER_VR_BUTTON = 3;
 import styles from "./VrControls.module.css";
 
 /**
@@ -12,6 +20,25 @@ import styles from "./VrControls.module.css";
  * permiso; se aprovecha este mismo toque.
  */
 export function VrButton({ onBeforeEnter }: { onBeforeEnter?: () => void }) {
+  const view = useViewMode();
+
+  // Con el control, en el celular: entrar al visor sin tocar la pantalla.
+  // El navegador puede no dar pantalla completa sin un toque real; en ese
+  // caso el visor lo avisa y un toque la recupera (VrExit).
+  useEffect(() => {
+    if (view !== "360" || !isTouchDevice()) return;
+    let rafId = 0;
+    let wasPressed = true; // si ya venía apretado (al salir del visor), no cuenta
+    const tick = () => {
+      rafId = requestAnimationFrame(tick);
+      const pressed = readPad()?.rawButtons[ENTER_VR_BUTTON] ?? false;
+      if (pressed && !wasPressed) void enterVr();
+      wasPressed = pressed;
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [view]);
+
   return (
     <button
       type="button"
@@ -32,26 +59,58 @@ export function VrButton({ onBeforeEnter }: { onBeforeEnter?: () => void }) {
 /**
  * Salida de la vista VR. Una ✕ arriba al centro de CADA mitad: cada ojo ve
  * solo su mitad de la pantalla, así que un botón único quedaría partido.
- * También se sale con Escape (en la compu) o al salir de pantalla completa.
+ * También se sale con Escape (en la compu).
+ *
+ * Si se pierde la pantalla completa (un gesto de atrás, bajar la barra de
+ * notificaciones), en el celular NO se sale del visor: con el teléfono
+ * puesto en el visor, salir obligaba a sacarlo para volver a entrar. Se
+ * queda en el visor y se avisa en cada ojo que un toque en la pantalla (o
+ * un botón del control, si el navegador lo acepta) la recupera. En la
+ * computadora sí se sale, como antes: ahí es intencional.
  */
 export function VrExit() {
+  const [needsFullscreen, setNeedsFullscreen] = useState(false);
+
   useEffect(() => {
+    const touch = isTouchDevice();
+    const supported = Boolean(document.fullscreenEnabled);
+    const check = () => setNeedsFullscreen(touch && supported && !document.fullscreenElement);
+    const id = window.setTimeout(check, 600); // dar tiempo a que entre la primera vez
+
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") void exitVr();
     };
-    // Si el sistema saca la pantalla completa (gesto de atrás en Android),
-    // se vuelve a la vista 360: la pantalla partida sin pantalla completa
-    // queda tapada por las barras del navegador.
     let wasFullscreen = Boolean(document.fullscreenElement);
     const onFullscreen = () => {
       const now = Boolean(document.fullscreenElement);
-      if (wasFullscreen && !now) void exitVr();
+      if (wasFullscreen && !now && !touch) void exitVr();
       wasFullscreen = now;
+      check();
     };
+    // Cualquier toque en la pantalla es un gesto válido para pedirla.
+    const onTouch = () => {
+      if (touch && supported && !document.fullscreenElement) void enterFullscreen();
+    };
+    // Y cualquier botón del control, por si el navegador lo acepta.
+    let rafId = 0;
+    let padWas = true;
+    const tick = () => {
+      rafId = requestAnimationFrame(tick);
+      const pad = readPad();
+      const pressed = Boolean(pad && pad.rawButtons.some(Boolean));
+      if (pressed && !padWas) onTouch();
+      padWas = pressed;
+    };
+    rafId = requestAnimationFrame(tick);
+
     window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onTouch, { capture: true });
     document.addEventListener("fullscreenchange", onFullscreen);
     return () => {
+      window.clearTimeout(id);
+      cancelAnimationFrame(rafId);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onTouch, { capture: true });
       document.removeEventListener("fullscreenchange", onFullscreen);
     };
   }, []);
@@ -59,15 +118,21 @@ export function VrExit() {
   return (
     <div className={styles.exitLayer} data-vr-keep>
       {[0, 1].map((eye) => (
-        <button
-          key={eye}
-          type="button"
-          className={styles.exit}
-          onClick={() => void exitVr()}
-          aria-label="Salir de la vista con visor"
-        >
-          ✕ Salir del visor
-        </button>
+        <div key={eye} className={styles.eyeTop}>
+          <button
+            type="button"
+            className={styles.exit}
+            onClick={() => void exitVr()}
+            aria-label="Salir de la vista con visor"
+          >
+            ✕ Salir del visor
+          </button>
+          {needsFullscreen && (
+            <p className={styles.fullscreenNote}>
+              Toca la pantalla para volver a pantalla completa
+            </p>
+          )}
+        </div>
       ))}
       {/* La línea del medio: ayuda a calzar el celular centrado en el visor. */}
       <span className={styles.divider} aria-hidden />

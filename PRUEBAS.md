@@ -160,6 +160,13 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
 - [ ] QAM: "Cambiar el mensaje" pasa por la lista. Cobertura: se ve la
       leyenda del piso.
 - [ ] La pantalla de carga se ve en los dos ojos.
+- [ ] En el visor, hacer el gesto de atrás o bajar la barra de
+      notificaciones: NO se sale del visor, aparece "Toca la pantalla para
+      volver a pantalla completa" en los dos ojos y un toque la recupera.
+      Probar también con un botón del control (puede que el navegador no lo
+      acepte; en ese caso, el toque).
+- [ ] En la vista normal del celular, con el control conectado, el clic del
+      stick derecho (Y en un control estándar) entra al visor.
 - [ ] Al entrar con el giroscopio quedas de frente al experimento (no a
       los árboles), sin importar hacia dónde apunte el celular.
 - [ ] Gira el cuerpo hacia otro lado y usa "Centrar la vista" (o el clic

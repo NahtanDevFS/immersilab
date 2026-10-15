@@ -54,8 +54,17 @@ export function useViewMode(): ViewMode {
  */
 export async function enterVr() {
   setViewMode("vr");
+  await enterFullscreen();
+}
+
+/**
+ * Pantalla completa y horizontal. Aparte de enterVr para poder recuperarla
+ * sin salir del visor (si el sistema la sacó). Necesita un gesto del usuario:
+ * sin él, el navegador la rechaza y no pasa nada.
+ */
+export async function enterFullscreen() {
   try {
-    await document.documentElement.requestFullscreen?.();
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
     const orientation = screen.orientation as ScreenOrientation & {
       lock?: (o: string) => Promise<void>;
     };
@@ -63,6 +72,11 @@ export async function enterVr() {
   } catch {
     // Sin pantalla completa o sin bloqueo de orientación: sigue igual.
   }
+}
+
+/** ¿Es un celular o tablet (pantalla táctil como entrada principal)? */
+export function isTouchDevice(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 }
 
 export async function exitVr() {

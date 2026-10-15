@@ -30,7 +30,8 @@
  *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
  *   2 clic stick izquierdo → centrar la vista hacia el experimento
  *                            (X / cuadrado en un control estándar)
- *   3 clic stick derecho   → mostrar u ocultar los paneles en la vista VR
+ *   3 clic stick derecho   → en el celular, fuera del visor: entrar al visor.
+ *                            Dentro del visor: mostrar u ocultar los paneles
  *                            (es el mismo índice que la Y de un control
  *                            estándar, así funciona igual en los dos)
  *
