@@ -9,10 +9,11 @@ import { VrText } from "./VrText";
 
 /**
  * Tamaño aparente del texto en la vista VR, como fracción de la distancia:
- * a 2 m mide 6 cm, a 20 m, 60 cm. Así se lee igual cerca o lejos, como las
- * etiquetas HTML (que siempre miden lo mismo en pantalla).
+ * a 2 m mide 8 cm, a 20 m, 80 cm (con 6 cm costaba leerlo con los lentes).
+ * Así se lee igual cerca o lejos, como las etiquetas HTML (que siempre miden
+ * lo mismo en pantalla).
  */
-const VR_SIZE_PER_METER = 0.03;
+const VR_SIZE_PER_METER = 0.04;
 
 /** El texto de una etiqueta HTML, con sus partes separadas por espacios. */
 function labelText(element: Element | null): string {

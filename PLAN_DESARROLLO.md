@@ -1062,6 +1062,12 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      se guarda en el dispositivo. Las imágenes de cada ojo se marcan como
      isXRRenderTarget para que three les aplique el mapeo de tonos y el sRGB
      igual que en la pantalla (mismos colores que la vista normal).
+   - ✅ Texto más nítido en el visor: en la vista VR se usa la resolución
+     del celular (hasta 3 píxeles por punto; fuera del visor sigue en
+     1.5–2), los paneles pasan de escala 0.8 a 1 y las etiquetas de las
+     escenas de 6 a 8 cm a 2 m. Los paneles siguen al cuerpo recién después
+     de 155° (antes 140°), porque al ser más grandes el del resultado llega
+     más lejos.
    - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
      muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
      Y = paneles, stick derecho = ajustar la variable mirada). En el visor

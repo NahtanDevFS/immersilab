@@ -60,7 +60,7 @@ const CENTER_WIDTH = 1.0;
  * Dónde empieza el panel del resultado, a la derecha: después del de retos
  * y acciones (1.15 de ancho, unos 40° a 1.3 m) y un pequeño espacio.
  */
-const RESULT_START = SIDE_START + 44;
+const RESULT_START = SIDE_START + panelAngle(1.15) + 4;
 /** Ancho del panel de retos y acciones. */
 const CHALLENGES_WIDTH = 1.15;
 
