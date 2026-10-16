@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { StereoEffect } from "three/examples/jsm/effects/StereoEffect.js";
 import { readPad } from "./gamepad";
 import { selectGazed, setPadHeldReader, setScreenHeld, updateGaze } from "@/lib/view/gaze";
+import { getVisorSettings, useCalibrating } from "@/lib/view/visorSettings";
 
 /** Separación entre los ojos, en metros (la escena está en metros). */
 const EYE_SEPARATION = 0.064;
@@ -30,9 +30,103 @@ function applyFov(camera: THREE.Camera, fov: number): number {
   return previous;
 }
 
+/*
+ * Corrección de los lentes del visor. Cada ojo se dibuja primero a una
+ * imagen propia y después se pasa a la pantalla con este shader, que:
+ * - centra la imagen en el lente (no en el centro de la mitad de pantalla),
+ * - la pre-deforma en barril, para que el cojín del lente la deje recta,
+ * - deja en negro lo que cae fuera de la imagen.
+ * `lensCenter` está en coordenadas de la mitad de pantalla de ese ojo.
+ */
+const LENS_VERTEX = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}
+`;
+
+const LENS_FRAGMENT = /* glsl */ `
+uniform sampler2D map;
+uniform vec2 lensCenter;
+uniform float k1;
+uniform float k2;
+uniform float zoom;
+uniform float aspect;
+varying vec2 vUv;
+void main() {
+  // Distancia al centro del lente, con 1 = medio alto de la pantalla.
+  vec2 d = (vUv - lensCenter) * vec2(aspect, 1.0) * 2.0;
+  float r2 = dot(d, d);
+  float f = 1.0 + k1 * r2 + k2 * r2 * r2;
+  vec2 src = 0.5 + (d * f / zoom) / (vec2(aspect, 1.0) * 2.0);
+  if (src.x < 0.0 || src.x > 1.0 || src.y < 0.0 || src.y > 1.0) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
+  // La imagen ya trae el tono y el sRGB aplicados (ver makeEyeTarget):
+  // se copia tal cual, sin volver a convertir.
+  gl_FragColor = texture2D(map, src);
+}
+`;
+
+/**
+ * Imagen de un ojo. Marcarla como isXRRenderTarget hace que three aplique el
+ * mapeo de tonos y la salida sRGB al dibujar en ella, igual que al dibujar
+ * en la pantalla: así la vista con visor tiene los mismos colores que la
+ * normal. Se guarda en RGBA8 lineal para que nadie vuelva a convertir.
+ */
+function makeEyeTarget(): THREE.WebGLRenderTarget {
+  const target = new THREE.WebGLRenderTarget(1, 1, { samples: 4 });
+  target.texture.colorSpace = THREE.SRGBColorSpace;
+  target.texture.internalFormat = "RGBA8";
+  (target as THREE.WebGLRenderTarget & { isXRRenderTarget: boolean }).isXRRenderTarget = true;
+  return target;
+}
+
+function sizeTarget(target: THREE.WebGLRenderTarget, width: number, height: number) {
+  if (target.width !== width || target.height !== height) target.setSize(width, height);
+}
+
+function setLensUniforms(
+  material: THREE.ShaderMaterial,
+  map: THREE.Texture,
+  lensCenterX: number,
+  aspect: number,
+) {
+  const { distortion, zoom } = getVisorSettings();
+  material.uniforms.map.value = map;
+  material.uniforms.lensCenter.value.set(lensCenterX, 0.5);
+  material.uniforms.k1.value = distortion;
+  material.uniforms.k2.value = distortion * 0.5;
+  material.uniforms.zoom.value = zoom;
+  material.uniforms.aspect.value = aspect;
+}
+
+function prepareEyes(
+  parts: { stereo: THREE.StereoCamera; left: THREE.WebGLRenderTarget; right: THREE.WebGLRenderTarget; buffer: THREE.Vector2 },
+  gl: THREE.WebGLRenderer,
+  scene: THREE.Scene,
+  camera: THREE.Camera,
+) {
+  if (scene.matrixWorldAutoUpdate) scene.updateMatrixWorld();
+  if (camera.parent === null && camera.matrixWorldAutoUpdate) camera.updateMatrixWorld();
+  parts.stereo.update(camera as THREE.PerspectiveCamera);
+  // Cada ojo, a su imagen, a la resolución real de su mitad de pantalla.
+  gl.getDrawingBufferSize(parts.buffer);
+  const eyeWidth = Math.max(1, Math.floor(parts.buffer.x / 2));
+  const eyeHeight = Math.max(1, Math.floor(parts.buffer.y));
+  sizeTarget(parts.left, eyeWidth, eyeHeight);
+  sizeTarget(parts.right, eyeWidth, eyeHeight);
+}
+
 /**
  * Dibuja la escena dos veces, lado a lado, con las cámaras separadas como
- * dos ojos. Es lo que hace YouTube en su vista para visor.
+ * dos ojos, cada una centrada en su lente y con la curvatura del lente
+ * compensada (lib/view/visorSettings.ts, "Ajustar el visor"). Antes cada ojo
+ * iba centrado en su mitad de pantalla, sin corrección: en un celular
+ * grande los ojos tenían que separarse hacia afuera (visión doble) y los
+ * bordes se veían curvos y borrosos.
  *
  * Se monta SOLO en la vista VR: con prioridad 1, R3F deja de dibujar por su
  * cuenta y el que dibuja es este componente. Por lo mismo, el post-proceso
@@ -42,29 +136,122 @@ export function StereoView() {
   const gl = useThree((state) => state.gl);
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
+  const calibrating = useCalibrating();
 
-  const effect = useMemo(() => {
-    const stereo = new StereoEffect(gl);
-    stereo.setEyeSeparation(EYE_SEPARATION);
-    return stereo;
-  }, [gl]);
+  const parts = useMemo(() => {
+    const stereo = new THREE.StereoCamera();
+    stereo.aspect = 0.5;
+    stereo.eyeSep = EYE_SEPARATION;
+    const material = new THREE.ShaderMaterial({
+      vertexShader: LENS_VERTEX,
+      fragmentShader: LENS_FRAGMENT,
+      uniforms: {
+        map: { value: null },
+        lensCenter: { value: new THREE.Vector2(0.5, 0.5) },
+        k1: { value: 0 },
+        k2: { value: 0 },
+        zoom: { value: 1 },
+        aspect: { value: 1 },
+      },
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+    quad.frustumCulled = false;
+    const lensScene = new THREE.Scene();
+    lensScene.add(quad);
+    return {
+      stereo,
+      material,
+      lensScene,
+      lensCamera: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1),
+      left: makeEyeTarget(),
+      right: makeEyeTarget(),
+      buffer: new THREE.Vector2(),
+    };
+  }, []);
 
   useEffect(() => {
     const previousFov = applyFov(camera, VR_FOV);
     return () => {
       applyFov(camera, previousFov);
-      // El efecto deja el viewport en la mitad derecha: al volver a la vista
-      // 360, sin esto se dibujaría solo en media pantalla.
+      // Al volver a la vista 360 se dibuja de nuevo en toda la pantalla.
+      gl.setRenderTarget(null);
       gl.setScissorTest(false);
       gl.setViewport(0, 0, size.width, size.height);
     };
   }, [camera, gl, size.width, size.height]);
 
+  useEffect(
+    () => () => {
+      parts.left.dispose();
+      parts.right.dispose();
+      parts.material.dispose();
+    },
+    [parts],
+  );
+
   useFrame(({ scene, camera: current }) => {
-    effect.render(scene, current);
+    const { stereo, material, lensScene, lensCamera, left, right } = parts;
+    prepareEyes(parts, gl, scene, current);
+    gl.setScissorTest(false);
+    gl.setRenderTarget(left);
+    gl.clear();
+    gl.render(scene, stereo.cameraL);
+    gl.setRenderTarget(right);
+    gl.clear();
+    gl.render(scene, stereo.cameraR);
+
+    // A la pantalla, cada imagen centrada en su lente.
+    gl.setRenderTarget(null);
+    const half = size.width / 2;
+    const aspect = half / size.height;
+    // Separación de los lentes como fracción del ancho de la pantalla.
+    const separation = Math.min(1, getVisorSettings().lensSeparation / size.width);
+    gl.setScissorTest(true);
+    gl.setScissor(0, 0, half, size.height);
+    gl.setViewport(0, 0, half, size.height);
+    setLensUniforms(material, left.texture, 1 - separation, aspect);
+    gl.render(lensScene, lensCamera);
+    gl.setScissor(half, 0, half, size.height);
+    gl.setViewport(half, 0, half, size.height);
+    setLensUniforms(material, right.texture, separation, aspect);
+    gl.render(lensScene, lensCamera);
+    gl.setScissorTest(false);
   }, 1);
 
-  return <GazeReticle />;
+  return (
+    <>
+      <GazeReticle />
+      {calibrating ? <CalibrationGrid /> : null}
+    </>
+  );
+}
+
+/**
+ * Cuadrícula para ajustar el visor: con la separación bien puesta se ve una
+ * sola y nítida; con la curvatura bien puesta, sus líneas se ven rectas
+ * hasta los bordes. Va pegada a la cabeza, adelante.
+ */
+function CalibrationGrid() {
+  const group = useRef<THREE.Group>(null);
+  const grid = useMemo(() => {
+    const helper = new THREE.GridHelper(4, 16, "#fbbf24", "#e7ecf5");
+    helper.rotation.x = Math.PI / 2;
+    return helper;
+  }, []);
+  useFrame(({ camera }) => {
+    const g = group.current;
+    if (!g) return;
+    g.position.copy(camera.position);
+    g.quaternion.copy(camera.quaternion);
+  });
+  return (
+    <group ref={group}>
+      <primitive object={grid} position={[0, 0, -2.2]} />
+    </group>
+  );
 }
 
 /** Un toque más largo o con más recorrido que esto es arrastrar, no tocar. */

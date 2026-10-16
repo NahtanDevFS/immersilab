@@ -165,6 +165,11 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
       volver a pantalla completa" en los dos ojos y un toque la recupera.
       Probar también con un botón del control (puede que el navegador no lo
       acepte; en ese caso, el toque).
+- [ ] "Ajustar el visor" (panel del resultado o panel del lobby) muestra una
+      cuadrícula. Con "Separación de los lentes" se logra verla una sola y
+      nítida (sin visión doble); con "Corrección de la curvatura", sus líneas
+      se ven rectas hasta los bordes. "Listo" cierra y el ajuste queda
+      guardado al volver a entrar.
 - [ ] En la vista normal del celular, con el control conectado, el clic del
       stick derecho (Y en un control estándar) entra al visor.
 - [ ] Al entrar con el giroscopio quedas de frente al experimento (no a
