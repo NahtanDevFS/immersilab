@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { readPad } from "@/components/shell/gamepad";
 import { requestRecenter } from "@/lib/view/recenter";
 import { resetPanelPlacements } from "@/lib/view/panelPlacement";
+import { setCalibrating, useCalibrating } from "@/lib/view/visorSettings";
+import { VisorCalibration } from "./VisorCalibration";
 import { displayName, useSession } from "@/lib/progress/useSession";
 import { GazeButton } from "./GazeButton";
 import { SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
@@ -29,6 +31,7 @@ export function LobbyVrHud({
   onOpenPage: (href: string) => void;
 }) {
   const [pad, setPad] = useState(false);
+  const calibrating = useCalibrating();
   const { user } = useSession();
 
   // El control puede conectarse después de entrar: se revisa cada tanto.
@@ -68,6 +71,7 @@ export function LobbyVrHud({
     { id: "recorrido", label: "Empezar el recorrido guiado", onSelect: onStartTour, primary: true },
     { id: "centrar", label: "Centrar la vista", onSelect: requestRecenter },
     { id: "acomodar", label: "Acomodar los paneles", onSelect: resetPanelPlacements },
+    { id: "visor", label: "Ajustar el visor", onSelect: () => setCalibrating(true) },
   ];
   const accountTitleY = linesEnd - 0.03 - buttons.length * BUTTON;
   const accountY = accountTitleY - 0.08;
@@ -75,7 +79,7 @@ export function LobbyVrHud({
 
   return (
     <Suspense fallback={null}>
-      <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado">
+      <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado" hidden={calibrating}>
         <SidePanel id="lobby" side="right" angle={SIDE_START} width={WIDTH} top={0.07}>
           <mesh position={[0, -height / 2 + 0.07, -0.01]}>
             <planeGeometry args={[WIDTH, height]} />
@@ -124,6 +128,7 @@ export function LobbyVrHud({
           ))}
         </SidePanel>
       </VrDashboard>
+      <VisorCalibration />
     </Suspense>
   );
 }

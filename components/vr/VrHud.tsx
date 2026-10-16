@@ -24,6 +24,8 @@ import {
   useTutorHud,
 } from "@/lib/tutor/hudStore";
 import { resetPanelPlacements } from "@/lib/view/panelPlacement";
+import { setCalibrating, useCalibrating } from "@/lib/view/visorSettings";
+import { VisorCalibration } from "./VisorCalibration";
 import { GUEST, completionKey } from "@/lib/progress/store";
 import { useProgress } from "@/lib/progress/useSession";
 import { useNarration } from "@/lib/narration/useNarration";
@@ -100,6 +102,7 @@ interface Props {
  * Todo se maneja con la mira (centro de la vista) y A, o tocando la pantalla.
  */
 export function VrHud(props: Props) {
+  const calibrating = useCalibrating();
   const narration = useNarration();
   // La tarjeta de la parada se abre al llegar; "Ver el experimento" la cierra.
   const [tourCardOpen, setTourCardOpen] = useState(true);
@@ -202,7 +205,7 @@ export function VrHud(props: Props) {
     // El texto 3D carga la fuente antes de dibujarse.
     <Suspense fallback={null}>
       <VrDashboard
-        hidden={card !== null}
+        hidden={card !== null || calibrating}
         intro="Gira la cabeza: a tu izquierda las variables y la conversación con el tutor; a tu derecha los retos y el resultado"
       >
         <SidePanel id="variables" side="left" angle={SIDE_START} width={variablesPanelWidth(props.schema)}>
@@ -227,7 +230,8 @@ export function VrHud(props: Props) {
           />
         </SidePanel>
       </VrDashboard>
-      {card}
+      {calibrating ? null : card}
+      <VisorCalibration />
       <HeadAnchor>
         <ChallengeToast />
         <TutorSubtitles />
@@ -367,6 +371,7 @@ function CenterPanel({
   // Con el giroscopio: vuelve a poner el experimento de frente.
   general.push({ id: "centrar", label: "Centrar la vista", onSelect: requestRecenter });
   general.push({ id: "acomodar", label: "Acomodar los paneles", onSelect: resetPanelPlacements });
+  general.push({ id: "visor", label: "Ajustar el visor", onSelect: () => setCalibrating(true) });
   general.push({ id: "lobby", label: "Volver al lobby", onSelect: onBackToLobby });
 
   y -= 0.02;

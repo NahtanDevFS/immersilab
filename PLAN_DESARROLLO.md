@@ -1048,6 +1048,20 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      la computadora se sigue saliendo del visor, como antes. Además, en el
      celular, el botón 3 del control (clic del stick derecho en el ESP32, Y
      en uno estándar) entra al visor desde la vista normal.
+   - ✅ Corrección de los lentes del visor (`components/shell/StereoView.tsx`,
+     `lib/view/visorSettings.ts`, `components/vr/VisorCalibration.tsx`).
+     Probado con un visor real: visión doble en algunos ángulos y bordes
+     borrosos y curvos. Causas: cada ojo iba centrado en su mitad de
+     pantalla (en un celular de 15 cm, ~75 mm entre centros contra ~63 mm
+     entre lentes: los ojos tenían que separarse hacia afuera) y no había
+     corrección del efecto de cojín de los lentes. Ahora cada ojo se dibuja
+     a una imagen propia y se pasa a la pantalla con un shader que la centra
+     en su lente y la pre-deforma en barril. "Ajustar el visor" (en el panel
+     del resultado y en el del lobby) muestra una cuadrícula y deja ajustar
+     la separación de los lentes, la corrección de la curvatura y el tamaño;
+     se guarda en el dispositivo. Las imágenes de cada ojo se marcan como
+     isXRRenderTarget para que three les aplique el mapeo de tonos y el sRGB
+     igual que en la pantalla (mismos colores que la vista normal).
    - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
      muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
      Y = paneles, stick derecho = ajustar la variable mirada). En el visor
