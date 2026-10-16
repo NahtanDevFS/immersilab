@@ -26,6 +26,11 @@ const ROWS: Array<{ key: keyof VisorSettings; label: string; format: (v: number)
   },
   { key: "distortion", label: "Corrección de la curvatura", format: (v) => `${Math.round(v * 100)} %` },
   { key: "zoom", label: "Tamaño de la imagen", format: (v) => `${Math.round(v * 100)} %` },
+  {
+    key: "chroma",
+    label: "Corrección de color",
+    format: (v) => (v === 0 ? "sin corrección" : `${v > 0 ? "+" : ""}${Math.round(v * 250)}`),
+  },
 ];
 
 /**
@@ -56,7 +61,7 @@ export function VisorCalibration() {
             AJUSTAR EL VISOR
           </VrText>
           <VrText position={[left, -0.045, 0]} fontSize={0.026} color="#c4cde0" maxWidth={WIDTH - 0.1}>
-            Separación: hasta ver la cuadrícula una sola y nítida. Curvatura: hasta ver sus líneas rectas.
+            Separación: la cuadrícula una sola. Curvatura: líneas rectas. Color: bordes sin halo rojo ni azul.
           </VrText>
           {ROWS.map((row, i) => {
             const y = -0.15 - i * ROW;

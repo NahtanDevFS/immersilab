@@ -1068,6 +1068,23 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      escenas de 6 a 8 cm a 2 m. Los paneles siguen al cuerpo recién después
      de 155° (antes 140°), porque al ser más grandes el del resultado llega
      más lejos.
+   - ✅ Legibilidad en el visor, segunda vuelta: texto 3D "en negrita" (un
+     trazo del mismo color en `VrText`, Geist solo viene en regular) y los
+     grises más claros; paneles a escala 1.15; modo lupa (mantener A o el
+     dedo mirando un panel lo acerca 1.7 veces, al soltar vuelve); el panel
+     del resultado y los botones generales pasan adelante y abajo (50° bajo
+     el horizonte: se ven al bajar la vista). La ✕ "Salir del visor" en
+     HTML se quita en el celular (no se podía tocar con el teléfono puesto
+     y, al no estar centrada en los lentes, se veía doble): "Salir del
+     visor" está ahora en los paneles 3D. El aviso de pantalla completa se
+     centra en cada lente.
+   - ✅ Lentes, tercera vuelta: "Corrección de color" en Ajustar el visor
+     (el shader toma el rojo y el azul un poco más adentro o más afuera que
+     el verde, contra la aberración cromática del lente; el signo depende
+     del lente) y mipmaps en las imágenes de cada ojo (la corrección de
+     curvatura comprime la periferia y sin ellos se veían escalones). El
+     "pixelado" del centro es el efecto rejilla del lente y la pantalla: no
+     se puede corregir por software.
    - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
      muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
      Y = paneles, stick derecho = ajustar la variable mirada). En el visor

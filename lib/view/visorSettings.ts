@@ -15,11 +15,16 @@ import { useSyncExternalStore } from "react";
  *   compensar el efecto de cojín de los lentes, que estira y desenfoca la
  *   periferia.
  * - `zoom`: tamaño de la imagen dentro de cada lente.
+ * - `chroma`: corrección de la aberración cromática. El lente separa los
+ *   colores (bordes rojizos o azulados hacia la periferia); se compensa
+ *   corriendo el rojo y el azul en sentido contrario. El signo depende del
+ *   lente: se ajusta mirando los bordes de la cuadrícula.
  */
 export interface VisorSettings {
   lensSeparation: number;
   distortion: number;
   zoom: number;
+  chroma: number;
 }
 
 /** Un píxel CSS mide unos 0.17 mm en la mayoría de los celulares. */
@@ -30,12 +35,14 @@ export const VISOR_DEFAULTS: VisorSettings = {
   lensSeparation: Math.round(63 / MM_PER_CSS_PX),
   distortion: 0.22,
   zoom: 1,
+  chroma: 0,
 };
 
 export const VISOR_LIMITS = {
   lensSeparation: { min: 280, max: 480, step: 4 },
   distortion: { min: 0, max: 0.6, step: 0.04 },
   zoom: { min: 0.7, max: 1.4, step: 0.05 },
+  chroma: { min: -0.04, max: 0.04, step: 0.004 },
 } as const;
 
 const KEY = "immersilab.visor.v1";

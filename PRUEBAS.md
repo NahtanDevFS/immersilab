@@ -169,10 +169,18 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
       leen sin esfuerzo. Si el celular se calienta o va lento en los
       experimentos pesados, avisar (la vista VR ahora usa la resolución
       completa del celular).
+- [ ] Mantener A (o el dedo) mirando un panel: a los ~0.3 s se acerca y se
+      agranda; al soltar vuelve a su lugar. Sobre un botón no pasa (el
+      botón se toca normal).
+- [ ] Al bajar la vista aparece el panel del resultado con los botones
+      generales, entre ellos "Salir del visor", que vuelve a la vista
+      normal. En el celular ya no aparece la ✕ de arriba.
 - [ ] "Ajustar el visor" (panel del resultado o panel del lobby) muestra una
       cuadrícula. Con "Separación de los lentes" se logra verla una sola y
       nítida (sin visión doble); con "Corrección de la curvatura", sus líneas
-      se ven rectas hasta los bordes. "Listo" cierra y el ajuste queda
+      se ven rectas hasta los bordes. Con "Corrección de color" (en un sentido
+      o en el otro) desaparecen los bordes rojizos o azulados de las líneas
+      hacia los costados. "Listo" cierra y el ajuste queda
       guardado al volver a entrar.
 - [ ] En la vista normal del celular, con el control conectado, el clic del
       stick derecho (Y en un control estándar) entra al visor.

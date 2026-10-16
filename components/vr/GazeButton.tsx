@@ -76,6 +76,8 @@ export function GazeButton({
     <group position={position}>
       <mesh
         ref={meshRef}
+        // Marca de botón: sobre un botón, mantener A no activa la lupa.
+        userData={{ gazeButton: true }}
         // También con el mouse o el dedo (fuera del visor): los botones 3D del
         // pizarrón se usan en la vista normal.
         onClick={(event) => {

@@ -63,10 +63,14 @@
   gap: 0.5rem;
 }
 
-/* Se perdió la pantalla completa: un toque la recupera. */
+/* Se perdió la pantalla completa: un toque la recupera. Va centrado en
+   cada lente (left lo pone el componente). */
 .fullscreenNote {
+  position: absolute;
+  top: 38%;
+  transform: translateX(-50%);
+  width: min(15rem, 38vw);
   margin: 0;
-  max-width: 80%;
   padding: 0.5rem 0.9rem;
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.88);

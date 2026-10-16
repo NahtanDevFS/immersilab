@@ -5,6 +5,7 @@ import { readPad } from "@/components/shell/gamepad";
 import { requestRecenter } from "@/lib/view/recenter";
 import { resetPanelPlacements } from "@/lib/view/panelPlacement";
 import { setCalibrating, useCalibrating } from "@/lib/view/visorSettings";
+import { exitVr } from "@/lib/view/viewMode";
 import { VisorCalibration } from "./VisorCalibration";
 import { displayName, useSession } from "@/lib/progress/useSession";
 import { GazeButton } from "./GazeButton";
@@ -54,6 +55,7 @@ export function LobbyVrHud({
     ["Entrar", "camina hacia una puerta: cada una es un experimento."],
     ["Tutor", "adentro, mantén R2 (B en el control ImmersiLab) o usa el botón del panel."],
     ["Paneles", "Y (clic del stick derecho) los oculta; su barra de arriba los mueve."],
+    ["Acercar", "mantén A (o el dedo) mirando un panel y se agranda para leerlo."],
     ["Centrar", "clic del stick izquierdo (o el botón de abajo) mira de nuevo al pasillo."],
   ];
 
@@ -72,6 +74,7 @@ export function LobbyVrHud({
     { id: "centrar", label: "Centrar la vista", onSelect: requestRecenter },
     { id: "acomodar", label: "Acomodar los paneles", onSelect: resetPanelPlacements },
     { id: "visor", label: "Ajustar el visor", onSelect: () => setCalibrating(true) },
+    { id: "salir-visor", label: "Salir del visor", onSelect: () => void exitVr() },
   ];
   const accountTitleY = linesEnd - 0.03 - buttons.length * BUTTON;
   const accountY = accountTitleY - 0.08;

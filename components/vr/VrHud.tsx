@@ -25,6 +25,7 @@ import {
 } from "@/lib/tutor/hudStore";
 import { resetPanelPlacements } from "@/lib/view/panelPlacement";
 import { setCalibrating, useCalibrating } from "@/lib/view/visorSettings";
+import { exitVr } from "@/lib/view/viewMode";
 import { VisorCalibration } from "./VisorCalibration";
 import { GUEST, completionKey } from "@/lib/progress/store";
 import { useProgress } from "@/lib/progress/useSession";
@@ -55,12 +56,13 @@ const ROWS_PER_COLUMN = 7;
 
 /** Ancho del panel del centro (resultados y botones generales). */
 const CENTER_WIDTH = 1.0;
-/** Espacio entre el panel del centro y los de los costados. */
 /**
- * Dónde empieza el panel del resultado, a la derecha: después del de retos
- * y acciones (1.15 de ancho, unos 40° a 1.3 m) y un pequeño espacio.
+ * El panel del resultado va adelante y abajo (grados bajo el horizonte de su
+ * borde de arriba): el visor muestra unos ±37° (algo más con la corrección
+ * de los lentes), así que mirando al frente no se ve, y bajando la vista queda de frente. A la derecha, después de los
+ * retos, quedaba casi a la espalda con los paneles más grandes.
  */
-const RESULT_START = SIDE_START + panelAngle(1.15) + 4;
+const RESULT_PITCH = -50;
 /** Ancho del panel de retos y acciones. */
 const CHALLENGES_WIDTH = 1.15;
 
@@ -206,7 +208,7 @@ export function VrHud(props: Props) {
     <Suspense fallback={null}>
       <VrDashboard
         hidden={card !== null || calibrating}
-        intro="Gira la cabeza: a tu izquierda las variables y la conversación con el tutor; a tu derecha los retos y el resultado"
+        intro="A tu izquierda las variables y la conversación, a tu derecha los retos, y abajo el resultado. Mantén A sobre un panel para acercarlo"
       >
         <SidePanel id="variables" side="left" angle={SIDE_START} width={variablesPanelWidth(props.schema)}>
           <VariablesPanel3D schema={props.schema} values={props.values} onChange={props.onChange} />
@@ -218,7 +220,9 @@ export function VrHud(props: Props) {
         <SidePanel id="retos" side="right" angle={SIDE_START} width={CHALLENGES_WIDTH} top={0.07}>
           <ChallengesAndActions {...props} />
         </SidePanel>
-        <SidePanel id="resultado" side="right" angle={RESULT_START} width={CENTER_WIDTH} top={0.07}>
+        {/* El resultado y los botones generales, adelante y abajo: se ven al
+            bajar la vista, como un tablero; mirando al frente no estorban. */}
+        <SidePanel id="resultado" side="right" angle={0} yaw={0} pitch={RESULT_PITCH} width={CENTER_WIDTH} top={0.07}>
           <CenterPanel
             engine={props.engine}
             hasBriefing={Boolean(props.briefing)}
@@ -372,6 +376,7 @@ function CenterPanel({
   general.push({ id: "centrar", label: "Centrar la vista", onSelect: requestRecenter });
   general.push({ id: "acomodar", label: "Acomodar los paneles", onSelect: resetPanelPlacements });
   general.push({ id: "visor", label: "Ajustar el visor", onSelect: () => setCalibrating(true) });
+  general.push({ id: "salir-visor", label: "Salir del visor", onSelect: () => void exitVr() });
   general.push({ id: "lobby", label: "Volver al lobby", onSelect: onBackToLobby });
 
   y -= 0.02;
@@ -479,7 +484,7 @@ function increment(def: VariableDefinition): number {
 function chatPlacement(schema: VariablesSchema): { angle: number; pitch?: number } {
   const variables = panelAngle(variablesPanelWidth(schema));
   const after = SIDE_START + variables + 4;
-  if (after + panelAngle(CHAT_WIDTH) <= 125) return { angle: after };
+  if (after + panelAngle(CHAT_WIDTH) <= 150) return { angle: after };
   return { angle: SIDE_START + variables / 2 - panelAngle(CHAT_WIDTH) / 2, pitch: 32 };
 }
 

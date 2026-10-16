@@ -35,7 +35,7 @@ export const PANEL_TILT = -0.25;
  * Tamaño de los paneles. Con 0.8 las letras ocupaban tan poco del campo
  * visual que a través de los lentes se veían borrosas.
  */
-export const PANEL_SCALE = 1;
+export const PANEL_SCALE = 1.15;
 /** Dónde empieza el primer panel de cada lado: el borde de la vista es ~37°. */
 export const SIDE_START = 45;
 /**
@@ -138,6 +138,14 @@ export function panelAngle(width: number): number {
 const MAX_YAW = 145;
 const MIN_PITCH = -55;
 const MAX_PITCH = 35;
+/**
+ * Lupa: manteniendo A (o el dedo) un momento sobre un panel, el panel se
+ * acerca y se ve así de más grande, para leer los detalles. Al soltar,
+ * vuelve a su lugar. Sobre un botón no se activa (ahí A es para tocarlo).
+ */
+const MAGNIFY = 1.7;
+const MAGNIFY_DELAY = 0.3;
+
 /** Alto de la barra para arrastrar, en unidades de panel. */
 const HANDLE_HEIGHT = 0.065;
 
@@ -168,6 +176,8 @@ export function SidePanel({
   width,
   top = 0.1,
   pitch,
+  yaw,
+  height = 1.2,
   children,
 }: {
   id: string;
@@ -178,12 +188,16 @@ export function SidePanel({
   top?: number;
   /** Altura por defecto (grados sobre el horizonte); si no, un poco abajo. */
   pitch?: number;
+  /** Dirección por defecto del centro (grados, + a la izquierda); reemplaza a `angle`. */
+  yaw?: number;
+  /** Alto aproximado (unidades de panel), para la zona que activa la lupa. */
+  height?: number;
   children: ReactNode;
 }) {
   const s = side === "left" ? 1 : -1;
   const halfAngle = Math.atan((width * PANEL_SCALE) / 2 / PANEL_DISTANCE) / DEG;
   const defaults: PanelPlacement = {
-    yaw: s * (angle + halfAngle),
+    yaw: yaw ?? s * (angle + halfAngle),
     pitch: pitch ?? Math.atan(PANEL_TOP / PANEL_DISTANCE) / DEG,
   };
 
@@ -195,15 +209,25 @@ export function SidePanel({
   const heldBefore = useRef(true);
   const resetSeen = useRef(panelResetVersion());
   const work = useRef({ dir: new THREE.Vector3(), q: new THREE.Quaternion() });
+  const near = useRef<THREE.Group>(null);
+  const backing = useRef<THREE.Mesh>(null);
+  const lupa = useRef({ held: 0, on: false, zoom: 1 });
 
-  // La barra se puede mirar (no hace nada al tocarla: hay que mantener).
+  // La barra se puede mirar (no hace nada al tocarla: hay que mantener). El
+  // fondo también, para que la lupa sepa que se está mirando este panel.
   useEffect(() => {
     const mesh = handle.current;
-    if (!mesh) return;
-    return registerGazeTarget(mesh, { onSelect: () => {}, enabled: () => true });
+    const back = backing.current;
+    if (!mesh || !back) return;
+    const offHandle = registerGazeTarget(mesh, { onSelect: () => {}, enabled: () => true });
+    const offBack = registerGazeTarget(back, { onSelect: () => {}, enabled: () => true });
+    return () => {
+      offHandle();
+      offBack();
+    };
   }, []);
 
-  useFrame(({ camera }) => {
+  useFrame(({ camera }, dt) => {
     const g = group.current;
     if (!g || !g.parent) return;
     if (place.current === null || panelResetVersion() !== resetSeen.current) {
@@ -237,6 +261,8 @@ export function SidePanel({
       }
     }
     heldBefore.current = held;
+    updateLupa(lupa.current, held && !dragging && looksAtPanel(g, handle.current), held, dt);
+    near.current?.position.set(0, 0, -PANEL_DISTANCE / lupa.current.zoom);
 
     g.rotation.set(current.pitch * DEG, current.yaw * DEG, 0, "YXZ");
     handleMaterial.current?.color.copy(dragging ? HANDLE_DRAG : gazed ? HANDLE_GAZED : HANDLE_IDLE);
@@ -244,8 +270,13 @@ export function SidePanel({
 
   return (
     <group ref={group}>
-      <group position={[0, 0, -PANEL_DISTANCE]} scale={PANEL_SCALE}>
+      <group ref={near} position={[0, 0, -PANEL_DISTANCE]} scale={PANEL_SCALE}>
         <group rotation={[PANEL_TILT, 0, 0]}>
+          {/* Zona invisible detrás del panel: para que la lupa sepa que se lo mira. */}
+          <mesh ref={backing} position={[0, top - height / 2, -0.03]}>
+            <planeGeometry args={[width, height]} />
+            <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+          </mesh>
           <mesh ref={handle} position={[0, top + HANDLE_HEIGHT / 2 + 0.008, -0.01]}>
             <planeGeometry args={[width, HANDLE_HEIGHT]} />
             <meshBasicMaterial ref={handleMaterial} color={HANDLE_IDLE} toneMapped={false} />
@@ -256,11 +287,37 @@ export function SidePanel({
             fontSize={0.026}
             color="#93a1be"
           >
-            Para mover: mira esta barra, mantén A (o el dedo) y mira adonde quieras
+            Mover: mantén A en esta barra · Acercar: mantén A sobre el panel
           </VrText>
           {children}
         </group>
       </group>
     </group>
   );
+}
+
+/** ¿Lo que está bajo la mira es parte de este panel (sin contar barra ni botones)? */
+function looksAtPanel(panel: THREE.Object3D, handleMesh: THREE.Object3D | null): boolean {
+  const gazed = getGazed();
+  if (!gazed || gazed === handleMesh || gazed.userData.gazeButton) return false;
+  for (let o: THREE.Object3D | null = gazed; o; o = o.parent) if (o === panel) return true;
+  return false;
+}
+
+/**
+ * La lupa de un panel. Fuera del componente porque muta su estado (un ref),
+ * cosa que el compilador de React no deja hacer adentro.
+ * Una vez que se acercó, sigue cerca mientras se mantenga apretado, aunque
+ * la mira se mueva (para poder recorrer el panel leyendo).
+ */
+function updateLupa(state: { held: number; on: boolean; zoom: number }, starting: boolean, held: boolean, dt: number) {
+  if (!held) {
+    state.held = 0;
+    state.on = false;
+  } else if (starting && !state.on) {
+    state.held += dt;
+    if (state.held >= MAGNIFY_DELAY) state.on = true;
+  }
+  const target = state.on ? MAGNIFY : 1;
+  state.zoom += (target - state.zoom) * Math.min(1, dt * 10);
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { useVisorSettings } from "@/lib/view/visorSettings";
 import { enterFullscreen, enterVr, exitVr, isTouchDevice, useViewMode } from "@/lib/view/viewMode";
 import { readPad } from "./gamepad";
 
@@ -115,25 +116,39 @@ export function VrExit() {
     };
   }, []);
 
+  // En el celular la ✕ no se muestra: con el teléfono en el visor no se
+  // puede tocar con precisión, y como no está centrada en los lentes se veía
+  // doble. Para salir está "Salir del visor" en los paneles 3D (se elige con
+  // la mira). En la computadora sí, porque ahí se usa con el mouse.
+  const touch = useSyncExternalStore(subscribeNever, isTouchDevice, () => false);
+  const { lensSeparation } = useVisorSettings();
+
   return (
     <div className={styles.exitLayer} data-vr-keep>
-      {[0, 1].map((eye) => (
-        <div key={eye} className={styles.eyeTop}>
-          <button
-            type="button"
-            className={styles.exit}
-            onClick={() => void exitVr()}
-            aria-label="Salir de la vista con visor"
+      {!touch &&
+        [0, 1].map((eye) => (
+          <div key={eye} className={styles.eyeTop}>
+            <button
+              type="button"
+              className={styles.exit}
+              onClick={() => void exitVr()}
+              aria-label="Salir de la vista con visor"
+            >
+              ✕ Salir del visor
+            </button>
+          </div>
+        ))}
+      {/* El aviso, centrado en cada lente (no en cada mitad): así se ve uno solo. */}
+      {needsFullscreen &&
+        [-1, 1].map((side) => (
+          <p
+            key={side}
+            className={styles.fullscreenNote}
+            style={{ left: `calc(50% ${side < 0 ? "-" : "+"} ${lensSeparation / 2}px)` }}
           >
-            ✕ Salir del visor
-          </button>
-          {needsFullscreen && (
-            <p className={styles.fullscreenNote}>
-              Toca la pantalla para volver a pantalla completa
-            </p>
-          )}
-        </div>
-      ))}
+            Toca la pantalla para volver a pantalla completa
+          </p>
+        ))}
       {/* La línea del medio: ayuda a calzar el celular centrado en el visor. */}
       <span className={styles.divider} aria-hidden />
     </div>
@@ -154,4 +169,8 @@ function VisorIcon() {
       <circle cx="16.5" cy="7.5" r="2.2" fill="currentColor" />
     </svg>
   );
+}
+
+function subscribeNever() {
+  return () => {};
 }

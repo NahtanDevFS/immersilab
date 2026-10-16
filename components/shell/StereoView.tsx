@@ -61,20 +61,28 @@ uniform float k1;
 uniform float k2;
 uniform float zoom;
 uniform float aspect;
+uniform float chroma;
 varying vec2 vUv;
 void main() {
   // Distancia al centro del lente, con 1 = medio alto de la pantalla.
   vec2 d = (vUv - lensCenter) * vec2(aspect, 1.0) * 2.0;
   float r2 = dot(d, d);
   float f = 1.0 + k1 * r2 + k2 * r2 * r2;
-  vec2 src = 0.5 + (d * f / zoom) / (vec2(aspect, 1.0) * 2.0);
+  vec2 toUv = vec2(aspect, 1.0) * 2.0;
+  vec2 offset = d * f / zoom;
+  vec2 src = 0.5 + offset / toUv;
   if (src.x < 0.0 || src.x > 1.0 || src.y < 0.0 || src.y > 1.0) {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     return;
   }
   // La imagen ya trae el tono y el sRGB aplicados (ver makeEyeTarget):
   // se copia tal cual, sin volver a convertir.
-  gl_FragColor = texture2D(map, src);
+  // Aberración cromática: el rojo y el azul se toman un poco más adentro o
+  // más afuera que el verde, al revés de como los separa el lente.
+  float r = texture2D(map, 0.5 + offset * (1.0 - chroma) / toUv).r;
+  float g = texture2D(map, src).g;
+  float b = texture2D(map, 0.5 + offset * (1.0 + chroma) / toUv).b;
+  gl_FragColor = vec4(r, g, b, 1.0);
 }
 `;
 
@@ -86,6 +94,10 @@ void main() {
  */
 function makeEyeTarget(): THREE.WebGLRenderTarget {
   const target = new THREE.WebGLRenderTarget(1, 1, { samples: 4 });
+  // Con mipmaps: hacia los bordes la corrección comprime la imagen, y sin
+  // ellos se veían escalones y parpadeo (el "pixelado" de la periferia).
+  target.texture.generateMipmaps = true;
+  target.texture.minFilter = THREE.LinearMipmapLinearFilter;
   target.texture.colorSpace = THREE.SRGBColorSpace;
   target.texture.internalFormat = "RGBA8";
   (target as THREE.WebGLRenderTarget & { isXRRenderTarget: boolean }).isXRRenderTarget = true;
@@ -102,13 +114,14 @@ function setLensUniforms(
   lensCenterX: number,
   aspect: number,
 ) {
-  const { distortion, zoom } = getVisorSettings();
+  const { distortion, zoom, chroma } = getVisorSettings();
   material.uniforms.map.value = map;
   material.uniforms.lensCenter.value.set(lensCenterX, 0.5);
   material.uniforms.k1.value = distortion;
   material.uniforms.k2.value = distortion * 0.5;
   material.uniforms.zoom.value = zoom;
   material.uniforms.aspect.value = aspect;
+  material.uniforms.chroma.value = chroma;
 }
 
 function prepareEyes(
@@ -167,6 +180,7 @@ export function StereoView() {
         k2: { value: 0 },
         zoom: { value: 1 },
         aspect: { value: 1 },
+        chroma: { value: 0 },
       },
       depthTest: false,
       depthWrite: false,
