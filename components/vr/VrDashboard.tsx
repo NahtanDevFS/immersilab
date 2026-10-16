@@ -31,7 +31,11 @@ export const PANEL_DISTANCE = 1.3;
 export const PANEL_TOP = -0.15;
 /** Un poco inclinados hacia atrás: el panel queda casi todo bajo los ojos. */
 export const PANEL_TILT = -0.25;
-export const PANEL_SCALE = 0.8;
+/**
+ * Tamaño de los paneles. Con 0.8 las letras ocupaban tan poco del campo
+ * visual que a través de los lentes se veían borrosas.
+ */
+export const PANEL_SCALE = 1;
 /** Dónde empieza el primer panel de cada lado: el borde de la vista es ~37°. */
 export const SIDE_START = 45;
 /**
@@ -39,7 +43,7 @@ export const SIDE_START = 45;
  * límite de siempre (55°), girar la cabeza para mirar un panel lo empujaba
  * más lejos.
  */
-const FOLLOW_LIMIT = (140 * Math.PI) / 180;
+const FOLLOW_LIMIT = (155 * Math.PI) / 180;
 
 /** Botón que muestra u oculta los paneles: la Y de un control estándar, el
  *  clic del stick derecho en el ESP32 (ver gamepad.ts). */
@@ -131,7 +135,7 @@ export function panelAngle(width: number): number {
   return (2 * Math.atan((width * PANEL_SCALE) / 2 / PANEL_DISTANCE)) / DEG;
 }
 /** Hasta dónde se puede llevar un panel (más allá, el cuerpo lo seguiría). */
-const MAX_YAW = 130;
+const MAX_YAW = 145;
 const MIN_PITCH = -55;
 const MAX_PITCH = 35;
 /** Alto de la barra para arrastrar, en unidades de panel. */

@@ -165,6 +165,10 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
       volver a pantalla completa" en los dos ojos y un toque la recupera.
       Probar también con un botón del control (puede que el navegador no lo
       acepte; en ese caso, el toque).
+- [ ] Con el visor puesto, las letras de los paneles y de las etiquetas se
+      leen sin esfuerzo. Si el celular se calienta o va lento en los
+      experimentos pesados, avisar (la vista VR ahora usa la resolución
+      completa del celular).
 - [ ] "Ajustar el visor" (panel del resultado o panel del lobby) muestra una
       cuadrícula. Con "Separación de los lentes" se logra verla una sola y
       nítida (sin visión doble); con "Corrección de la curvatura", sus líneas

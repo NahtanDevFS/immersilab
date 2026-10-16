@@ -18,6 +18,14 @@ const EYE_SEPARATION = 0.064;
 const VR_FOV = 75;
 
 /**
+ * Resolución en la vista VR: la del celular, hasta 3 píxeles por punto.
+ * Fuera del visor se limita a 1.5–2 para ahorrar batería, pero en el visor
+ * cada ojo tiene media pantalla y el lente la agranda: con 1.5 las letras
+ * quedaban con tan pocos píxeles que costaba distinguirlas.
+ */
+const VR_MAX_DPR = 3;
+
+/**
  * Cambia el campo visual y devuelve el que tenía. Fuera del componente a
  * propósito: el compilador de React no deja mutar la cámara que devuelve un
  * hook, pero la cámara de three es un objeto que se muta por diseño.
@@ -136,7 +144,14 @@ export function StereoView() {
   const gl = useThree((state) => state.gl);
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
+  const setDpr = useThree((state) => state.setDpr);
   const calibrating = useCalibrating();
+
+  useEffect(() => {
+    const previous = gl.getPixelRatio();
+    setDpr(Math.min(window.devicePixelRatio || 1, VR_MAX_DPR));
+    return () => setDpr(previous);
+  }, [gl, setDpr]);
 
   const parts = useMemo(() => {
     const stereo = new THREE.StereoCamera();
