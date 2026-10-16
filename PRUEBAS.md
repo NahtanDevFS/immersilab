@@ -169,6 +169,12 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
       leen sin esfuerzo. Si el celular se calienta o va lento en los
       experimentos pesados, avisar (la vista VR ahora usa la resolución
       completa del celular).
+- [ ] Con el control: el stick izquierdo a fondo un momento corre; soltarlo
+      un poco vuelve a caminar.
+- [ ] En el visor, stick derecho arriba o abajo sube o baja los paneles y
+      las tarjetas; "Centrar la vista" los devuelve.
+- [ ] En el lobby, Mi progreso / Mi cuenta preguntan antes de salir del
+      visor; "Quedarme en el visor" cancela.
 - [ ] Mantener A (o el dedo) mirando un panel: a los ~0.3 s se acerca y se
       agranda; al soltar vuelve a su lugar. Sobre un botón no pasa (el
       botón se toca normal).

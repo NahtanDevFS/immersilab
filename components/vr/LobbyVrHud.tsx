@@ -11,6 +11,7 @@ import { displayName, useSession } from "@/lib/progress/useSession";
 import { GazeButton } from "./GazeButton";
 import { SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
 import { VrText } from "./VrText";
+import { VrCard } from "./VrCard";
 
 const WIDTH = 1.25;
 const LINE = 0.075;
@@ -32,6 +33,12 @@ export function LobbyVrHud({
   onOpenPage: (href: string) => void;
 }) {
   const [pad, setPad] = useState(false);
+  /**
+   * Página que se quiere abrir (cuenta, progreso). No se abre de una: esas
+   * páginas son HTML y necesitan teclado, así que sacan del visor, y antes
+   * eso pasaba sin aviso. Se pregunta primero.
+   */
+  const [pending, setPending] = useState<{ href: string; label: string } | null>(null);
   const calibrating = useCalibrating();
   const { user } = useSession();
 
@@ -48,7 +55,7 @@ export function LobbyVrHud({
     [
       "Caminar",
       pad
-        ? "stick izquierdo del control."
+        ? "stick izquierdo; a fondo un momento para correr."
         : "hace falta un control. Si ya lo conectaste, presiona cualquier botón.",
     ],
     ["Elegir", pad ? "mira un botón y presiona A." : "mira un botón y toca la pantalla."],
@@ -56,6 +63,7 @@ export function LobbyVrHud({
     ["Tutor", "adentro, mantén R2 (B en el control ImmersiLab) o usa el botón del panel."],
     ["Paneles", "Y (clic del stick derecho) los oculta; su barra de arriba los mueve."],
     ["Acercar", "mantén A (o el dedo) mirando un panel y se agranda para leerlo."],
+    ["Altura", "stick derecho arriba o abajo sube o baja los paneles."],
     ["Centrar", "clic del stick izquierdo (o el botón de abajo) mira de nuevo al pasillo."],
   ];
 
@@ -82,7 +90,7 @@ export function LobbyVrHud({
 
   return (
     <Suspense fallback={null}>
-      <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado" hidden={calibrating}>
+      <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado" hidden={calibrating || pending !== null}>
         <SidePanel id="lobby" side="right" angle={SIDE_START} width={WIDTH} top={0.07}>
           <mesh position={[0, -height / 2 + 0.07, -0.01]}>
             <planeGeometry args={[WIDTH, height]} />
@@ -122,7 +130,7 @@ export function LobbyVrHud({
             <GazeButton
               key={button.href}
               label={button.label}
-              onSelect={() => onOpenPage(button.href)}
+              onSelect={() => setPending(button)}
               position={[-WIDTH / 2 + 0.05 + accountWidth / 2 + i * (accountWidth + 0.03), accountY, 0]}
               width={accountWidth}
               height={0.085}
@@ -132,6 +140,31 @@ export function LobbyVrHud({
         </SidePanel>
       </VrDashboard>
       <VisorCalibration />
+      {pending ? (
+        <VrCard
+          eyebrow="Salir del visor"
+          title={pending.label}
+          sections={[
+            {
+              text:
+                "Esta página no se puede usar dentro del visor: necesita el teclado del celular. " +
+                "Si continúas, vas a salir del visor; para volver, toca Visor en el encabezado.",
+            },
+          ]}
+          buttons={[
+            { id: "cancelar", label: "Quedarme en el visor", onSelect: () => setPending(null), primary: true },
+            {
+              id: "continuar",
+              label: "Continuar",
+              onSelect: () => {
+                const { href } = pending;
+                setPending(null);
+                onOpenPage(href);
+              },
+            },
+          ]}
+        />
+      ) : null}
     </Suspense>
   );
 }

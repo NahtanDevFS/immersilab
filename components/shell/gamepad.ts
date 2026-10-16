@@ -28,6 +28,8 @@
  * Botones del ESP32 (índices de buttons[]):
  *   0 principal  → acción: clic / agarrar slider, A siguiente en el tutorial
  *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
+ *   Stick izquierdo a fondo ~0.5 s → correr (MovementController).
+ *   Stick derecho arriba/abajo, en la vista VR → subir o bajar la interfaz.
  *   2 clic stick izquierdo → centrar la vista hacia el experimento
  *                            (X / cuadrado en un control estándar)
  *   3 clic stick derecho   → en el celular, fuera del visor: entrar al visor.

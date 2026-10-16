@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { readPad } from "./gamepad";
 import { selectGazed, setPadHeldReader, setScreenHeld, updateGaze } from "@/lib/view/gaze";
 import { getVisorSettings, useCalibrating } from "@/lib/view/visorSettings";
+import { nudgeUiPitch } from "@/lib/view/recenter";
 
 /** Separación entre los ojos, en metros (la escena está en metros). */
 const EYE_SEPARATION = 0.064;
@@ -283,6 +284,9 @@ function CalibrationGrid() {
   );
 }
 
+/** Grados por segundo que se mueve la interfaz con el stick derecho a fondo. */
+const UI_PITCH_SPEED = 40;
+
 /** Un toque más largo o con más recorrido que esto es arrastrar, no tocar. */
 const TAP_MAX_MS = 400;
 const TAP_MAX_PX = 12;
@@ -335,7 +339,7 @@ function GazeReticle() {
     };
   }, [canvas]);
 
-  useFrame(({ camera }) => {
+  useFrame(({ camera }, delta) => {
     const mesh = ref.current;
     if (!mesh) return;
     camera.getWorldDirection(forward);
@@ -345,8 +349,13 @@ function GazeReticle() {
     const gazed = updateGaze(camera);
     mesh.scale.setScalar(gazed ? 1.8 : 1);
 
+    // Stick derecho arriba o abajo: sube o baja la interfaz (ver recenter.ts).
+    // Hacia abajo, el contenido sube: se ve lo que estaba más abajo.
+    const pad = readPad();
+    if (pad && Math.abs(pad.right.y) > 0.3) nudgeUiPitch(pad.right.y * UI_PITCH_SPEED * delta);
+
     // A del control: por flanco, una vez por apretón.
-    const pressed = readPad()?.action ?? false;
+    const pressed = pad?.action ?? false;
     if (pressed && !padWasPressed.current) selectGazed();
     padWasPressed.current = pressed;
   });

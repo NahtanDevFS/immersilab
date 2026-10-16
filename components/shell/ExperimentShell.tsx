@@ -114,7 +114,7 @@ export function ExperimentShell({
       ? [
           {
             id: "recorrido",
-            label: nextStop ? `Siguiente parada: ${nextStop.name}` : "Terminar el recorrido",
+            label: nextStop ? `Siguiente parada: ${nextStop.name}` : "Terminar el recorrido (sale del visor)",
             onSelect: () => {
               if (nextStop) {
                 router.push(tourHref(tourIndex + 1));

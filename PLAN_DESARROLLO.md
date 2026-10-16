@@ -1085,6 +1085,12 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      curvatura comprime la periferia y sin ellos se veían escalones). El
      "pixelado" del centro es el efecto rejilla del lente y la pantalla: no
      se puede corregir por software.
+   - ✅ Comodidad con el control en el visor: correr empujando el stick
+     izquierdo a fondo medio segundo (el ESP32 no tiene botón libre);
+     stick derecho arriba o abajo sube o baja toda la interfaz que acompaña
+     al cuerpo (hasta 45°; "Centrar la vista" la vuelve a su lugar), para
+     ver la parte de abajo de los cuadros altos; y Mi progreso / Mi cuenta
+     desde el lobby piden confirmación antes de sacar del visor.
    - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
      muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
      Y = paneles, stick derecho = ajustar la variable mirada). En el visor

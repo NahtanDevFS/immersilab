@@ -137,7 +137,7 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
     walk: {
       title: "Camina",
       body: pad
-        ? "Mueve el stick izquierdo del control."
+        ? "Mueve el stick izquierdo del control. Empújalo a fondo un momento para correr."
         : finePointer
           ? "Usa W A S D o las flechas. Con Shift corres."
           : // El navegador no muestra un control hasta que se aprieta

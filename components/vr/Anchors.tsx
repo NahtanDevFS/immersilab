@@ -3,7 +3,7 @@
 import { useMemo, useRef, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { currentAlignment } from "@/lib/view/recenter";
+import { currentAlignment, getUiPitch } from "@/lib/view/recenter";
 
 /** Cuánto se puede girar la cabeza antes de que los paneles la sigan. */
 const FOLLOW_LIMIT = (55 * Math.PI) / 180;
@@ -49,7 +49,8 @@ export function BodyAnchor({
     if (Math.abs(diff) > followLimit) {
       yaw.current += diff - Math.sign(diff) * followLimit;
     }
-    g.rotation.set(0, yaw.current, 0);
+    // Más la altura de la interfaz (stick derecho arriba o abajo).
+    g.rotation.set((getUiPitch() * Math.PI) / 180, yaw.current, 0, "YXZ");
   });
 
   return <group ref={group}>{children}</group>;

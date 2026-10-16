@@ -8,7 +8,16 @@ import { attachKeyboard, readKeyboard } from "./keyboard";
 import { resolveCollisions } from "@/lib/collision/colliders";
 
 const SPEED = 4; // metros por segundo, caminando
-const RUN_MULTIPLIER = 2; // con Shift, en teclado
+const RUN_MULTIPLIER = 2; // con Shift, o el stick a fondo un momento
+
+/**
+ * Correr con el control: no hay botón libre (el ESP32 tiene los cuatro
+ * ocupados), así que se corre empujando el stick izquierdo a fondo un
+ * momento, como en muchos juegos de celular. Soltarlo un poco vuelve a
+ * caminar.
+ */
+const RUN_STICK = 0.92;
+const RUN_AFTER = 0.5; // s con el stick a fondo
 
 /** Radio del jugador para colisionar. Es el "cuerpo" que no atraviesa las
  *  paredes; 0.35 m es hombro a hombro y deja pasar por un vano de 1 m. */
@@ -36,6 +45,7 @@ export function MovementController() {
   const { camera } = useThree();
   const forward = useRef(new THREE.Vector3());
   const right = useRef(new THREE.Vector3());
+  const fullStick = useRef(0);
 
   useEffect(() => attachKeyboard(), []);
 
@@ -46,7 +56,10 @@ export function MovementController() {
     // Eje Y negativo = stick hacia arriba = caminar hacia adelante.
     const moveX = clampAxis((pad?.left.x ?? 0) + keys.x);
     const moveY = clampAxis((pad?.left.y ?? 0) + keys.y);
+    const stick = Math.hypot(pad?.left.x ?? 0, pad?.left.y ?? 0);
+    fullStick.current = stick >= RUN_STICK ? fullStick.current + delta : 0;
     if (moveX === 0 && moveY === 0) return;
+    const running = keys.run || fullStick.current >= RUN_AFTER;
 
     camera.getWorldDirection(forward.current);
     forward.current.y = 0;
@@ -54,7 +67,7 @@ export function MovementController() {
 
     right.current.crossVectors(forward.current, camera.up).normalize();
 
-    const step = SPEED * (keys.run ? RUN_MULTIPLIER : 1) * delta;
+    const step = SPEED * (running ? RUN_MULTIPLIER : 1) * delta;
     camera.position.addScaledVector(forward.current, -moveY * step);
     camera.position.addScaledVector(right.current, moveX * step);
 
