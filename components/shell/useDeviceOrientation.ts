@@ -231,11 +231,19 @@ export function useDeviceOrientation() {
 
     if (!wasGranted()) return; // iOS y todavía no aceptó: hace falta el botón
 
+    // Ya aceptó antes. Pasar del lobby a un experimento NO recarga la página
+    // y el permiso de esta carga sigue vigente: se engancha ya. Antes se
+    // esperaba siempre al primer toque, y al entrar a una sala el giroscopio
+    // quedaba apagado hasta tocar la pantalla (con el teléfono en el visor).
+    // Si no llegan lecturas (una recarga real en iOS), queda el primer toque.
+    attach();
+
     const DOE = window.DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<"granted" | "denied">;
     };
 
     const askOnFirstGesture = async () => {
+      if (hasReading.current) return; // ya anda: no hace falta pedir nada
       try {
         const result = await DOE.requestPermission?.();
         if (result === "granted") attach();
