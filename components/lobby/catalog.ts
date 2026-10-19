@@ -13,6 +13,7 @@ import { protoboardExperiment } from "@/components/modules/electronics/experimen
 import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
 import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
+import { contadorExperiment } from "@/components/modules/electronics/experiments/contador";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -61,6 +62,7 @@ const registry = [
   { href: "/lab/electronics/protoboard", name: protoboardExperiment.name },
   { href: "/lab/electronics/fuente-poder", name: fuentePoderExperiment.name },
   { href: "/lab/electronics/compuertas", name: compuertasExperiment.name },
+  { href: "/lab/electronics/contador", name: contadorExperiment.name },
 ];
 
 export const lobbyDoors: LobbyDoor[] = registry.map((entry, index) => {
