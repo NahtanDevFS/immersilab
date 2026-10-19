@@ -15,6 +15,7 @@ import { compuertasExperiment } from "@/components/modules/electronics/experimen
 import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
 import { contadorExperiment } from "@/components/modules/electronics/experiments/contador";
 import { firewallNatExperiment } from "@/components/modules/networks/experiments/firewall-nat";
+import { subredesVlanExperiment } from "@/components/modules/networks/experiments/subredes-vlan";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -57,6 +58,7 @@ const registry = [
   },
   // Redes, en el orden del temario
   { href: "/lab/networks/osi", name: osiExperiment.name },
+  { href: "/lab/networks/subredes-vlan", name: subredesVlanExperiment.name },
   { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
   { href: "/lab/networks/firewall-nat", name: firewallNatExperiment.name },
