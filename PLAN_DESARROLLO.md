@@ -1091,6 +1091,22 @@ R5 (OSI) ✅ → R4 (enrutamiento) ✅ → R3 (cobertura) ✅. Fase E cerrada.
      al cuerpo (hasta 45°; "Centrar la vista" la vuelve a su lugar), para
      ver la parte de abajo de los cuadros altos; y Mi progreso / Mi cuenta
      desde el lobby piden confirmación antes de sacar del visor.
+   - ✅ Control ESP32 en Android: la v1 del firmware (4 botones, ejes
+     0..32767, sin cruceta) funcionaba en la compu y en un Samsung, pero en
+     un Motorola y en un Poco X7 Pro (HyperOS) se conectaba y el sistema
+     descartaba todo (ni las apps ni Chrome lo veían; un mando de Switch sí
+     funcionaba en el mismo Poco). La v2
+     (`firmware/control_immersilab/control_immersilab.ino`) se describe
+     como un mando estándar: 16 botones con los clics de los sticks en el
+     14 y el 15, ejes -32767..32767 y una cruceta. `gamepad.ts` reconoce
+     el control por su nombre aunque Android lo traduzca a mando estándar y
+     lee las dos versiones del firmware. Confirmado en el Poco X7 Pro.
+     Además el firmware ya no se cuelga ni borra los emparejamientos en cada
+     encendido si el botón secundario se lee apretado (falso contacto en el
+     pin 26), espera a que el Bluetooth esté listo antes de borrar, y avisa
+     por el Monitor Serie cada conexión y desconexión. Un ESP32 se conecta
+     a UN dispositivo a la vez: para usarlo en otro, apagar el Bluetooth
+     del anterior. Página de diagnóstico: `/prueba-control.html`.
    - ⏳ Próximamente (hardware): una pantallita en el control ESP32 que
      muestre qué hace cada botón y cada palanca en ese momento (A, hablar,
      Y = paneles, stick derecho = ajustar la variable mirada). En el visor

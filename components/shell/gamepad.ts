@@ -25,6 +25,17 @@
  * Además los ejes pueden llegar en 0..1 con el reposo en 0.5, así que se
  * normalizan a -1..1. Todo eso está en `readEsp32` más abajo.
  *
+ * Hay dos versiones del firmware (firmware/control_immersilab):
+ *   v1: 4 botones, ejes 0..32767. Android estricto (Motorola, Poco/HyperOS)
+ *       se conecta pero descarta todo; solo Samsung y la compu lo leen.
+ *   v2: mando estándar: 16 botones (clics de los sticks en el 14 y el 15),
+ *       ejes -32767..32767 y una cruceta. En la compu llega SIN mapeo
+ *       estándar (clics en buttons[13] y [14]); en Android, el sistema lo
+ *       traduce a un mando estándar (mapping "standard", sticks en
+ *       axes[0..3], clics en buttons[10] y [11]).
+ * `readEsp32` devuelve siempre los botones en el mismo orden (principal,
+ * secundario, clic izq, clic der), así el resto de la app no distingue.
+ *
  * Botones del ESP32 (índices de buttons[]):
  *   0 principal  → acción: clic / agarrar slider, A siguiente en el tutorial
  *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
@@ -148,9 +159,11 @@ const espPads = new Set<string>();
  * Una vez reconocido se recuerda, aunque después muevan los sticks.
  */
 function isEsp32(pad: Gamepad): boolean {
+  // Por nombre, antes que por mapeo: en Android el firmware v2 llega como
+  // mando estándar y hay que reconocerlo igual.
+  if (pad.id.toLowerCase().includes("immersilab")) return true;
   if (pad.mapping === "standard") return false;
   if (readOverride("pad") === "esp32") return true;
-  if (pad.id.toLowerCase().includes("immersilab")) return true;
 
   const key = `${pad.index}:${pad.id}`;
   if (espPads.has(key)) return true;
@@ -182,13 +195,13 @@ const rangeByPad = new Map<string, AxisRange>();
  * Devuelve null si todavía no se puede saber (por ejemplo, si justo lo
  * estaban moviendo al conectar) — mientras tanto los sticks valen 0.
  */
-function esp32Range(pad: Gamepad): AxisRange | null {
+function esp32Range(pad: Gamepad, axes: typeof ESP32_AXES): AxisRange | null {
   const key = `${pad.index}:${pad.id}`;
   const known = rangeByPad.get(key);
   if (known) return known;
 
-  const x = pad.axes[ESP32_AXES.lx] ?? 0;
-  const y = pad.axes[ESP32_AXES.ly] ?? 0;
+  const x = pad.axes[axes.lx] ?? 0;
+  const y = pad.axes[axes.ly] ?? 0;
   const near = (v: number, target: number) => Math.abs(v - target) < 0.12;
 
   let range: AxisRange | null = null;
@@ -206,8 +219,13 @@ function esp32Deadzone(value: number): number {
   return Math.sign(value) * Math.min(1, (abs - ESP32_DEADZONE) / (1 - ESP32_DEADZONE));
 }
 
+/** Ejes del firmware v2 en Android (traducido a mando estándar). */
+const ESP32_STANDARD_AXES = { lx: 0, ly: 1, rx: 2, ry: 3 };
+
 function readEsp32(pad: Gamepad): PadState {
-  const range = esp32Range(pad);
+  const standard = pad.mapping === "standard";
+  const axes = standard ? ESP32_STANDARD_AXES : ESP32_AXES;
+  const range = esp32Range(pad, axes);
 
   const axis = (index: number, invert: boolean) => {
     if (!range) return 0;
@@ -216,32 +234,35 @@ function readEsp32(pad: Gamepad): PadState {
     return esp32Deadzone(invert ? -normalized : normalized);
   };
 
+  // Botones en orden fijo: principal, secundario, clic izq, clic der.
+  const pressed = (i: number) => pad.buttons[i]?.pressed ?? false;
+  const [clickLeft, clickRight] = standard
+    ? [pressed(10), pressed(11)] // v2 en Android
+    : pad.buttons.length >= 15
+      ? [pressed(13), pressed(14)] // v2 en la compu
+      : [pressed(2), pressed(3)]; // v1
+  const buttons = [pressed(0), pressed(1), clickLeft, clickRight];
+
   return {
     id: pad.id,
     mapping: "ESP32",
     left: {
-      x: axis(ESP32_AXES.lx, ESP32_INVERT.lx),
-      y: axis(ESP32_AXES.ly, ESP32_INVERT.ly),
+      x: axis(axes.lx, ESP32_INVERT.lx),
+      y: axis(axes.ly, ESP32_INVERT.ly),
     },
     right: {
-      x: axis(ESP32_AXES.rx, ESP32_INVERT.rx),
-      y: axis(ESP32_AXES.ry, ESP32_INVERT.ry),
+      x: axis(axes.rx, ESP32_INVERT.rx),
+      y: axis(axes.ry, ESP32_INVERT.ry),
     },
-    action: pad.buttons[0]?.pressed ?? false,
-    // El ESP32 solo tiene 4 botones (no existe el índice 7 del R2), así que
-    // hablarle al tutor es el botón secundario, mantenido.
-    talk: pad.buttons[1]?.pressed ?? false,
+    action: buttons[0],
+    // El ESP32 no tiene R2 (índice 7), así que hablarle al tutor es el botón
+    // secundario, mantenido.
+    talk: buttons[1],
     rawAxes: pad.axes,
-    rawButtons: pad.buttons.map((b) => b.pressed),
+    rawButtons: buttons,
   };
 }
 
-/**
- * En los controles de mapeo estándar el stick derecho está en [2,3] por
- * especificación. En los que el navegador no reconoce, [2,3] sigue siendo lo
- * más común, pero varios DirectInput con 6 ejes lo ponen en [3,4] — se
- * asume eso como mejor apuesta, y si falla se corrige con ?stickR=.
- */
 function defaultRightStick(pad: Gamepad): [number, number] {
   if (pad.mapping === "standard") return [2, 3];
   return pad.axes.length >= 6 ? [3, 4] : [2, 3];

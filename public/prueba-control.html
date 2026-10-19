@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba del control</title>
+<style>
+  body { margin: 0; padding: 16px; background: #0b1220; color: #e7ecf5; font-family: system-ui, sans-serif; }
+  h1 { font-size: 1.2rem; margin: 0 0 12px; }
+  p { margin: 6px 0; line-height: 1.4; }
+  .ok { color: #34d399; } .bad { color: #f87171; } .muted { color: #93a1be; }
+  .pad { margin-top: 12px; padding: 10px; border: 1px solid #26344e; border-radius: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .cell { min-width: 3.2rem; padding: 4px 6px; border-radius: 6px; background: #131b2e; text-align: center; font-variant-numeric: tabular-nums; }
+  .on { background: #2dd4bf; color: #052e2b; font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>Prueba del control</h1>
+<p>Conecta el control por Bluetooth, deja esta página abierta y <b>presiona cualquier botón del control</b>. Abajo aparece lo que el navegador recibe.</p>
+<p id="secure"></p>
+<p id="api"></p>
+<p id="events" class="muted">Eventos: ninguno todavía.</p>
+<div id="pads"><p class="muted">Ningún control visible para el navegador.</p></div>
+<script>
+  // Página de diagnóstico (sin el laboratorio): muestra en vivo los controles
+  // que entrega la Gamepad API, para saber si el problema es del Bluetooth,
+  // del navegador o de la app.
+  var secure = document.getElementById("secure");
+  secure.innerHTML = window.isSecureContext
+    ? '<span class="ok">Conexión segura (HTTPS o localhost): el navegador puede entregar el control.</span>'
+    : '<span class="bad">Conexión NO segura (http con una IP): Chrome puede bloquear el control y el giroscopio. Abre el laboratorio por https.</span>';
+  document.getElementById("api").innerHTML = navigator.getGamepads
+    ? '<span class="ok">El navegador tiene la API de controles.</span>'
+    : '<span class="bad">Este navegador no tiene la API de controles. Usa Google Chrome.</span>';
+
+  var log = [];
+  function addEvent(text) {
+    log.unshift(new Date().toLocaleTimeString() + " · " + text);
+    document.getElementById("events").textContent = "Eventos: " + log.slice(0, 4).join("  |  ");
+  }
+  window.addEventListener("gamepadconnected", function (e) { addEvent("conectado: " + e.gamepad.id); });
+  window.addEventListener("gamepaddisconnected", function (e) { addEvent("desconectado: " + e.gamepad.id); });
+
+  function render() {
+    var list = Array.prototype.slice.call(navigator.getGamepads ? navigator.getGamepads() : []).filter(Boolean);
+    var box = document.getElementById("pads");
+    if (list.length === 0) {
+      box.innerHTML = '<p class="muted">Ningún control visible para el navegador. Si ya está conectado por Bluetooth, presiona un botón con esta página abierta.</p>';
+    } else {
+      box.innerHTML = list.map(function (p) {
+        var axes = p.axes.map(function (a, i) { return '<span class="cell">eje ' + i + '<br>' + a.toFixed(2) + '</span>'; }).join("");
+        var buttons = p.buttons.map(function (b, i) { return '<span class="cell' + (b.pressed ? ' on' : '') + '">' + i + '</span>'; }).join("");
+        return '<div class="pad"><p><b>' + p.id + '</b></p>' +
+          '<p class="muted">índice ' + p.index + ' · mapeo: ' + (p.mapping || "no estándar") + ' · ' + (p.connected ? "conectado" : "desconectado") + '</p>' +
+          '<p>Ejes (' + p.axes.length + '):</p><div class="row">' + axes + '</div>' +
+          '<p>Botones (' + p.buttons.length + '), se encienden al apretarlos:</p><div class="row">' + buttons + '</div></div>';
+      }).join("");
+    }
+    requestAnimationFrame(render);
+  }
+  render();
+</script>
+</body>
+</html>
