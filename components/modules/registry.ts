@@ -13,6 +13,7 @@ import { osiExperiment } from "@/components/modules/networks/experiments/osi";
 import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
 import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
+import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
 
 /**
  * Todas las definiciones de experimento, por slug. Lo usa la pantalla de
@@ -35,6 +36,7 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     protoboardExperiment,
     fuentePoderExperiment,
     compuertasExperiment,
+    leyesNewtonExperiment,
   ].map((definition) => [definition.slug, definition]),
 );
 

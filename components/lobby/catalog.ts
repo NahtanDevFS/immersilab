@@ -12,6 +12,7 @@ import { coberturaExperiment } from "@/components/modules/networks/experiments/c
 import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
 import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
+import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -40,6 +41,7 @@ export interface LobbyDoor {
 const registry = [
   // Física
   { href: "/lab/physics/tiro-parabolico", name: tiroParabolicoExperiment.name },
+  { href: "/lab/physics/leyes-newton", name: leyesNewtonExperiment.name },
   { href: "/lab/physics/colisiones-1d", name: colisiones1DExperiment.name },
   { href: "/lab/physics/pendulo", name: penduloExperiment.name },
   { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
