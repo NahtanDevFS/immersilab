@@ -1,5 +1,5 @@
-/* Acciones de los experimentos (espectro, modulación, ondas, péndulo,
-   cobertura): botón principal y notas, abajo a la derecha. Los retos ya no
+/* Acciones de los experimentos (péndulo, cobertura, compuertas, los de
+   redes): botón principal y notas, abajo a la derecha. Los retos ya no
    van aquí: los dibuja el HUD de retos del shell (ChallengeHUD). */
 .actions {
   position: absolute;

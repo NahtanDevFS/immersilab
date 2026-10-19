@@ -4,8 +4,8 @@
   left: calc(0.75rem + env(safe-area-inset-left));
   z-index: 10;
   width: 248px;
-  /* Tope de alto: con muchos controles (colisiones con predicción, ondas
-     con diez sliders) el panel crecía hacia arriba y tapaba el header en
+  /* Tope de alto: con muchos controles (colisiones con predicción, divide la
+     red con trece selectores) el panel crecía hacia arriba y tapaba el header en
      pantallas bajas. Se deja libre el alto del header (~4.5rem) y el resto
      se scrollea. */
   max-height: calc(100% - 5.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));

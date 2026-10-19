@@ -80,7 +80,11 @@ export default function ProgresoPage() {
         {DISCIPLINES.map((discipline) => (
           <section key={discipline.slug} className={styles.inner} style={{ gap: "0.7rem" }}>
             <h2 className={styles.discipline}>{discipline.name}</h2>
-            {MODULES.filter((m) => m.discipline === discipline.slug).map((module) => (
+            {/* Un módulo sin experimentos en el catálogo (por ejemplo, uno cuyos
+                experimentos se retiraron) no se muestra: sería un título vacío. */}
+            {MODULES.filter(
+              (m) => m.discipline === discipline.slug && catalog.some((e) => e.module === m.slug),
+            ).map((module) => (
               <div key={module.slug} className={styles.inner} style={{ gap: "0.6rem" }}>
                 <p className={styles.module}>{module.name}</p>
                 {catalog

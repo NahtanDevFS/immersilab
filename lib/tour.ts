@@ -36,14 +36,6 @@ export const TOUR: TourStop[] = [
     preset: { modo: "blancos" },
   },
   {
-    slug: "venturi",
-    href: "/lab/physics/venturi",
-    name: "Tubo de Venturi",
-    say:
-      "Seguimos en Física, ahora con fluidos. Por este tubo pasa siempre el mismo caudal, así que donde se angosta el fluido tiene que ir más rápido, y por Bernoulli la presión baja justo ahí. " +
-      "Angosta el cuello y mira las dos columnas: la de la derecha baja. Si te pasas con el agua, aparece la cavitación.",
-  },
-  {
     slug: "electroiman",
     href: "/lab/physics/electroiman",
     name: "La grúa electromagnética",
@@ -58,14 +50,6 @@ export const TOUR: TourStop[] = [
     say:
       "Ahora Cálculo. Una curva que gira alrededor de un eje barre un sólido, y su volumen es una integral: la suma de muchos discos delgados. " +
       "Los deslizadores son el radio de la pieza a distintas alturas. El reto es igualar la pieza traslúcida, en forma y en volumen.",
-  },
-  {
-    slug: "espectro",
-    href: "/lab/networks/espectro",
-    name: "Tu voz en el espectro",
-    say:
-      "Pasamos a Redes y Telecomunicaciones. Aquí la transformada de Fourier descompone tu voz en frecuencias, en tiempo real. " +
-      "Enciende el micrófono y silba, y después habla: vas a ver cuánto de tu voz cabe en la banda telefónica.",
   },
   {
     slug: "enrutamiento",

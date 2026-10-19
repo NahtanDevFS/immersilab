@@ -2,16 +2,10 @@ import type { ExperimentDefinition, VariablesState } from "@/types/module";
 import { tiroParabolicoExperiment } from "@/components/modules/physics/experiments/tiro-parabolico";
 import { colisiones1DExperiment } from "@/components/modules/physics/experiments/colisiones-1d";
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
-import { ondasExperiment } from "@/components/modules/physics/experiments/ondas";
-import { venturiExperiment } from "@/components/modules/physics/experiments/venturi";
 import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments/suma-riemann";
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
-import { taylorExperiment } from "@/components/modules/calculus/experiments/taylor";
-import { qamExperiment } from "@/components/modules/networks/experiments/qam";
-import { modulacionExperiment } from "@/components/modules/networks/experiments/modulacion";
-import { espectroExperiment } from "@/components/modules/networks/experiments/espectro";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
 import { enrutamientoExperiment } from "@/components/modules/networks/experiments/enrutamiento";
 import { osiExperiment } from "@/components/modules/networks/experiments/osi";
@@ -29,16 +23,10 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     tiroParabolicoExperiment,
     colisiones1DExperiment,
     penduloExperiment,
-    ondasExperiment,
-    venturiExperiment,
     electroimanExperiment,
     sumaRiemannExperiment,
     derivadaPicoExperiment,
     solidosRevolucionExperiment,
-    taylorExperiment,
-    qamExperiment,
-    modulacionExperiment,
-    espectroExperiment,
     coberturaExperiment,
     enrutamientoExperiment,
     osiExperiment,
