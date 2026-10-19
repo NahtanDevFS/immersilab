@@ -10,17 +10,20 @@ Gemini) que responde con los valores actuales del experimento.
 
 ## Qué incluye
 
-- **19 experimentos** en cuatro áreas, con **60 retos** en total:
-  - **Física:** tiro parabólico (artillería), colisiones 1D (predice el
-    resultado), péndulo, ondas y superposición, tubo de Venturi, la grúa
-    electromagnética (electroimán).
-  - **Cálculo:** derivada (frena en el pico), suma de Riemann, sólidos de
-    revolución, series de Taylor.
-  - **Redes y Telecomunicaciones:** modulación AM/FM, constelación QAM,
-    propagación y cobertura, enrutamiento (contra Dijkstra), encapsulación
-    OSI/TCP-IP, espectro de tu voz en vivo (FFT del micrófono).
+- **20 experimentos** en cuatro áreas, con **72 retos** en total:
+  - **Física:** tiro parabólico (artillería), leyes de Newton (plano
+    inclinado, fricción y polea), colisiones 1D (predice el resultado),
+    péndulo, guía la carga (campo eléctrico), la grúa electromagnética
+    (electroimán).
+  - **Cálculo:** derivada (frena en el pico), llena el tanque (razones de
+    cambio relacionadas), suma de Riemann, sólidos de revolución.
+  - **Redes y Telecomunicaciones:** encapsulación OSI/TCP-IP, divide la red
+    (subredes VLSM y VLAN), rompe el bucle (STP y EtherChannel),
+    enrutamiento (contra Dijkstra), propagación y cobertura con demanda en
+    la hora pico, defiende el borde (firewall y NAT).
   - **Electrónica:** protoboard con multímetro (Ohm y Kirchhoff), fuente de
-    poder con osciloscopio (de alterna a continua), compuertas lógicas.
+    poder con osciloscopio (de alterna a continua), compuertas lógicas, el
+    contador (flip-flops y contadores de módulo N).
 - **Lobby** en 3D con una puerta por experimento: se entra caminando.
 - **Tutor por voz:** se mantiene presionado el botón del micrófono (o el
   gatillo R2 del control), se pregunta en voz alta y responde hablando.
@@ -28,8 +31,8 @@ Gemini) que responde con los valores actuales del experimento.
 - **Progreso:** sin cuenta se guarda en el dispositivo; con cuenta se guarda
   en Supabase y se ve desde cualquier lado (`/progreso`). Lo logrado como
   invitado pasa a la cuenta al ingresar.
-- **Tutorial de entrada** de 30 segundos y **recorrido guiado** por un
-  experimento de cada módulo (nueve), para mostrar el laboratorio en clase.
+- **Tutorial de entrada** de 30 segundos y **recorrido guiado** de nueve
+  paradas por las cuatro áreas, para mostrar el laboratorio en clase.
 
 ## Requisitos
 
@@ -63,6 +66,11 @@ Corre en el SQL Editor de Supabase el archivo
 `supabase/migrations/20261006120000_catalogo_y_retos.sql`. Crea el catálogo
 de disciplinas, módulos y experimentos, la tabla `challenge_completions`, el
 perfil automático al registrarse y las reglas de acceso (RLS).
+
+Después, en orden, las migraciones que agregan experimentos:
+`20261008120000_electromagnetismo.sql`, `20261008130000_electronica.sql` y
+`20261020120000_catalogo_v2.sql` (los siete experimentos del catálogo v2; no
+borra los retirados, para no perder el historial).
 
 Si cambia el catálogo de experimentos, la migración se regenera con:
 

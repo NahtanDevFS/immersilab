@@ -1,9 +1,10 @@
 # Créditos
 
 Origen y licencia de todo lo que ImmersiLab usa y no se hizo en el proyecto.
-Lo que no aparece aquí (curvas, sólidos, ondas, constelaciones, grafos,
-mapas de cobertura, cajas de encapsulación, la puerta y el pasillo del lobby)
-se genera por código.
+Lo que no aparece aquí (curvas, sólidos, grafos, mapas de cobertura, cajas
+de encapsulación, la puerta y el pasillo del lobby, y todo lo de los siete
+experimentos del catálogo v2: tanques, rampa, cámara de vacío, edificio,
+switches, rack y flip-flops) se genera por código.
 
 ## Texturas y entorno
 

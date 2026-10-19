@@ -2,10 +2,13 @@ import type { VariablesState } from "@/types/module";
 
 /**
  * Recorrido guiado: una demo del laboratorio, pensada para mostrarlo en
- * clase (PLAN_DESARROLLO.md, Fase F.4). Pasa por un experimento de cada
- * MÓDULO (nueve), en el orden del catálogo, y termina en la pantalla de
- * progreso para mostrar que lo logrado queda guardado. Recorrer los quince
- * experimentos tomaría más de media hora y dejaría de ser una demo.
+ * clase (PLAN_DESARROLLO.md, Fase F.4). Son nueve paradas repartidas entre
+ * las cuatro áreas, siguiendo el temario: dos de mecánica (tiro parabólico
+ * y leyes de Newton), una de electromagnetismo, una de cálculo, tres de
+ * redes (segmentación, enrutamiento y arquitectura) y dos de electrónica.
+ * Termina en la pantalla de progreso para mostrar que lo logrado queda
+ * guardado. Recorrer los veinte experimentos tomaría más de una hora y
+ * dejaría de ser una demo.
  *
  * El estado vive en la URL (`?recorrido=2`): así se puede abrir directo una
  * parada, recargar sin perderse, y no hace falta estado global. Fuera del
@@ -36,6 +39,14 @@ export const TOUR: TourStop[] = [
     preset: { modo: "blancos" },
   },
   {
+    slug: "leyes-newton",
+    href: "/lab/physics/leyes-newton",
+    name: "Leyes de Newton",
+    say:
+      "Seguimos con las leyes de Newton. Sobre la caja ves sus fuerzas como flechas: el peso, la normal y la fricción. " +
+      "Antes de soltarla, di si crees que se va a mover. La fricción estática aguanta hasta un tope: sube el ángulo de la rampa y busca el punto donde ya no alcanza.",
+  },
+  {
     slug: "electroiman",
     href: "/lab/physics/electroiman",
     name: "La grúa electromagnética",
@@ -50,6 +61,14 @@ export const TOUR: TourStop[] = [
     say:
       "Ahora Cálculo. Una curva que gira alrededor de un eje barre un sólido, y su volumen es una integral: la suma de muchos discos delgados. " +
       "Los deslizadores son el radio de la pieza a distintas alturas. El reto es igualar la pieza traslúcida, en forma y en volumen.",
+  },
+  {
+    slug: "subredes-vlan",
+    href: "/lab/networks/subredes-vlan",
+    name: "Divide la red",
+    say:
+      "Pasamos a Redes y Telecomunicaciones. Este edificio comparte un solo bloque de direcciones: elige la máscara de cada departamento para que a todos les alcance sin desperdiciar. " +
+      "Después toca cada computadora para ponerla en la VLAN de su departamento, y prueba con ping quién se puede hablar con quién.",
   },
   {
     slug: "enrutamiento",
