@@ -1,0 +1,15 @@
+/* Etiquetas de la cámara: sin puntero, para no cortar el arrastre con el que
+   se mira alrededor. */
+.label {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(11, 18, 32, 0.85);
+  color: var(--lab-text);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

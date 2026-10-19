@@ -17,6 +17,7 @@ import { contadorExperiment } from "@/components/modules/electronics/experiments
 import { firewallNatExperiment } from "@/components/modules/networks/experiments/firewall-nat";
 import { subredesVlanExperiment } from "@/components/modules/networks/experiments/subredes-vlan";
 import { stpExperiment } from "@/components/modules/networks/experiments/stp";
+import { campoElectricoExperiment } from "@/components/modules/physics/experiments/campo-electrico";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -48,6 +49,7 @@ const registry = [
   { href: "/lab/physics/leyes-newton", name: leyesNewtonExperiment.name },
   { href: "/lab/physics/colisiones-1d", name: colisiones1DExperiment.name },
   { href: "/lab/physics/pendulo", name: penduloExperiment.name },
+  { href: "/lab/physics/campo-electrico", name: campoElectricoExperiment.name },
   { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
   // Cálculo
   { href: "/lab/calculus/derivada-pico", name: derivadaPicoExperiment.name },
