@@ -255,7 +255,7 @@ export function ExperimentShell({
           <Suspense fallback={null}>
             <LabBackground quality={quality} />
           </Suspense>
-          <SceneComponent engine={engine} variables={values} />
+          <SceneComponent engine={engine} variables={values} setVariable={setValue} />
 
           {gyroActive && !vr && (
             <VariablesHud3D

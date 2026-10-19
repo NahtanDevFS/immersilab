@@ -163,6 +163,14 @@ export interface ExperimentDefinition {
   SceneComponent: React.ComponentType<{
     engine: ExperimentEngine;
     variables: VariablesState;
+    /**
+     * Opcional: cambia una variable desde la escena, igual que el panel.
+     * Sirve para los objetos que se tocan con el mouse o con la mira (la PC
+     * que pasa a otra VLAN, la tarjeta que entra al rack): si lo tocado vive
+     * en una variable y no en el motor, el panel, el tutor y el visor ven lo
+     * mismo sin código extra.
+     */
+    setVariable?: (key: string, value: number | boolean | string) => void;
   }>;
   /**
    * Opcional: panel de acciones propias del experimento (ej. "Lanzar" en
