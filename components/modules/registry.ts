@@ -13,6 +13,7 @@ import { osiExperiment } from "@/components/modules/networks/experiments/osi";
 import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
 import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
+import { stpExperiment } from "@/components/modules/networks/experiments/stp";
 import { subredesVlanExperiment } from "@/components/modules/networks/experiments/subredes-vlan";
 import { firewallNatExperiment } from "@/components/modules/networks/experiments/firewall-nat";
 import { contadorExperiment } from "@/components/modules/electronics/experiments/contador";
@@ -39,6 +40,7 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     protoboardExperiment,
     fuentePoderExperiment,
     compuertasExperiment,
+    stpExperiment,
     subredesVlanExperiment,
     firewallNatExperiment,
     contadorExperiment,

@@ -1,0 +1,32 @@
+/* Etiquetas de enlaces y estado: sin puntero, para no cortar el arrastre con
+   el que se mira alrededor. */
+.link,
+.status {
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(11, 18, 32, 0.85);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+  color: var(--lab-text);
+}
+
+.link[data-down] {
+  color: #a1a1aa;
+  text-decoration: line-through;
+}
+
+.status {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  color: var(--lab-accent);
+}
+
+.status[data-storm] {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.92);
+}
