@@ -14,6 +14,7 @@ import { fuentePoderExperiment } from "@/components/modules/electronics/experime
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
 import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
 import { contadorExperiment } from "@/components/modules/electronics/experiments/contador";
+import { firewallNatExperiment } from "@/components/modules/networks/experiments/firewall-nat";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -58,6 +59,7 @@ const registry = [
   { href: "/lab/networks/osi", name: osiExperiment.name },
   { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
+  { href: "/lab/networks/firewall-nat", name: firewallNatExperiment.name },
   // Electrónica
   { href: "/lab/electronics/protoboard", name: protoboardExperiment.name },
   { href: "/lab/electronics/fuente-poder", name: fuentePoderExperiment.name },
