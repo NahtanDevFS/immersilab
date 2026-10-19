@@ -10,7 +10,8 @@ interface Props {
 }
 
 /**
- * Leyenda del mapa de calor, aviso de interferencia y contador de puntos.
+ * Leyenda del mapa de calor, carga de las antenas, aviso de interferencia
+ * y contador de puntos.
  * Los retos los dibuja el HUD de retos del shell; las antenas se manejan
  * desde el panel de variables.
  */
@@ -36,7 +37,15 @@ export function CoverageControls({ engine }: Props) {
           debajo del panel de variables o del botón del tutor. */}
       <p className={styles.note} data-legend>
         Piso: <span data-ok>verde</span> buena señal · <span data-weak>rojo</span> no
-        alcanza · <span data-interf>magenta</span> interferencia
+        alcanza · <span data-interf>magenta</span> interferencia ·{" "}
+        <span data-sat>naranja</span> antena saturada
+      </p>
+
+      <p className={styles.note} data-legend>
+        {`${runtime.hour}:00 · demanda ${Math.round(runtime.load.totalMbps)} Mbps`}
+        {runtime.antennas
+          .map((_, i) => ` · A${i + 1}: ${Math.round(runtime.load.perAntenna[i])}/${runtime.band.capacityMbps}`)
+          .join("")}
       </p>
 
       {interfered > 0 && (

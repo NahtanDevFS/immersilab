@@ -19,6 +19,18 @@
  * muros de 8/12/18 dB, la banda importa: 900 MHz se arregla con una antena,
  * 2.4 GHz necesita dos, y 5 GHz no alcanza con tres (por eso el Wi-Fi de
  * 5 GHz se despliega con muchos más puntos de acceso).
+ *
+ * Demanda: cada punto tiene usuarios y un perfil horario, y cada antena
+ * reparte una capacidad fija (50, 150 o 600 Mbps según la banda) entre los
+ * puntos que la oyen mejor. Con 0.45 Mbps por usuario la hora pico es a las
+ * 12, con 320 Mbps en todo el campus. Se calibró también con búsqueda
+ * exhaustiva (banda × potencia × postes × canales):
+ * - 900 MHz cubre todo, pero tres antenas suman 150 Mbps: nunca aguanta.
+ * - 2.4 GHz con dos antenas suma 300 Mbps: tampoco.
+ * - 2.4 GHz con tres antenas aguanta solo si quedan repartidas, por ejemplo
+ *   postes 1, 2 y 3 a 27 dBm (88/135/98 Mbps), 1, 4 y 5 a 30 dBm, 1, 4 y 7 a
+ *   28 dBm, o 3, 5 y 6 a 26 dBm. Hay 108 combinaciones que lo logran.
+ * - Con los valores por defecto (una antena en el poste 2) no se cubre.
  */
 
 export const METERS_PER_UNIT = 50;
@@ -43,28 +55,81 @@ export const BUILDINGS: Building[] = [
   { id: "rectoria", name: "Rectoría", rect: [7.0, 1.2, 9.0, 3.0], height: 1.0 },
 ];
 
+/**
+ * Qué fracción de los usuarios de un punto está conectada a cada hora del
+ * día (24 valores, de las 0 a las 23). Es lo que convierte "cubrir" en
+ * "diseñar": una antena que alcanza a todos puede no aguantarlos a la vez.
+ */
+type Profile = number[];
+
+/** Arma un perfil desde los tramos que importan; el resto de horas vale `base`. */
+function profile(base: number, spans: Array<[from: number, to: number, value: number]>): Profile {
+  const out = Array.from({ length: 24 }, () => base);
+  for (const [from, to, value] of spans) for (let h = from; h <= to; h++) out[h] = value;
+  return out;
+}
+
+export const PROFILES = {
+  // Clases de 8 a 11 y de 14 a 17; al mediodía la mitad se va a almorzar.
+  aulas: profile(0.02, [[7, 7, 0.4], [8, 11, 0.85], [12, 12, 0.5], [13, 13, 0.35], [14, 17, 0.75], [18, 20, 0.35]]),
+  // El almuerzo concentra a casi todo el campus en dos horas.
+  cafeteria: profile(0, [[7, 10, 0.25], [11, 11, 0.6], [12, 13, 1], [14, 14, 0.6], [15, 18, 0.3]]),
+  // La biblioteca es pareja: siempre hay alguien estudiando.
+  biblioteca: profile(0.05, [[7, 7, 0.4], [8, 11, 0.7], [12, 13, 0.85], [14, 19, 0.8], [20, 21, 0.4]]),
+  oficinas: profile(0.02, [[8, 12, 0.9], [13, 13, 0.5], [14, 16, 0.9], [17, 17, 0.4]]),
+  // Parqueo y Entrada: la gente llega y se va.
+  llegadas: profile(0.02, [[6, 6, 0.5], [7, 7, 1], [8, 11, 0.25], [12, 13, 0.6], [14, 16, 0.25], [17, 18, 1], [19, 20, 0.3]]),
+  // Al aire libre: el mediodía en la plaza y el jardín, la tarde en la cancha.
+  exterior: profile(0.02, [[8, 11, 0.3], [12, 13, 1], [14, 17, 0.4], [18, 19, 0.2]]),
+  cancha: profile(0, [[7, 11, 0.15], [12, 13, 0.4], [14, 15, 0.3], [16, 19, 1]]),
+  // Eventos a media mañana y a media tarde.
+  auditorio: profile(0, [[9, 11, 0.8], [12, 13, 0.3], [15, 17, 0.8]]),
+} satisfies Record<string, Profile>;
+
 export interface Point {
   id: string;
   name: string;
   x: number;
   z: number;
+  /** Usuarios conectados en el momento de más uso de ese punto. */
+  users: number;
+  profile: keyof typeof PROFILES;
 }
 
 /** Los puntos donde hay que medir buena señal: el objetivo del reto. */
 export const POINTS: Point[] = [
-  { id: "p-biblioteca", name: "Biblioteca", x: 2.0, z: -2.4 },
-  { id: "p-aulas-a", name: "Aulas A", x: 5.2, z: -2.5 },
-  { id: "p-aulas-b", name: "Aulas B", x: 8.3, z: -1.8 },
-  { id: "p-labs", name: "Laboratorios", x: 2.0, z: 1.2 },
-  { id: "p-cafeteria", name: "Cafetería", x: 5.1, z: 0.1 },
-  { id: "p-rectoria", name: "Rectoría", x: 8.0, z: 2.1 },
-  { id: "p-parqueo", name: "Parqueo", x: 0.5, z: 3.0 },
-  { id: "p-cancha", name: "Cancha", x: 9.6, z: -3.3 },
-  { id: "p-plaza", name: "Plaza", x: 5.0, z: 2.6 },
-  { id: "p-entrada", name: "Entrada", x: 0.3, z: -0.5 },
-  { id: "p-jardin", name: "Jardín", x: 6.6, z: -1.2 },
-  { id: "p-auditorio", name: "Auditorio", x: 3.6, z: 3.2 },
+  { id: "p-biblioteca", name: "Biblioteca", x: 2.0, z: -2.4, users: 120, profile: "biblioteca" },
+  { id: "p-aulas-a", name: "Aulas A", x: 5.2, z: -2.5, users: 160, profile: "aulas" },
+  { id: "p-aulas-b", name: "Aulas B", x: 8.3, z: -1.8, users: 140, profile: "aulas" },
+  { id: "p-labs", name: "Laboratorios", x: 2.0, z: 1.2, users: 90, profile: "aulas" },
+  { id: "p-cafeteria", name: "Cafetería", x: 5.1, z: 0.1, users: 180, profile: "cafeteria" },
+  { id: "p-rectoria", name: "Rectoría", x: 8.0, z: 2.1, users: 50, profile: "oficinas" },
+  { id: "p-parqueo", name: "Parqueo", x: 0.5, z: 3.0, users: 40, profile: "llegadas" },
+  { id: "p-cancha", name: "Cancha", x: 9.6, z: -3.3, users: 30, profile: "cancha" },
+  { id: "p-plaza", name: "Plaza", x: 5.0, z: 2.6, users: 60, profile: "exterior" },
+  { id: "p-entrada", name: "Entrada", x: 0.3, z: -0.5, users: 40, profile: "llegadas" },
+  { id: "p-jardin", name: "Jardín", x: 6.6, z: -1.2, users: 40, profile: "exterior" },
+  { id: "p-auditorio", name: "Auditorio", x: 3.6, z: 3.2, users: 100, profile: "auditorio" },
 ];
+
+/** Lo que consume cada usuario conectado, en Mbps (video y redes sociales). */
+export const MBPS_PER_USER = 0.45;
+
+/** Demanda de un punto a una hora, en Mbps. */
+export function demandMbps(point: Point, hour: number): number {
+  const h = Math.min(23, Math.max(0, Math.round(hour)));
+  return point.users * PROFILES[point.profile][h] * MBPS_PER_USER;
+}
+
+/** Demanda de todo el campus a una hora, en Mbps. */
+export function totalDemandMbps(hour: number): number {
+  return POINTS.reduce((sum, p) => sum + demandMbps(p, hour), 0);
+}
+
+/** La hora del día con más demanda en todo el campus. */
+export const PEAK_HOUR = Array.from({ length: 24 }, (_, h) => h).reduce((best, h) =>
+  totalDemandMbps(h) > totalDemandMbps(best) ? h : best,
+);
 
 export interface Site {
   id: string;
@@ -90,13 +155,19 @@ export interface Band {
   mhz: number;
   /** Pérdida al atravesar un edificio entero (dos muros), en dB. */
   buildingLossDb: number;
+  /**
+   * Lo que una antena reparte entre todos los puntos que atiende, en Mbps.
+   * Más frecuencia permite canales más anchos y más capacidad: es lo que se
+   * gana a cambio de la peor penetración.
+   */
+  capacityMbps: number;
 }
 
 /** Más frecuencia, más pérdida por muro: es la otra mitad de la lección. */
 export const BANDS: Band[] = [
-  { id: "900", label: "900 MHz", mhz: 900, buildingLossDb: 8 },
-  { id: "2400", label: "2.4 GHz", mhz: 2400, buildingLossDb: 12 },
-  { id: "5000", label: "5 GHz", mhz: 5000, buildingLossDb: 18 },
+  { id: "900", label: "900 MHz", mhz: 900, buildingLossDb: 8, capacityMbps: 50 },
+  { id: "2400", label: "2.4 GHz", mhz: 2400, buildingLossDb: 12, capacityMbps: 150 },
+  { id: "5000", label: "5 GHz", mhz: 5000, buildingLossDb: 18, capacityMbps: 600 },
 ];
 
 export function getBand(id: string | number | boolean): Band {
@@ -228,5 +299,40 @@ export function coverageOf(antennas: Antenna[], band: Band, powerDbm: number): C
     total: POINTS.length,
     interfered: perPoint.filter((r) => r.interfered).length,
     perPoint,
+  };
+}
+
+export interface LoadSummary {
+  hour: number;
+  /** Demanda total del campus a esa hora, en Mbps. */
+  totalMbps: number;
+  /** Carga de cada antena (mismo orden que `antennas`), en Mbps. */
+  perAntenna: number[];
+  /** ¿El punto está en una antena que se pasa de su capacidad? */
+  saturated: boolean[];
+  saturatedCount: number;
+}
+
+/**
+ * Carga de cada antena a una hora. Cada punto con señal suficiente se
+ * conecta a la antena que mejor oye (como un celular real) y le suma su
+ * demanda. Si una antena se pasa de su capacidad, todos sus puntos quedan
+ * saturados: la capacidad es compartida, no se reparte por orden de llegada.
+ */
+export function loadOf(
+  antennas: Antenna[], band: Band, perPoint: Reception[], hour: number,
+): LoadSummary {
+  const perAntenna = antennas.map(() => 0);
+  const attached = perPoint.map((r) => r.best >= 0 && r.bestDbm >= SENSITIVITY_DBM);
+  perPoint.forEach((r, i) => {
+    if (attached[i]) perAntenna[r.best] += demandMbps(POINTS[i], hour);
+  });
+  const saturated = perPoint.map((r, i) => attached[i] && perAntenna[r.best] > band.capacityMbps);
+  return {
+    hour,
+    totalMbps: totalDemandMbps(hour),
+    perAntenna,
+    saturated,
+    saturatedCount: saturated.filter(Boolean).length,
   };
 }

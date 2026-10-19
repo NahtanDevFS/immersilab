@@ -13,10 +13,11 @@ import {
   SENSITIVITY_DBM,
   SITES,
   getBand,
+  loadOf,
   receptionAt,
   type Reception,
 } from "./propagation";
-import { antennasFrom, type CoverageEngine } from "./engine";
+import { antennasFrom, DEFAULT_HOUR, type CoverageEngine } from "./engine";
 import styles from "./CoverageScene.module.css";
 import { SceneLabel } from "@/components/vr/SceneLabel";
 
@@ -32,10 +33,19 @@ const HEAT_Y = 0.02;
 
 const CHANNEL_COLORS: Record<number, string> = { 1: "#2dd4bf", 6: "#f2a65a", 11: "#c084fc" };
 
+/** Color de la carga de una antena según cuánto de su capacidad usa. */
+function loadColor(fraction: number): string {
+  if (fraction > 1) return "#ef4444";
+  if (fraction > 0.8) return "#facc15";
+  return "#34d399";
+}
+
 /** Color del mapa de calor para una recepción. */
-function heatColor(r: Reception, out: THREE.Color) {
+function heatColor(r: Reception, saturated: boolean[], out: THREE.Color) {
   if (!Number.isFinite(r.bestDbm)) return out.setRGB(0.05, 0.07, 0.12);
   if (r.interfered) return out.setRGB(1.1, 0.25, 1.1);
+  // Con señal pero en una antena que no da abasto: naranja.
+  if (r.covered && saturated[r.best]) return out.setRGB(1.25, 0.5, 0.05);
   if (r.covered) {
     // De ámbar (justo en la sensibilidad) a verde (señal holgada, −55 dBm).
     const t = Math.min(1, (r.bestDbm - SENSITIVITY_DBM) / 23);
@@ -60,7 +70,19 @@ export function CoverageScene({ engine, variables }: Props) {
 
   const band = getBand(variables.banda ?? "2400");
   const power = Number(variables.potencia ?? 20);
+  const hour = Math.round(Number(variables.hora ?? DEFAULT_HOUR));
   const antennas = useMemo(() => antennasFrom(variables), [variables]);
+
+  const receptions = useMemo(
+    () => POINTS.map((p) => receptionAt(antennas, p.x, p.z, band, power)),
+    [antennas, band, power],
+  );
+  const load = useMemo(() => loadOf(antennas, band, receptions, hour), [antennas, band, receptions, hour]);
+  // Qué antenas se pasan de su capacidad: el piso que atienden va en naranja.
+  const saturatedAntennas = useMemo(
+    () => load.perAntenna.map((mbps) => mbps > band.capacityMbps),
+    [load, band],
+  );
 
   // Mapa de calor: se rearma solo cuando cambian banda, potencia o antenas.
   const heat = useMemo(() => {
@@ -79,7 +101,7 @@ export function CoverageScene({ engine, variables }: Props) {
         positions[v] = x;
         positions[v + 1] = HEAT_Y;
         positions[v + 2] = z;
-        heatColor(receptionAt(antennas, x, z, band, power), color);
+        heatColor(receptionAt(antennas, x, z, band, power), saturatedAntennas, color);
         colors[v] = color.r;
         colors[v + 1] = color.g;
         colors[v + 2] = color.b;
@@ -97,15 +119,10 @@ export function CoverageScene({ engine, variables }: Props) {
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     geo.setIndex(indices);
     return geo;
-  }, [antennas, band, power]);
+  }, [antennas, band, power, saturatedAntennas]);
 
   // Libera la geometría anterior: se rearma con cada movimiento de un slider.
   useEffect(() => () => heat.dispose(), [heat]);
-
-  const receptions = useMemo(
-    () => POINTS.map((p) => receptionAt(antennas, p.x, p.z, band, power)),
-    [antennas, band, power],
-  );
 
   return (
     <group>
@@ -138,11 +155,13 @@ export function CoverageScene({ engine, variables }: Props) {
         );
       })}
 
-      {/* Puntos de medición: columnas verdes (cubierto), rojas (sin señal) o
-          magenta (interferencia). */}
+      {/* Puntos de medición: columnas verdes (cubierto), naranjas (cubierto
+          pero en una antena saturada), rojas (sin señal) o magenta
+          (interferencia). */}
       {POINTS.map((p, i) => {
         const r = receptions[i];
-        const color = r.covered ? "#34d399" : r.interfered ? "#e879f9" : "#e24b4a";
+        const state = load.saturated[i] ? "sat" : r.covered ? "ok" : r.interfered ? "interf" : "weak";
+        const color = { sat: "#fb923c", ok: "#34d399", interf: "#e879f9", weak: "#e24b4a" }[state];
         return (
           <group key={p.id} position={[p.x, 0, p.z]}>
             <mesh position={[0, 0.7, 0]}>
@@ -150,7 +169,7 @@ export function CoverageScene({ engine, variables }: Props) {
               <meshBasicMaterial color={color} toneMapped={false} />
             </mesh>
             <SceneLabel position={[0, 1.55, 0]} center>
-              <div className={styles.point} data-state={r.covered ? "ok" : r.interfered ? "interf" : "weak"}>
+              <div className={styles.point} data-state={state}>
                 {p.name}
                 <span>
                   {Number.isFinite(r.bestDbm) ? `${Math.round(r.bestDbm)} dBm` : "—"}
@@ -168,6 +187,10 @@ export function CoverageScene({ engine, variables }: Props) {
           .map((a, i) => (a.site.id === s.id ? i : -1))
           .filter((i) => i >= 0);
         const used = indexes.length > 0;
+        // Si dos antenas comparten poste, la barra suma las dos.
+        const mbps = indexes.reduce((sum, i) => sum + load.perAntenna[i], 0);
+        const capacity = band.capacityMbps * indexes.length;
+        const fraction = capacity > 0 ? mbps / capacity : 0;
         return (
           <group key={s.id} position={[s.x, 0, s.z]}>
             <mesh position={[0, used ? 1.1 : 0.35, 0]} castShadow>
@@ -183,11 +206,24 @@ export function CoverageScene({ engine, variables }: Props) {
                     toneMapped={false}
                   />
                 </mesh>
-                <SceneLabel position={[0, 2.65, 0]} center>
-                  <div className={styles.antenna}>
+                {/* Barra de carga: el fondo es la capacidad y el relleno, lo
+                    que se usa. Pasada de su capacidad, se llena en rojo. */}
+                <group position={[0, 2.95, 0]}>
+                  <mesh>
+                    <boxGeometry args={[0.9, 0.12, 0.04]} />
+                    <meshBasicMaterial color="#1e293b" />
+                  </mesh>
+                  <mesh position={[-0.45 + (0.9 * Math.min(1, fraction)) / 2, 0, 0.025]}>
+                    <boxGeometry args={[Math.max(0.001, 0.9 * Math.min(1, fraction)), 0.1, 0.02]} />
+                    <meshBasicMaterial color={loadColor(fraction)} toneMapped={false} />
+                  </mesh>
+                </group>
+                <SceneLabel position={[0, 3.3, 0]} center>
+                  <div className={styles.antenna} data-load={fraction > 1 ? "full" : undefined}>
                     {indexes
                       .map((i) => `Antena ${i + 1} · canal ${antennas[i].channel}`)
                       .join(" / ")}
+                    <span>{`${Math.round(mbps)} de ${capacity} Mbps`}</span>
                   </div>
                 </SceneLabel>
               </>

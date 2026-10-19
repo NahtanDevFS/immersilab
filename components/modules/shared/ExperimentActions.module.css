@@ -74,3 +74,6 @@
 .note[data-legend] [data-interf] {
   color: #e879f9;
 }
+.note[data-legend] [data-sat] {
+  color: #fb923c;
+}
