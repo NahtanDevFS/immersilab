@@ -5,28 +5,33 @@ import type {
   VariablesState,
 } from "@/types/module";
 import {
+  PEAK_HOUR,
   POINTS,
   SITES,
   coverageOf,
   getBand,
+  loadOf,
+  totalDemandMbps,
   type Antenna,
   type Band,
   type CoverageSummary,
+  type LoadSummary,
 } from "./propagation";
 
 /**
  * R3 · Cubre el campus — PLAN_DESARROLLO.md §3.3.
  *
- * Como Riemann o Taylor, no hay simulación en el tiempo: la cobertura es una
- * función pura de las variables. El motor la recalcula solo cuando cambian y
- * lleva la cuenta de los retos. Los retos se eligieron con una búsqueda
- * exhaustiva sobre el modelo (ver `propagation.ts`) para que los tres sean
- * posibles y ninguno trivial.
+ * Como Riemann, no hay simulación en el tiempo: la cobertura y la carga son
+ * una función pura de las variables. El motor las recalcula solo cuando
+ * cambian y lleva la cuenta de los retos. Los retos se eligieron con una
+ * búsqueda exhaustiva sobre el modelo (ver `propagation.ts`) para que todos
+ * sean posibles y ninguno trivial.
  */
 
 /** Canales de Wi-Fi en 2.4 GHz que no se solapan entre sí. */
 export const CHANNELS = ["1", "6", "11"];
 export const MAX_ANTENNAS = 3;
+export const DEFAULT_HOUR = 13;
 
 export function antennasFrom(variables: VariablesState): Antenna[] {
   const antennas: Antenna[] = [];
@@ -45,12 +50,15 @@ export interface ChallengeProgress {
 export interface CoverageRuntime {
   band: Band;
   power: number;
+  hour: number;
   antennas: Antenna[];
   summary: CoverageSummary;
+  load: LoadSummary;
   challenges: {
     campus: ChallengeProgress;
     wifi: ChallengeProgress;
     reutilizar: ChallengeProgress;
+    horaPico: ChallengeProgress;
   };
 }
 
@@ -62,15 +70,19 @@ export function createCoverageEngine(): CoverageEngine {
   let lastVariables: VariablesState = {};
   let lastKey = "";
 
+  const emptySummary = coverageOf([], getBand("2400"), 20);
   const runtime: CoverageRuntime = {
     band: getBand("2400"),
     power: 20,
+    hour: DEFAULT_HOUR,
     antennas: [],
-    summary: coverageOf([], getBand("2400"), 20),
+    summary: emptySummary,
+    load: loadOf([], getBand("2400"), emptySummary.perPoint, DEFAULT_HOUR),
     challenges: {
       campus: { done: false, progress: 0 },
       wifi: { done: false, progress: 0 },
       reutilizar: { done: false, progress: 0 },
+      horaPico: { done: false, progress: 0 },
     },
   };
 
@@ -81,8 +93,10 @@ export function createCoverageEngine(): CoverageEngine {
 
     runtime.band = getBand(variables.banda ?? "2400");
     runtime.power = Number(variables.potencia ?? 20);
+    runtime.hour = Math.round(Number(variables.hora ?? DEFAULT_HOUR));
     runtime.antennas = antennasFrom(variables);
     runtime.summary = coverageOf(runtime.antennas, runtime.band, runtime.power);
+    runtime.load = loadOf(runtime.antennas, runtime.band, runtime.summary.perPoint, runtime.hour);
 
     const fraction = runtime.summary.covered / runtime.summary.total;
     const all = fraction === 1;
@@ -90,7 +104,7 @@ export function createCoverageEngine(): CoverageEngine {
     const channelsUsed = new Set(runtime.antennas.map((a) => a.channel)).size;
     const reuses = runtime.antennas.length === 3 && channelsUsed === 2;
 
-    const { campus, wifi, reutilizar } = runtime.challenges;
+    const { campus, wifi, reutilizar, horaPico } = runtime.challenges;
     // El progreso muestra la mejor fracción lograda en las condiciones de
     // cada reto: así la barra avanza mientras se acomodan las antenas.
     if (!campus.done) {
@@ -104,6 +118,13 @@ export function createCoverageEngine(): CoverageEngine {
     if (!reutilizar.done && isWifi && reuses) {
       reutilizar.progress = Math.max(reutilizar.progress, fraction);
       reutilizar.done = all;
+    }
+    // La hora pico se mide en la hora pico: aguantar a las tres de la mañana
+    // no prueba nada. Cuenta solo lo que está cubierto y sin saturar.
+    if (!horaPico.done && runtime.hour === PEAK_HOUR) {
+      const fine = runtime.summary.perPoint.filter((r, i) => r.covered && !runtime.load.saturated[i]).length;
+      horaPico.progress = Math.max(horaPico.progress, fine / runtime.summary.total);
+      horaPico.done = fine === runtime.summary.total;
     }
   }
 
@@ -132,7 +153,7 @@ export function createCoverageEngine(): CoverageEngine {
     },
 
     getChallenges(): ChallengeStatus[] {
-      const { campus, wifi, reutilizar } = runtime.challenges;
+      const { campus, wifi, reutilizar, horaPico } = runtime.challenges;
       return [
         {
           id: "campus",
@@ -152,6 +173,15 @@ export function createCoverageEngine(): CoverageEngine {
           detail: "Tres antenas en 2.4 GHz con solo dos canales distintos.",
           ...reutilizar,
         },
+        {
+          id: "hora-pico",
+          title: "Aguanta la hora pico",
+          detail:
+            runtime.hour === PEAK_HOUR || horaPico.done
+              ? "En la hora de más demanda: todo con buena señal, sin interferencia y sin antenas saturadas."
+              : "Busca en la curva de consumo la hora de más demanda y pon la hora ahí.",
+          ...horaPico,
+        },
       ];
     },
 
@@ -160,18 +190,15 @@ export function createCoverageEngine(): CoverageEngine {
     },
 
     getSeries() {
-      // Señal en cada punto de medición, para la mini gráfica.
-      return runtime.summary.perPoint.map((r, i) => ({
-        x: i + 1,
-        y: Number.isFinite(r.bestDbm) ? Math.max(-110, r.bestDbm) : -110,
-      }));
+      // La curva de consumo del campus a lo largo del día, para la mini gráfica.
+      return Array.from({ length: 24 }, (_, h) => ({ x: h, y: Math.round(totalDemandMbps(h)) }));
     },
 
     getState(): AIContext {
-      const { summary, antennas, band, power } = runtime;
+      const { summary, antennas, band, power, load, hour } = runtime;
       const names = (filter: (i: number) => boolean) =>
         POINTS.filter((_, i) => filter(i)).map((p) => p.name).join(", ") || "ninguno";
-      const { campus, wifi, reutilizar } = runtime.challenges;
+      const { campus, wifi, reutilizar, horaPico } = runtime.challenges;
       return {
         experimentName: "Cubre el campus",
         disciplineName: "Redes",
@@ -187,9 +214,19 @@ export function createCoverageEngine(): CoverageEngine {
             (i) => !summary.perPoint[i].covered && !summary.perPoint[i].interfered,
           ),
           con_interferencia: names((i) => summary.perPoint[i].interfered),
+          hora: `${hour}:00`,
+          hora_pico: `${PEAK_HOUR}:00`,
+          demanda_total_mbps: Math.round(load.totalMbps),
+          capacidad_por_antena_mbps: band.capacityMbps,
+          carga_por_antena:
+            antennas
+              .map((a, i) => `antena ${i + 1} en ${a.site.name}: ${Math.round(load.perAntenna[i])} de ${band.capacityMbps} Mbps`)
+              .join("; ") || "sin antenas",
+          puntos_saturados: names((i) => load.saturated[i]),
           reto_campus: campus.done ? "logrado" : "pendiente",
           reto_wifi_2_4: wifi.done ? "logrado" : "pendiente",
           reto_reutilizar_canales: reutilizar.done ? "logrado" : "pendiente",
+          reto_hora_pico: horaPico.done ? "logrado" : "pendiente",
         },
         conceptTags: [
           "pérdida de trayecto",
@@ -197,6 +234,7 @@ export function createCoverageEngine(): CoverageEngine {
           "atenuación por obstáculos",
           "interferencia cocanal",
           "reutilización de frecuencias",
+          "capacidad y demanda",
         ],
       };
     },

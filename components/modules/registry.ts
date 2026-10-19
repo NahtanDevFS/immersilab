@@ -2,22 +2,23 @@ import type { ExperimentDefinition, VariablesState } from "@/types/module";
 import { tiroParabolicoExperiment } from "@/components/modules/physics/experiments/tiro-parabolico";
 import { colisiones1DExperiment } from "@/components/modules/physics/experiments/colisiones-1d";
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
-import { ondasExperiment } from "@/components/modules/physics/experiments/ondas";
-import { venturiExperiment } from "@/components/modules/physics/experiments/venturi";
 import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments/suma-riemann";
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
-import { taylorExperiment } from "@/components/modules/calculus/experiments/taylor";
-import { qamExperiment } from "@/components/modules/networks/experiments/qam";
-import { modulacionExperiment } from "@/components/modules/networks/experiments/modulacion";
-import { espectroExperiment } from "@/components/modules/networks/experiments/espectro";
+import { razonesCambioExperiment } from "@/components/modules/calculus/experiments/razones-cambio";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
 import { enrutamientoExperiment } from "@/components/modules/networks/experiments/enrutamiento";
 import { osiExperiment } from "@/components/modules/networks/experiments/osi";
 import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
 import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
+import { campoElectricoExperiment } from "@/components/modules/physics/experiments/campo-electrico";
+import { stpExperiment } from "@/components/modules/networks/experiments/stp";
+import { subredesVlanExperiment } from "@/components/modules/networks/experiments/subredes-vlan";
+import { firewallNatExperiment } from "@/components/modules/networks/experiments/firewall-nat";
+import { contadorExperiment } from "@/components/modules/electronics/experiments/contador";
+import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
 
 /**
  * Todas las definiciones de experimento, por slug. Lo usa la pantalla de
@@ -29,22 +30,23 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     tiroParabolicoExperiment,
     colisiones1DExperiment,
     penduloExperiment,
-    ondasExperiment,
-    venturiExperiment,
     electroimanExperiment,
     sumaRiemannExperiment,
     derivadaPicoExperiment,
     solidosRevolucionExperiment,
-    taylorExperiment,
-    qamExperiment,
-    modulacionExperiment,
-    espectroExperiment,
+    razonesCambioExperiment,
     coberturaExperiment,
     enrutamientoExperiment,
     osiExperiment,
     protoboardExperiment,
     fuentePoderExperiment,
     compuertasExperiment,
+    campoElectricoExperiment,
+    stpExperiment,
+    subredesVlanExperiment,
+    firewallNatExperiment,
+    contadorExperiment,
+    leyesNewtonExperiment,
   ].map((definition) => [definition.slug, definition]),
 );
 

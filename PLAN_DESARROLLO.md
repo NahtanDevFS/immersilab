@@ -25,19 +25,19 @@ Lo que **ya funciona**:
 | Timestep fijo 1/60s | `lib/physics-engine/useFixedTimestep.ts` | Funciona. |
 | Física: tiro parabólico | `.../tiro-parabolico/` | Funciona. |
 | Física: colisiones 1D | `.../colisiones-1d/` | Funciona. |
-| Redes: constelación QAM (R2) | `.../networks/experiments/qam/` | Funciona. |
+| Redes: constelación QAM (R2) | — | Retirado en el catálogo v2 (§3.5). |
 | Redes: enrutamiento (R4) | `.../networks/experiments/enrutamiento/` | Funciona. |
 | Redes: OSI y TCP/IP (R5) | `.../networks/experiments/osi/` | Funciona. |
-| Redes: modulación AM/FM (R1) | `.../networks/experiments/modulacion/` | Funciona (lógica probada con 23 casos; audio sin probar en el celular). |
+| Redes: modulación AM/FM (R1) | — | Retirado en el catálogo v2 (§3.5). |
 | Redes: propagación y cobertura (R3) | `.../networks/experiments/cobertura/` | Funciona (17 casos probados). |
-| Redes: espectro de la voz (R6) | `.../networks/experiments/espectro/` | Funciona (probado con señales sintéticas; falta probar con voz real). |
-| Física: tubo de Venturi (fluidos) | `.../physics/experiments/venturi/` | Funciona, con 3 retos. |
+| Redes: espectro de la voz (R6) | — | Retirado en el catálogo v2 (§3.5). |
+| Física: tubo de Venturi (fluidos) | — | Retirado en el catálogo v2 (§3.5). |
 | Física: péndulo y energía (F3) | `.../physics/experiments/pendulo/` | Funciona (15 casos probados). |
-| Física: ondas y superposición (F4) | `.../physics/experiments/ondas/` | Funciona (15 casos probados). |
+| Física: ondas y superposición (F4) | — | Retirado en el catálogo v2 (§3.5). |
 | Cálculo: suma de Riemann (C2) | `.../calculus/experiments/suma-riemann/` | Funciona. |
 | Cálculo: sólidos de revolución (C3) | `.../calculus/experiments/solidos-revolucion/` | Funciona. |
 | Cálculo: derivada (C1) | `.../calculus/experiments/derivada-pico/` | Funciona. |
-| Cálculo: series de Taylor (C4) | `.../calculus/experiments/taylor/` | Funciona (16 casos probados). |
+| Cálculo: series de Taylor (C4) | — | Retirado en el catálogo v2 (§3.5). |
 | Catálogo de funciones y pistas | `components/modules/calculus/shared/` | Compartido por los experimentos de cálculo. |
 | Texturas PBR con tiling | `useTiledPbrTexture.ts` | Funciona; convención Poly Haven. |
 | Tutor por voz | `app/api/tutor/`, `components/tutor/`, `lib/tutor/` | Implementado (Fase B) con Gemini: push-to-talk R2/botón, streaming, TTS por oración, barge-in, subtítulos, modo sin conexión. Probado con la key real en escritorio; falta el celular. |
@@ -265,6 +265,8 @@ Todos implementan `ExperimentDefinition` — el shell no cambia.
 > longitud en vuelo inventaba energía); cambiar la masa no, porque el reto 2
 > es justamente ese. Energía conservada con deriva < 10⁻⁶ sin rozamiento.
 
+> **Retirado en el catálogo v2 (2026-10-18).** Ya no está en la app ni en el lobby; las filas de la base se conservan para no perder el historial de los estudiantes. Ver `PLAN_NUEVOS_EXPERIMENTOS.md` §3.
+
 **F4 · Ondas y superposición → "El sintonizador"** *(puente hacia Redes)*
 - **Concepto**: superposición, interferencia constructiva/destructiva, batido, y
   —clave— que **una señal compleja es una suma de senoidales**. Es el
@@ -320,6 +322,8 @@ espacio de la función**.
 - **Variables**: 4–5 puntos de control del perfil, `metodo` (discos/capas), `eje`.
 - **Assets**: ninguno (`LatheGeometry` procedural) + ambiente de taller.
 
+> **Retirado en el catálogo v2 (2026-10-18).** Ya no está en la app ni en el lobby; las filas de la base se conservan para no perder el historial de los estudiantes. Ver `PLAN_NUEVOS_EXPERIMENTOS.md` §3.
+
 **C4 · Series de Taylor → "¿Cuántos términos?"**
 - **Concepto**: aproximación polinómica local, radio de convergencia.
 - **Mecánica**: la curva real y la aproximación se dibujan juntas; cada término
@@ -346,6 +350,8 @@ espacio de la función**.
 Es tu carrera — este módulo debería ser el más fuerte y el que se muestre primero
 en la defensa.
 
+> **Retirado en el catálogo v2 (2026-10-18).** Ya no está en la app ni en el lobby; las filas de la base se conservan para no perder el historial de los estudiantes. Ver `PLAN_NUEVOS_EXPERIMENTOS.md` §3.
+
 **R1 · Modulación AM/FM → "Sintoniza la emisora"**
 - **Concepto**: portadora, moduladora, índice de modulación, ancho de banda.
 - **Mecánica**: tres ondas en 3D apiladas (moduladora, portadora, modulada). El
@@ -366,6 +372,8 @@ en la defensa.
 > propio con Bessel y regla de Carson), y el dial con el filtro del receptor.
 > Retos: sintonizar Radio UMG (AM, 1040 kHz), modular entre 0.9 y 1 sin
 > sobremodular, sintonizar UMG FM (95.3 MHz).
+
+> **Retirado en el catálogo v2 (2026-10-18).** Ya no está en la app ni en el lobby; las filas de la base se conservan para no perder el historial de los estudiantes. Ver `PLAN_NUEVOS_EXPERIMENTOS.md` §3.
 
 **R2 · Constelación QAM → "Recupera el mensaje"**
 - **Concepto**: I/Q, modulación digital (BPSK/QPSK/16-QAM/64-QAM), SNR, BER, y el
@@ -423,6 +431,8 @@ en la defensa.
   contrarreloj. Se ven los bytes reales de cada cabecera.
 - **Variables**: `protocolo` (TCP/UDP), `mtu`, `tamano_payload`.
 - **Assets**: ninguno (cajas + texto) — sonido de "encaje" al acertar.
+
+> **Retirado en el catálogo v2 (2026-10-18).** Ya no está en la app ni en el lobby; las filas de la base se conservan para no perder el historial de los estudiantes. Ver `PLAN_NUEVOS_EXPERIMENTOS.md` §3.
 
 **R6 · Espectro en vivo (FFT del micrófono) → "Tu voz en el dominio de la frecuencia"** *(bonus de alto impacto)*
 - **Concepto**: dominio del tiempo vs. dominio de la frecuencia, Fourier, el ancho
@@ -509,6 +519,115 @@ y `electronica-digital`, experimentos `protoboard`, `fuente-poder` y
   de verdad. Se elige la compuerta de cada zócalo y se prueba la tabla
   completa. Niveles: la alarma (A·B), el portón ((A+B)·C̄), los tres jueces
   (AB+AC+BC). Reto extra: el nivel 3 sin un intento fallido.
+
+### 3.5 Catálogo v2 (2026-10-18) ✅
+
+El laboratorio pasa de 19 a 20 experimentos para seguir los temarios de los
+cursos (`PLAN_NUEVOS_EXPERIMENTOS.md`). Salen Taylor, Venturi, El
+sintonizador, Sintoniza la emisora, Recupera el mensaje y Tu voz en el
+espectro; entran siete y Cubre el campus suma la demanda. Las filas de los
+retirados se quedan en la base (`challenge_completions` borra en cascada).
+
+Cada motor nuevo se probó en Node con búsquedas exhaustivas o casos
+dirigidos; los números de abajo salen de esas pruebas. Las acciones de cada
+experimento salen de una sola función que alimenta el panel HTML
+(`components/modules/shared/ActionList.tsx`) y los botones del visor.
+
+**Cambio en el contrato:** `SceneComponent` recibe un `setVariable` opcional
+(lo pasa el shell, igual que el panel). Lo usan las escenas donde se tocan
+objetos que viven en variables: las PC de Divide la red, las tarjetas de
+Defiende el borde y la predicción de enlaces de Rompe el bucle. Es genérico:
+ningún experimento viejo cambia.
+
+**Llena el tanque** (`calculus/experiments/razones-cambio/`, Cálculo · Núcleo A)
+- Razones de cambio relacionadas en un cono invertido (2 m de alto, 1 m de
+  radio arriba: V = πh³/12, dh/dt = 4Q/(πh²)), un cilindro de 0.5 m de radio
+  (dh/dt = Q/(πr²)) y una escalera de 5 m (dy/dt = −(x/y)·dx/dt).
+- Se integra lo que cambia de verdad (el volumen, la base) y se despeja lo
+  otro; al cruzar la meta el modelo se fija en el valor exacto. El reloj se
+  acelera para que cada intento dure unos 6 s, con cámara lenta opcional en
+  la última décima.
+- Comprobación: cono, 10 L/s, 1 m → 1.273 cm/s (26 s); escalera 0.5 m/s,
+  x = 3 m → −37.5 cm/s. En las 642 combinaciones de variables existe una
+  predicción con paso 0.01 que acierta.
+- **Distinto al plan:** la predicción va de −250 a 250 cm/s (no ±100): con la
+  base a 4.5 m y 1 m/s la punta baja a 206 cm/s.
+
+**Leyes de Newton** (`physics/experiments/leyes-newton/`, Física · Núcleo A)
+- Plano inclinado y polea con el diagrama de cuerpo libre como flechas
+  (1 m cada 50 N) y componentes del peso a pedido. La fricción estática vale
+  lo que haga falta hasta μs·N; al superarla pasa a μk·N.
+- Comprobación: madera, 30°, 10 kg → 49.05 N contra 42.48 N, a = 2.36 m/s².
+  Ángulos críticos: madera 26.57°, acero 36.50°, caucho 45.00°, hielo 5.71°.
+  Polea 5 kg / 3 kg en madera → 1.84 m/s², T = 23.91 N.
+- Retos calibrados: los cinco se logran con casos dirigidos y ninguno con
+  los valores por defecto (20°, predicción "no").
+
+**Guía la carga** (`physics/experiments/campo-electrico/`, Física · Electromagnetismo)
+- Cámara de vacío en unidades reales (k = 9×10⁹, partícula de 1 g y
+  ±1 µC). El tiro se integra completo con RK4 a 600 Hz al lanzar y la escena
+  lo reproduce; las líneas de campo (14 por carga, 200 pasos) se calculan
+  solo cuando cambian las cargas.
+- Calibración: nivel 1, 334 combinaciones enteras pasan el aro (también con
+  una sola carga, q2 = −1 µC a 4 m/s); nivel 2 con placas de 2 m separadas
+  1 m, a 3 m/s pasa con 800–1750 V; nivel 3, 152 soluciones con dos cargas o
+  más y solo 6 con una; nivel 4, campo nulo a 2 m de la carga de 4 µC.
+- **Distinto al plan:** el voltaje va de −3000 a 3000 V para la variante con
+  la partícula negativa (el reto pide pasar con los dos signos); el ángulo
+  solo se usa en el nivel 3 (en el 1 se podía apuntar directo al aro); el
+  reto del nivel 3 exige dos cargas o más.
+
+**Divide la red** (`networks/experiments/subredes-vlan/`, Redes · Segmentación y redundancia)
+- VLSM sobre 192.168.10.0/24 (de la subred más grande a la más chica,
+  alineadas), con la tabla en un pizarrón de la escena; edificio de dos pisos
+  con acceso, distribución y núcleo; cada PC se toca para cambiar de VLAN.
+- Pings fijos que cubren los cuatro casos de la tabla del plan. Ronda 1
+  justa: /26, /27, /28, /29 (120 de 256). Ronda 2: /25, /26, /27, /28, /30
+  (244 de 256).
+- Las opciones de máscara muestran solo el prefijo, sin los hosts.
+
+**Rompe el bucle** (`networks/experiments/stp/`, Redes · Segmentación y redundancia)
+- STP como lo hacen los switches (raíz por ID, costo por Bellman-Ford,
+  puerto raíz con desempates por vecino y puerto, designado por costo e ID).
+  Con prioridades por defecto la raíz es Acceso 1; con el Núcleo en 4096 se
+  bloquean el enlace 2 y el lado de Distribución en los enlaces 5 y 6; con
+  EtherChannel (costo 3) solo 5 y 6.
+- **Distinto al plan:** STP activo y los enlaces caídos viven en el motor
+  (botones "Activar STP", "Restaurar los enlaces" y tocar un enlace), no en
+  las variables `stp` y `enlace_caido`: los botones de `vrActions` no pueden
+  cambiar variables, y así funcionan igual en el visor. El tutor los ve en
+  `result`.
+
+**Defiende el borde** (`networks/experiments/firewall-nat/`, Redes · Seguridad)
+- Rack de seis ranuras armado con tarjetas (variables `regla1` a `regla6`);
+  gana la primera regla que coincide y al final está el bloqueo implícito.
+  Ronda 3 con PAT (tabla de traducción) y reenvío de puertos; en esa ronda
+  el rack no se usa.
+- Búsqueda exhaustiva de racks de hasta tres tarjetas: la ronda 1 tiene 39
+  soluciones y la ronda 2 solo 6 (las permutaciones de `ssh-admin`, `web` y
+  `respuestas`). Con el rack vacío no pasa nada legítimo.
+
+**El contador** (`electronics/experiments/contador/`, Electrónica · Electrónica digital)
+- Cuatro flip-flops T en el flanco de bajada con rizado en cadena, reloj de
+  cada etapa desde Q o Q̄, NAND de reinicio con valor de carga y destello
+  del estado transitorio. El diagrama de tiempos se dibuja en un canvas
+  (líneas de 7 px) para que se lea en el visor.
+- Comprobado: ascendente, descendente, década (Q3·Q1), módulo 6 (Q2·Q1), de
+  9 a 0 (las cuatro salidas, carga 9) y Q3 a 0.5 Hz con reloj de 8 Hz.
+- **Distinto al plan:** la predicción de Q3 va de 0 a 1 Hz con paso 0.005
+  (no 0 a 8 con paso 0.125): Q3 va entre 0.03 y 0.8 Hz y con ese paso solo
+  cuatro relojes tenían respuesta.
+
+**Cubre el campus con demanda** (`networks/experiments/cobertura/`)
+- Usuarios y perfil horario por punto, 0.45 Mbps por usuario (0.5 del plan
+  daba una sola solución en el borde), capacidad por antena de 50, 150 y
+  600 Mbps según la banda, compartida entre los puntos que la oyen mejor.
+  Variable `hora` (por defecto 13), curva de consumo en la mini gráfica,
+  barra de carga sobre cada antena y naranja para lo saturado.
+- Calibración exhaustiva: hora pico a las 12 con 320 Mbps; 900 MHz nunca
+  aguanta (150 Mbps con tres antenas); 2.4 GHz con dos tampoco (300); con
+  tres repartidas hay 108 combinaciones que sí, por ejemplo postes 1, 2 y 3
+  a 27 dBm. Los retos viejos no cambian.
 
 ### 3.4 Capa de juego compartida (transversal)
 

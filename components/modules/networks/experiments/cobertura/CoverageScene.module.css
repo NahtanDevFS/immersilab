@@ -43,6 +43,9 @@
 .point[data-state="interf"] {
   color: #e879f9;
 }
+.point[data-state="sat"] {
+  color: #fb923c;
+}
 
 .site {
   color: var(--lab-text-muted);
@@ -56,4 +59,16 @@
   border: 0.5px solid var(--lab-accent-warm);
   color: var(--lab-accent-warm);
   font-size: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.antenna span {
+  color: var(--lab-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.antenna[data-load="full"] span {
+  color: #f87171;
 }

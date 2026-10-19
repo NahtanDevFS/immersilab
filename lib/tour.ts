@@ -2,10 +2,13 @@ import type { VariablesState } from "@/types/module";
 
 /**
  * Recorrido guiado: una demo del laboratorio, pensada para mostrarlo en
- * clase (PLAN_DESARROLLO.md, Fase F.4). Pasa por un experimento de cada
- * MÓDULO (nueve), en el orden del catálogo, y termina en la pantalla de
- * progreso para mostrar que lo logrado queda guardado. Recorrer los quince
- * experimentos tomaría más de media hora y dejaría de ser una demo.
+ * clase (PLAN_DESARROLLO.md, Fase F.4). Son nueve paradas repartidas entre
+ * las cuatro áreas, siguiendo el temario: dos de mecánica (tiro parabólico
+ * y leyes de Newton), una de electromagnetismo, una de cálculo, tres de
+ * redes (segmentación, enrutamiento y arquitectura) y dos de electrónica.
+ * Termina en la pantalla de progreso para mostrar que lo logrado queda
+ * guardado. Recorrer los veinte experimentos tomaría más de una hora y
+ * dejaría de ser una demo.
  *
  * El estado vive en la URL (`?recorrido=2`): así se puede abrir directo una
  * parada, recargar sin perderse, y no hace falta estado global. Fuera del
@@ -36,12 +39,12 @@ export const TOUR: TourStop[] = [
     preset: { modo: "blancos" },
   },
   {
-    slug: "venturi",
-    href: "/lab/physics/venturi",
-    name: "Tubo de Venturi",
+    slug: "leyes-newton",
+    href: "/lab/physics/leyes-newton",
+    name: "Leyes de Newton",
     say:
-      "Seguimos en Física, ahora con fluidos. Por este tubo pasa siempre el mismo caudal, así que donde se angosta el fluido tiene que ir más rápido, y por Bernoulli la presión baja justo ahí. " +
-      "Angosta el cuello y mira las dos columnas: la de la derecha baja. Si te pasas con el agua, aparece la cavitación.",
+      "Seguimos con las leyes de Newton. Sobre la caja ves sus fuerzas como flechas: el peso, la normal y la fricción. " +
+      "Antes de soltarla, di si crees que se va a mover. La fricción estática aguanta hasta un tope: sube el ángulo de la rampa y busca el punto donde ya no alcanza.",
   },
   {
     slug: "electroiman",
@@ -60,12 +63,12 @@ export const TOUR: TourStop[] = [
       "Los deslizadores son el radio de la pieza a distintas alturas. El reto es igualar la pieza traslúcida, en forma y en volumen.",
   },
   {
-    slug: "espectro",
-    href: "/lab/networks/espectro",
-    name: "Tu voz en el espectro",
+    slug: "subredes-vlan",
+    href: "/lab/networks/subredes-vlan",
+    name: "Divide la red",
     say:
-      "Pasamos a Redes y Telecomunicaciones. Aquí la transformada de Fourier descompone tu voz en frecuencias, en tiempo real. " +
-      "Enciende el micrófono y silba, y después habla: vas a ver cuánto de tu voz cabe en la banda telefónica.",
+      "Pasamos a Redes y Telecomunicaciones. Este edificio comparte un solo bloque de direcciones: elige la máscara de cada departamento para que a todos les alcance sin desperdiciar. " +
+      "Después toca cada computadora para ponerla en la VLAN de su departamento, y prueba con ping quién se puede hablar con quién.",
   },
   {
     slug: "enrutamiento",

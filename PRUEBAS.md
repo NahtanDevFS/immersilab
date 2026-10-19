@@ -32,7 +32,7 @@ limpio, en la consola del navegador: `localStorage.clear()`.
       experimento.
 - [ ] No se atraviesan las paredes.
 
-## 2. En cada experimento (los 19)
+## 2. En cada experimento (los 20)
 
 Para cada uno:
 
@@ -46,33 +46,56 @@ Para cada uno:
       experimento.
 - [ ] "← Lobby" vuelve al pasillo.
 
-Retos para probar (60 en total):
+Retos para probar (72 en total):
 
 | Experimento | Retos |
 |---|---|
 | Tiro parabólico | Primer impacto · Ronda de artillero · Contra el viento |
+| Leyes de Newton | ¿Se mueve o no? · Predice la aceleración · El ángulo crítico · Súbela con lo justo · La pesa que tira |
 | Colisiones 1D | Predice un choque elástico · Predice un choque plástico · Masas distintas, choque a medias |
 | Péndulo | Sincroniza los relojes · ¿Y la masa? · El doble de lento |
-| Ondas | Una sola onda · Batido · Onda cuadrada · Onda de sierra |
-| Tubo de Venturi | Nueve veces más rápido · Al borde de la cavitación · Flujo laminar |
+| Guía la carga | Primer desvío · Entre placas · Rodea el muro · Donde el campo se anula |
 | La grúa electromagnética | Levanta la lata · Separa la chatarra · Levanta el carro sin recalentar |
-| Suma de Riemann | Menos de 1 % de error · Con 6 bloques o menos · En las cuatro funciones |
 | Derivada | Frena en un pico o un valle · Frenado perfecto · En las tres pistas |
+| Llena el tanque | El cono que se llena · ¿Y si es un cilindro? · La escalera que resbala · El doble de alto |
+| Suma de Riemann | Menos de 1 % de error · Con 6 bloques o menos · En las cuatro funciones |
 | Sólidos de revolución | Copa · Pesa de gimnasio · Trompo · Jarrón |
-| Taylor | sen(x) · eˣ · ln(1 + x) · 1 / (1 − x) |
-| QAM | Mensaje intacto · Intacto en 16-QAM · Intacto en 64-QAM |
-| Modulación | Sintoniza Radio UMG (AM) · Modula al 100 % sin pasarte · Sintoniza UMG FM |
-| Espectro | Silba · De «u» a «i» · Habla 3 segundos |
-| Cobertura | Cubre el campus · Wi-Fi en 2.4 GHz · Reutiliza canales |
-| Enrutamiento | Gánale a Dijkstra · Con las tres métricas · Re-enruta |
 | OSI | Sin errores en OSI · Sin errores en TCP/IP |
+| Divide la red | Sin desperdiciar · Que todo quepa · Cada quien en su VLAN · Que se hablen |
+| Rompe el bucle | Provoca una tormenta · Elige bien la raíz · Piensa como STP · La red se recupera · Todo el ancho de banda |
+| Enrutamiento | Gánale a Dijkstra · Con las tres métricas · Re-enruta |
+| Cobertura | Cubre el campus · Wi-Fi en 2.4 GHz · Reutiliza canales · Aguanta la hora pico |
+| Defiende el borde | Protege la base de datos · El orden importa · Con lo justo · Abre solo lo necesario |
 | Arma el circuito | Enciende el LED sin quemarlo · Saca 3.3 V de 9 V · Comprueba Kirchhoff |
 | La fuente de poder | Carga el celular · Rizado menor al 5 % con media onda · Lo mismo con la mitad de capacitor |
 | Arma la lógica | La alarma · El portón · Los tres jueces · Sin probar a ciegas |
+| El contador | Divide la frecuencia · Cuenta hacia atrás · Solo hasta 9 · El temporizador · Las decenas del reloj |
 
-Pistas de lo nuevo en Venturi: 9× sale con el cuello de 2 cm; al borde, por
-ejemplo agua a 12 L/s con cuello de 1.25 cm; laminar con agua es imposible,
-con aceite sí.
+Pistas del catálogo v2 (comprobadas en Node con el motor de cada uno):
+- **Llena el tanque:** cono con 10 L/s y meta 1 m → 1.27 cm/s; cilindro con
+  10 L/s → 1.27 cm/s a cualquier altura; escalera a 0.5 m/s con la base en
+  3 m → −37.5 cm/s. El doble de alto: por ejemplo 0.6 m (3.54 cm/s) y 1.2 m
+  (0.88 cm/s) con 10 L/s.
+- **Leyes de Newton:** madera, 30°, 10 kg → se mueve con 2.36 m/s²; ángulo
+  crítico de la madera 26.57° (quieta a 26°, resbala a 27°); fuerza mínima a
+  30° con 10 kg: 92 N; polea 5 kg y 3 kg en madera → 1.84 m/s².
+- **Guía la carga:** nivel 1 con q2 = −1 µC a 4 m/s; nivel 2 con partícula
+  positiva a 3 m/s entre 800 y 1750 V (negativa: −800 a −1750 V); nivel 3,
+  por ejemplo q = −5, −5, −3, +3 µC a 4 m/s y 0°; nivel 4, sensor en
+  x = 0.5 m.
+- **Divide la red:** ronda 1 /26, /27, /28, /29 (120 de 256); ronda 2 /25,
+  /26, /27, /28, /30 (244 de 256); VLAN: PC2 y PC6 en 20, PC3 y PC8 en 30,
+  PC5 en 40; probar sin subinterfaces y después con troncal y subinterfaces.
+- **Rompe el bucle:** prioridad del Núcleo en 4096; con esa raíz se
+  bloquean los enlaces 2, 5 y 6; con EtherChannel solo 5 y 6.
+- **Cobertura, hora pico:** a las 12 (320 Mbps), 2.4 GHz con antenas en los
+  postes 1, 2 y 3 a 27 dBm y canales 1, 6 y 11.
+- **Defiende el borde:** ronda 1 web y respuestas; ronda 2 ssh-admin, web y
+  respuestas (en cualquier orden, pero nunca bloquear SSH arriba del
+  administrador); ronda 3 reenviar 443 al servidor web.
+- **El contador:** década con NAND en Q3 y Q1 y carga 0; módulo 6 con Q2 y
+  Q1; de 9 a 0 descendente con las cuatro salidas y carga 9; con reloj de
+  8 Hz, Q3 va a 0.5 Hz.
 
 Pistas de los experimentos nuevos:
 - **Grúa:** la lata con separación de 1 cm; el carro con hierro dulce, 1000
@@ -114,8 +137,8 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
 - [ ] No aparece la explicación larga; "Explicación completa" la abre.
 - [ ] "Ver el experimento" pliega la tarjeta a una pastilla arriba al centro;
       "1/9 · Ver texto" la vuelve a abrir.
-- [ ] "Siguiente" recorre un experimento por módulo: Tubo de Venturi →
-      La grúa electromagnética → Tornea la pieza → Tu voz en el espectro →
+- [ ] "Siguiente" recorre las paradas: Leyes de Newton →
+      La grúa electromagnética → Tornea la pieza → Divide la red →
       Encuentra el camino → Arma el paquete → Arma el circuito →
       Arma la lógica → `/progreso`.
 - [ ] "Salir del recorrido" deja el experimento normal, con el "?" de la

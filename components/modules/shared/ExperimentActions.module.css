@@ -1,5 +1,5 @@
-/* Acciones de los experimentos (espectro, modulación, ondas, péndulo,
-   cobertura): botón principal y notas, abajo a la derecha. Los retos ya no
+/* Acciones de los experimentos (péndulo, cobertura, compuertas, los de
+   redes): botón principal y notas, abajo a la derecha. Los retos ya no
    van aquí: los dibuja el HUD de retos del shell (ChallengeHUD). */
 .actions {
   position: absolute;
@@ -39,6 +39,31 @@
   cursor: not-allowed;
 }
 
+/* Acciones que no son la principal (Reiniciar, Vaciar): sin relleno. */
+.secondaryButton {
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Con tres o más botones (ActionList) la fila se parte en dos renglones. */
+.buttons[data-wrap] {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .note {
   margin: 0;
   padding: 0.5rem 0.75rem;
@@ -73,4 +98,7 @@
 }
 .note[data-legend] [data-interf] {
   color: #e879f9;
+}
+.note[data-legend] [data-sat] {
+  color: #fb923c;
 }

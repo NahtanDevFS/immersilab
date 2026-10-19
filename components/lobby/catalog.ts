@@ -2,21 +2,22 @@ import { tiroParabolicoExperiment } from "@/components/modules/physics/experimen
 import { colisiones1DExperiment } from "@/components/modules/physics/experiments/colisiones-1d";
 import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments/suma-riemann";
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
-import { venturiExperiment } from "@/components/modules/physics/experiments/venturi";
-import { ondasExperiment } from "@/components/modules/physics/experiments/ondas";
 import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
-import { taylorExperiment } from "@/components/modules/calculus/experiments/taylor";
-import { qamExperiment } from "@/components/modules/networks/experiments/qam";
+import { razonesCambioExperiment } from "@/components/modules/calculus/experiments/razones-cambio";
 import { enrutamientoExperiment } from "@/components/modules/networks/experiments/enrutamiento";
 import { osiExperiment } from "@/components/modules/networks/experiments/osi";
-import { espectroExperiment } from "@/components/modules/networks/experiments/espectro";
-import { modulacionExperiment } from "@/components/modules/networks/experiments/modulacion";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
 import { protoboardExperiment } from "@/components/modules/electronics/experiments/protoboard";
 import { fuentePoderExperiment } from "@/components/modules/electronics/experiments/fuente-poder";
 import { compuertasExperiment } from "@/components/modules/electronics/experiments/compuertas";
+import { leyesNewtonExperiment } from "@/components/modules/physics/experiments/leyes-newton";
+import { contadorExperiment } from "@/components/modules/electronics/experiments/contador";
+import { firewallNatExperiment } from "@/components/modules/networks/experiments/firewall-nat";
+import { subredesVlanExperiment } from "@/components/modules/networks/experiments/subredes-vlan";
+import { stpExperiment } from "@/components/modules/networks/experiments/stp";
+import { campoElectricoExperiment } from "@/components/modules/physics/experiments/campo-electrico";
 import { doorPlacement } from "./corridor";
 import { DISCIPLINES } from "@/lib/catalog";
 
@@ -43,28 +44,33 @@ export interface LobbyDoor {
  * coordenadas ni revisar que no se pise con otra puerta.
  */
 const registry = [
+  // Física
   { href: "/lab/physics/tiro-parabolico", name: tiroParabolicoExperiment.name },
+  { href: "/lab/physics/leyes-newton", name: leyesNewtonExperiment.name },
   { href: "/lab/physics/colisiones-1d", name: colisiones1DExperiment.name },
   { href: "/lab/physics/pendulo", name: penduloExperiment.name },
-  { href: "/lab/calculus/suma-riemann", name: sumaRiemannExperiment.name },
+  { href: "/lab/physics/campo-electrico", name: campoElectricoExperiment.name },
+  { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
+  // Cálculo
   { href: "/lab/calculus/derivada-pico", name: derivadaPicoExperiment.name },
+  { href: "/lab/calculus/razones-cambio", name: razonesCambioExperiment.name },
+  { href: "/lab/calculus/suma-riemann", name: sumaRiemannExperiment.name },
   {
     href: "/lab/calculus/solidos-revolucion",
     name: solidosRevolucionExperiment.name,
   },
-  { href: "/lab/calculus/taylor", name: taylorExperiment.name },
-  { href: "/lab/physics/venturi", name: venturiExperiment.name },
-  { href: "/lab/physics/ondas", name: ondasExperiment.name },
-  { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
-  { href: "/lab/networks/qam", name: qamExperiment.name },
-  { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
+  // Redes, en el orden del temario
   { href: "/lab/networks/osi", name: osiExperiment.name },
-  { href: "/lab/networks/espectro", name: espectroExperiment.name },
-  { href: "/lab/networks/modulacion", name: modulacionExperiment.name },
+  { href: "/lab/networks/subredes-vlan", name: subredesVlanExperiment.name },
+  { href: "/lab/networks/stp", name: stpExperiment.name },
+  { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
+  { href: "/lab/networks/firewall-nat", name: firewallNatExperiment.name },
+  // Electrónica
   { href: "/lab/electronics/protoboard", name: protoboardExperiment.name },
   { href: "/lab/electronics/fuente-poder", name: fuentePoderExperiment.name },
   { href: "/lab/electronics/compuertas", name: compuertasExperiment.name },
+  { href: "/lab/electronics/contador", name: contadorExperiment.name },
 ];
 
 export const lobbyDoors: LobbyDoor[] = registry.map((entry, index) => {
