@@ -5,6 +5,7 @@ import { derivadaPicoExperiment } from "@/components/modules/calculus/experiment
 import { electroimanExperiment } from "@/components/modules/physics/experiments/electroiman";
 import { penduloExperiment } from "@/components/modules/physics/experiments/pendulo";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
+import { razonesCambioExperiment } from "@/components/modules/calculus/experiments/razones-cambio";
 import { enrutamientoExperiment } from "@/components/modules/networks/experiments/enrutamiento";
 import { osiExperiment } from "@/components/modules/networks/experiments/osi";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
@@ -37,19 +38,24 @@ export interface LobbyDoor {
  * coordenadas ni revisar que no se pise con otra puerta.
  */
 const registry = [
+  // Física
   { href: "/lab/physics/tiro-parabolico", name: tiroParabolicoExperiment.name },
   { href: "/lab/physics/colisiones-1d", name: colisiones1DExperiment.name },
   { href: "/lab/physics/pendulo", name: penduloExperiment.name },
-  { href: "/lab/calculus/suma-riemann", name: sumaRiemannExperiment.name },
+  { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
+  // Cálculo
   { href: "/lab/calculus/derivada-pico", name: derivadaPicoExperiment.name },
+  { href: "/lab/calculus/razones-cambio", name: razonesCambioExperiment.name },
+  { href: "/lab/calculus/suma-riemann", name: sumaRiemannExperiment.name },
   {
     href: "/lab/calculus/solidos-revolucion",
     name: solidosRevolucionExperiment.name,
   },
-  { href: "/lab/physics/electroiman", name: electroimanExperiment.name },
-  { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
+  // Redes, en el orden del temario
   { href: "/lab/networks/osi", name: osiExperiment.name },
+  { href: "/lab/networks/enrutamiento", name: enrutamientoExperiment.name },
   { href: "/lab/networks/cobertura", name: coberturaExperiment.name },
+  // Electrónica
   { href: "/lab/electronics/protoboard", name: protoboardExperiment.name },
   { href: "/lab/electronics/fuente-poder", name: fuentePoderExperiment.name },
   { href: "/lab/electronics/compuertas", name: compuertasExperiment.name },

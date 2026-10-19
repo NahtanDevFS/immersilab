@@ -6,6 +6,7 @@ import { electroimanExperiment } from "@/components/modules/physics/experiments/
 import { sumaRiemannExperiment } from "@/components/modules/calculus/experiments/suma-riemann";
 import { derivadaPicoExperiment } from "@/components/modules/calculus/experiments/derivada-pico";
 import { solidosRevolucionExperiment } from "@/components/modules/calculus/experiments/solidos-revolucion";
+import { razonesCambioExperiment } from "@/components/modules/calculus/experiments/razones-cambio";
 import { coberturaExperiment } from "@/components/modules/networks/experiments/cobertura";
 import { enrutamientoExperiment } from "@/components/modules/networks/experiments/enrutamiento";
 import { osiExperiment } from "@/components/modules/networks/experiments/osi";
@@ -27,6 +28,7 @@ export const EXPERIMENT_DEFINITIONS: Record<string, ExperimentDefinition> = Obje
     sumaRiemannExperiment,
     derivadaPicoExperiment,
     solidosRevolucionExperiment,
+    razonesCambioExperiment,
     coberturaExperiment,
     enrutamientoExperiment,
     osiExperiment,

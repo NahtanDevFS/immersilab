@@ -39,6 +39,31 @@
   cursor: not-allowed;
 }
 
+/* Acciones que no son la principal (Reiniciar, Vaciar): sin relleno. */
+.secondaryButton {
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 0.5px solid var(--lab-panel-border);
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Con tres o más botones (ActionList) la fila se parte en dos renglones. */
+.buttons[data-wrap] {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .note {
   margin: 0;
   padding: 0.5rem 0.75rem;
