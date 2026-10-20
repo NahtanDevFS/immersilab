@@ -235,6 +235,11 @@ export interface StpRuntime {
   lastBroadcast: { reached: number; total: number; storm: boolean } | null;
   /** Predicción comparada al activar STP. */
   lastPrediction: { predicted: number[]; actual: number[]; ok: boolean } | null;
+  /**
+   * Ya se usó el primer intento de predicción con la raíz actual y no se
+   * acertó: compararla otra vez no cuenta para el reto.
+   */
+  predictionSpent: boolean;
 }
 
 export interface StpEngine extends ExperimentEngine {
@@ -243,6 +248,8 @@ export interface StpEngine extends ExperimentEngine {
   powerCycle: () => void;
   toggleLink: (n: number) => void;
   restoreLinks: () => void;
+  /** Como recién entrar: STP apagado, enlaces conectados y otro primer intento de predicción. */
+  restart: () => void;
   getRuntime: () => StpRuntime;
 }
 
@@ -280,6 +287,7 @@ export function createStpEngine(): StpEngine {
     forwarding: LINKS,
     lastBroadcast: null,
     lastPrediction: null,
+    predictionSpent: false,
   };
 
   /** Raíz y bloqueados con los que STP convergió por última vez ("" con STP apagado). */
@@ -321,6 +329,7 @@ export function createStpEngine(): StpEngine {
     if (!runtime.stpOn) {
       convergedRoot = null;
       convergedBlocked = "";
+      runtime.predictionSpent = false;
       return;
     }
     // Cualquier cambio del árbol (activar STP, otra prioridad, EtherChannel,
@@ -341,6 +350,8 @@ export function createStpEngine(): StpEngine {
       // Marcar o desmarcar la predicción con STP activo se refleja enseguida.
       checkPrediction(false);
     }
+    runtime.predictionSpent =
+      !done.prediccion && triedRoots.has(runtime.stp.root);
     if (runtime.stp.root === "nucleo") done.raiz = true;
     if (
       runtime.etherchannel &&
@@ -456,6 +467,19 @@ export function createStpEngine(): StpEngine {
       triedRoots.clear();
     },
 
+    restart() {
+      runtime.stpOn = false;
+      runtime.down.clear();
+      runtime.phase = "idle";
+      runtime.t = 0;
+      runtime.frames = 0;
+      runtime.lastBroadcast = null;
+      runtime.lastPrediction = null;
+      // Los retos ya cumplidos se quedan; solo se devuelven los intentos.
+      triedRoots.clear();
+      recompute();
+    },
+
     getRuntime() {
       return runtime;
     },
@@ -495,7 +519,7 @@ export function createStpEngine(): StpEngine {
         c(
           "prediccion",
           "Piensa como STP",
-          "Marca qué enlaces se bloquean y acierta al activar STP, en el primer intento con esa raíz.",
+          "Marca qué enlaces se bloquean antes de activar STP y acierta. Solo cuenta el primer intento con cada raíz; «Empezar de nuevo» te da otro.",
         ),
         c(
           "se-recupera",

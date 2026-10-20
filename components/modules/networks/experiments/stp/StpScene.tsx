@@ -48,19 +48,25 @@ const ENDS: Record<number, [THREE.Vector3, THREE.Vector3]> = Object.fromEntries(
 /**
  * Dónde va la etiqueta de cada enlace: a qué fracción del cable (desde el
  * extremo `a`) y cuánto más arriba. Los enlaces 4 y 5 se cruzan justo en el
- * medio, así que sus etiquetas van cerca de los switches de acceso; las de
- * los dos paralelos N–D, una arriba y otra abajo.
+ * medio, así que sus etiquetas van escalonadas, una más alta que la otra; las
+ * de los dos paralelos N–D, una arriba y otra abajo. Probado en el visor,
+ * donde el texto ocupa más.
  */
 const LABEL_AT: Record<number, { t: number; dy: number }> = {
   1: { t: 0.5, dy: 0.2 },
   2: { t: 0.5, dy: -0.2 },
   3: { t: 0.4, dy: 0.15 },
-  4: { t: 0.75, dy: 0.15 },
-  5: { t: 0.75, dy: 0.15 },
-  6: { t: 0.4, dy: 0.15 },
+  4: { t: 0.7, dy: 0.15 },
+  5: { t: 0.73, dy: 0.15 },
+  6: { t: 0.55, dy: 0.15 },
 };
-/** En el visor, las etiquetas de los enlaces más chicas que las de otras escenas: aquí hay seis juntas. */
-const LINK_LABEL_VR_SCALE = 0.7;
+/**
+ * En el visor, las etiquetas de los enlaces más chicas que las de otras
+ * escenas y en dos renglones (el enlace arriba, la velocidad abajo): aquí hay
+ * seis juntas y en un renglón se pisaban.
+ */
+const LINK_LABEL_VR_SCALE = 0.6;
+const LINK_LABEL_VR_MAX_WIDTH = 7;
 
 interface Props {
   engine: ExperimentEngine;
@@ -220,10 +226,9 @@ export function StpScene({ engine, variables, setVariable }: Props) {
                   </mesh>
                 ) : null;
               })}
-            {/* Solo el número y los extremos: la velocidad está en el pizarrón y en
-                el grosor del cable, la predicción en el color, y un enlace caído
-                se ve gris y tachado. Con todo el texto, las seis etiquetas se
-                pisaban. */}
+            {/* Número, extremos y velocidad. La predicción va en el color del
+                cable y un enlace caído se ve gris y tachado: con esos textos
+                además, las seis etiquetas se pisaban. */}
             <SceneLabel
               position={a
                 .clone()
@@ -231,9 +236,11 @@ export function StpScene({ engine, variables, setVariable }: Props) {
                 .add(new THREE.Vector3(0, LABEL_AT[l.n].dy, 0))}
               center
               vrScale={LINK_LABEL_VR_SCALE}
+              vrMaxWidth={LINK_LABEL_VR_MAX_WIDTH}
             >
               <div className={styles.link} data-down={down || undefined}>
-                {`${l.n} · ${linkName(l).replace(/ \([ab]\)$/, "")}`}
+                {/* Espacios duros (\u00a0): el único corte de renglón posible es antes de la velocidad. */}
+                {`${l.n}\u00a0·\u00a0${linkName(l).replace(/ \([ab]\)$/, "")} (${l.gbps >= 1 ? "1\u00a0Gbps" : "100\u00a0Mbps"})`}
               </div>
             </SceneLabel>
           </group>

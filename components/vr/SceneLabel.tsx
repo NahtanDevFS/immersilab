@@ -41,6 +41,8 @@ function labelText(element: Element | null): string {
 type Props = ComponentProps<typeof Html> & {
   /** Multiplica el tamaño del texto en la vista VR (1 = el de siempre). */
   vrScale?: number;
+  /** Ancho máximo del texto en la vista VR antes de pasar a otro renglón, en alturas de letra (18 por defecto). */
+  vrMaxWidth?: number;
 };
 
 /**
@@ -60,6 +62,7 @@ export function SceneLabel({
   children,
   position,
   vrScale = 1,
+  vrMaxWidth = 18,
   ...props
 }: Props) {
   const vr = useViewMode() === "vr";
@@ -85,7 +88,12 @@ export function SceneLabel({
         </div>
       </Html>
       {vr && text ? (
-        <VrLabel position={position} text={text} scale={vrScale} />
+        <VrLabel
+          position={position}
+          text={text}
+          scale={vrScale}
+          maxWidth={vrMaxWidth}
+        />
       ) : null}
     </>
   );
@@ -95,10 +103,12 @@ function VrLabel({
   position,
   text,
   scale,
+  maxWidth,
 }: {
   position: Props["position"];
   text: string;
   scale: number;
+  maxWidth: number;
 }) {
   const group = useRef<THREE.Group>(null);
   const world = useMemo(() => new THREE.Vector3(), []);
@@ -123,7 +133,7 @@ function VrLabel({
           anchorX="center"
           textAlign="center"
           fontSize={1}
-          maxWidth={18}
+          maxWidth={maxWidth}
           color="#ffffff"
           outlineWidth={0.08}
           outlineColor="#0b1220"

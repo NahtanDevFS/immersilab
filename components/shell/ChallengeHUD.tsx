@@ -79,26 +79,33 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
       // La primera lectura solo fija la línea base: no se festeja lo que ya
       // estaba logrado al entrar.
       if (doneBefore.current) {
-        const fresh = next.find((c) => c.done && !doneBefore.current!.has(c.id));
-        if (fresh) {
-          // Se guarda siempre (en el dispositivo y, con cuenta, en Supabase);
-          // el aviso solo la primera vez, para no festejar de nuevo lo que el
-          // alumno ya había logrado en otra visita.
-          const firstTime = recordCompletion(experimentSlug, fresh.id, fresh.title);
-          void pushPending();
-          if (firstTime) {
-            setToast(fresh.title);
-            playChime();
-            // El tutor lo comenta por voz (si no está ocupado).
-            emitChallengeCompleted({
-              experimentSlug,
-              challengeId: fresh.id,
-              title: fresh.title,
-              detail: fresh.detail,
-            });
-            window.clearTimeout(toastTimer);
-            toastTimer = window.setTimeout(() => setToast(null), TOAST_MS);
-          }
+        // Todos los recién logrados, no solo el primero: una misma acción
+        // puede cumplir dos retos a la vez (en "Rompe el bucle", activar STP
+        // con el Núcleo de raíz y la predicción correcta). Antes se guardaba
+        // solo uno y el otro se perdía al salir del experimento.
+        const fresh = next.filter(
+          (c) => c.done && !doneBefore.current!.has(c.id),
+        );
+        // Se guarda siempre (en el dispositivo y, con cuenta, en Supabase);
+        // el aviso solo la primera vez, para no festejar de nuevo lo que el
+        // alumno ya había logrado en otra visita.
+        const firstTime = fresh.filter((c) =>
+          recordCompletion(experimentSlug, c.id, c.title),
+        );
+        if (fresh.length) void pushPending();
+        if (firstTime.length) {
+          setToast(firstTime.map((c) => c.title).join(" · "));
+          playChime();
+          // El tutor lo comenta por voz (si no está ocupado). Un solo aviso
+          // aunque sean varios: dos seguidos lo harían hablar dos veces encima.
+          emitChallengeCompleted({
+            experimentSlug,
+            challengeId: firstTime[0].id,
+            title: firstTime.map((c) => c.title).join(" y "),
+            detail: firstTime.map((c) => c.detail).join(" "),
+          });
+          window.clearTimeout(toastTimer);
+          toastTimer = window.setTimeout(() => setToast(null), TOAST_MS);
         }
       }
       doneBefore.current = done;
@@ -132,7 +139,11 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
         </div>
       )}
 
-      <section className={styles.hud} data-collapsed={collapsed} data-all={allDone}>
+      <section
+        className={styles.hud}
+        data-collapsed={collapsed}
+        data-all={allDone}
+      >
         <header className={styles.header}>
           <button
             type="button"
@@ -176,7 +187,9 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
                   <span className={styles.text}>
                     <strong>{c.title}</strong>
                     <span className={styles.detail}>
-                      {before ? "Ya lo lograste en una visita anterior." : c.detail}
+                      {before
+                        ? "Ya lo lograste en una visita anterior."
+                        : c.detail}
                     </span>
                     <span className={styles.bar}>
                       <span
@@ -196,8 +209,8 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
             sin obligar a registrarse. */}
         {!collapsed && guest && (
           <p className={styles.guest}>
-            Sin cuenta, tu progreso se guarda solo en este dispositivo y se puede
-            perder. <Link href="/cuenta">Ingresar</Link>
+            Sin cuenta, tu progreso se guarda solo en este dispositivo y se
+            puede perder. <Link href="/cuenta">Ingresar</Link>
           </p>
         )}
       </section>

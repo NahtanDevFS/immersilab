@@ -77,6 +77,14 @@ function actions(engine: ExperimentEngine): VrAction[] {
       info: true,
     });
   }
+  if (r.predictionSpent) {
+    list.push({
+      id: "intento",
+      label:
+        "Ya usaste el primer intento con esta raíz: para que la predicción vuelva a contar, pulsa «Empezar de nuevo».",
+      info: true,
+    });
+  }
   list.push({
     id: "broadcast-btn",
     label:
@@ -106,6 +114,13 @@ function actions(engine: ExperimentEngine): VrAction[] {
       label: "Restaurar los enlaces",
       onSelect: () => stp.restoreLinks(),
     });
+  if (r.stpOn || r.down.size || r.lastPrediction || r.lastBroadcast) {
+    list.push({
+      id: "reiniciar",
+      label: "Empezar de nuevo",
+      onSelect: () => stp.restart(),
+    });
+  }
   return list;
 }
 
@@ -142,7 +157,6 @@ export const stpExperiment: ExperimentDefinition = {
     formulas: [
       "ID de puente = prioridad + MAC",
       "Raíz = menor ID",
-      "Enlaces 1 a 4: 1 Gbps · 5 y 6: 100 Mbps",
       "Costo: 1 Gbps = 4 · 100 Mbps = 19",
       "Puerto raíz: menor costo a la raíz",
       "Designado: menor costo; empate, menor ID",
