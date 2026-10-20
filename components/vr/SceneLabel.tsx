@@ -1,6 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react";
 import { useFrame } from "@react-three/fiber";
 import { Billboard, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -31,7 +38,10 @@ function labelText(element: Element | null): string {
   return parts.join(" ");
 }
 
-type Props = ComponentProps<typeof Html>;
+type Props = ComponentProps<typeof Html> & {
+  /** Multiplica el tamaño del texto en la vista VR (1 = el de siempre). */
+  vrScale?: number;
+};
 
 /**
  * Etiqueta de una escena, para las dos vistas.
@@ -46,7 +56,12 @@ type Props = ComponentProps<typeof Html>;
  * cada cuadro (el período del péndulo, la velocidad de un carrito) y siguen
  * funcionando sin tocarlas.
  */
-export function SceneLabel({ children, position, ...props }: Props) {
+export function SceneLabel({
+  children,
+  position,
+  vrScale = 1,
+  ...props
+}: Props) {
   const vr = useViewMode() === "vr";
   const contentRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
@@ -69,12 +84,22 @@ export function SceneLabel({ children, position, ...props }: Props) {
           {children}
         </div>
       </Html>
-      {vr && text ? <VrLabel position={position} text={text} /> : null}
+      {vr && text ? (
+        <VrLabel position={position} text={text} scale={vrScale} />
+      ) : null}
     </>
   );
 }
 
-function VrLabel({ position, text }: { position: Props["position"]; text: string }) {
+function VrLabel({
+  position,
+  text,
+  scale,
+}: {
+  position: Props["position"];
+  text: string;
+  scale: number;
+}) {
   const group = useRef<THREE.Group>(null);
   const world = useMemo(() => new THREE.Vector3(), []);
 
@@ -83,7 +108,12 @@ function VrLabel({ position, text }: { position: Props["position"]; text: string
     const g = group.current;
     if (!g) return;
     g.getWorldPosition(world);
-    g.scale.setScalar(Math.max(0.02, world.distanceTo(camera.position) * VR_SIZE_PER_METER));
+    g.scale.setScalar(
+      Math.max(
+        0.02,
+        world.distanceTo(camera.position) * VR_SIZE_PER_METER * scale,
+      ),
+    );
   });
 
   return (

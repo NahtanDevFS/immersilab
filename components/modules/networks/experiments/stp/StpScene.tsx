@@ -30,14 +30,37 @@ const POS: Record<SwitchId, THREE.Vector3> = {
 /** Los dos enlaces paralelos N–D van uno arriba del otro. */
 const LIFT: Record<number, number> = { 1: 0.12, 2: -0.12 };
 
-const ROLE_COLOR: Record<PortRole, string> = { raiz: "#22c55e", designado: "#3b82f6", bloqueado: "#f97316" };
+const ROLE_COLOR: Record<PortRole, string> = {
+  raiz: "#22c55e",
+  designado: "#3b82f6",
+  bloqueado: "#f97316",
+};
 
 /** Extremos de un enlace en la escena (con la separación de los paralelos). */
 function ends(l: Link): [THREE.Vector3, THREE.Vector3] {
   const lift = new THREE.Vector3(0, LIFT[l.n] ?? 0, 0);
   return [POS[l.a].clone().add(lift), POS[l.b].clone().add(lift)];
 }
-const ENDS: Record<number, [THREE.Vector3, THREE.Vector3]> = Object.fromEntries(LINKS.map((l) => [l.n, ends(l)]));
+const ENDS: Record<number, [THREE.Vector3, THREE.Vector3]> = Object.fromEntries(
+  LINKS.map((l) => [l.n, ends(l)]),
+);
+
+/**
+ * Dónde va la etiqueta de cada enlace: a qué fracción del cable (desde el
+ * extremo `a`) y cuánto más arriba. Los enlaces 4 y 5 se cruzan justo en el
+ * medio, así que sus etiquetas van cerca de los switches de acceso; las de
+ * los dos paralelos N–D, una arriba y otra abajo.
+ */
+const LABEL_AT: Record<number, { t: number; dy: number }> = {
+  1: { t: 0.5, dy: 0.2 },
+  2: { t: 0.5, dy: -0.2 },
+  3: { t: 0.4, dy: 0.15 },
+  4: { t: 0.75, dy: 0.15 },
+  5: { t: 0.75, dy: 0.15 },
+  6: { t: 0.4, dy: 0.15 },
+};
+/** En el visor, las etiquetas de los enlaces más chicas que las de otras escenas: aquí hay seis juntas. */
+const LINK_LABEL_VR_SCALE = 0.7;
 
 interface Props {
   engine: ExperimentEngine;
@@ -57,9 +80,18 @@ export function StpScene({ engine, variables, setVariable }: Props) {
   const stp = engine as StpEngine;
   useFixedTimestep((dt) => stp.update(dt, variables));
 
-  const [runtime, setRuntime] = useState<StpRuntime>(() => ({ ...stp.getRuntime() }));
+  const [runtime, setRuntime] = useState<StpRuntime>(() => ({
+    ...stp.getRuntime(),
+  }));
   useEffect(() => {
-    const id = window.setInterval(() => setRuntime({ ...stp.getRuntime(), down: new Set(stp.getRuntime().down) }), 120);
+    const id = window.setInterval(
+      () =>
+        setRuntime({
+          ...stp.getRuntime(),
+          down: new Set(stp.getRuntime().down),
+        }),
+      120,
+    );
     return () => window.clearInterval(id);
   }, [stp]);
 
@@ -77,17 +109,34 @@ export function StpScene({ engine, variables, setVariable }: Props) {
           {/* Bastidor */}
           <mesh position={[0, -POS[s.id].y / 2 - 0.05, -0.1]}>
             <boxGeometry args={[0.7, POS[s.id].y - 0.1, 0.5]} />
-            <meshStandardMaterial color="#1f2937" metalness={0.4} roughness={0.6} />
+            <meshStandardMaterial
+              color="#1f2937"
+              metalness={0.4}
+              roughness={0.6}
+            />
           </mesh>
           <mesh castShadow>
             <boxGeometry args={[0.8, 0.18, 0.5]} />
-            <meshStandardMaterial color={runtime.stp.root === s.id && runtime.stpOn ? "#854d0e" : "#334155"} metalness={0.3} roughness={0.5} />
+            <meshStandardMaterial
+              color={
+                runtime.stp.root === s.id && runtime.stpOn
+                  ? "#854d0e"
+                  : "#334155"
+              }
+              metalness={0.3}
+              roughness={0.5}
+            />
           </mesh>
           <Suspense fallback={null}>
             <VrText position={[0, 0.25, 0.26]} anchorX="center" fontSize={0.09}>
               {`${s.name}${runtime.stp.root === s.id && runtime.stpOn ? " · RAÍZ" : ""}`}
             </VrText>
-            <VrText position={[0, 0.0, 0.26]} anchorX="center" fontSize={0.06} color="#cbd5e1">
+            <VrText
+              position={[0, 0.0, 0.26]}
+              anchorX="center"
+              fontSize={0.06}
+              color="#cbd5e1"
+            >
               {`${runtime.priorities[s.id]} · MAC :0${s.mac}`}
             </VrText>
           </Suspense>
@@ -101,10 +150,17 @@ export function StpScene({ engine, variables, setVariable }: Props) {
             runtime.phase === "broadcast" &&
             Number.isFinite(reachFrom("acceso1", runtime.forwarding)[s]);
           return (
-            <group key={`${s}${dx}`} position={[POS[s].x + dx, 0.45, POS[s].z + 0.7]}>
+            <group
+              key={`${s}${dx}`}
+              position={[POS[s].x + dx, 0.45, POS[s].z + 0.7]}
+            >
               <mesh>
                 <boxGeometry args={[0.32, 0.24, 0.05]} />
-                <meshStandardMaterial color={lit ? "#22c55e" : "#1e293b"} emissive="#22c55e" emissiveIntensity={lit ? 0.8 : 0} />
+                <meshStandardMaterial
+                  color={lit ? "#22c55e" : "#1e293b"}
+                  emissive="#22c55e"
+                  emissiveIntensity={lit ? 0.8 : 0}
+                />
               </mesh>
             </group>
           );
@@ -115,7 +171,19 @@ export function StpScene({ engine, variables, setVariable }: Props) {
         const down = runtime.down.has(l.n);
         const blocked = runtime.stpOn && runtime.stp.blocked.includes(l.n);
         const predicted = Boolean(variables[`pred_enlace${l.n}`]);
-        const color = down ? "#3f3f46" : storm && forwardingSet.has(l.n) ? "#ef4444" : blocked ? "#78350f" : l.gbps >= 1 ? "#94a3b8" : "#64748b";
+        // Con STP apagado, el cable marcado en la predicción se pinta de naranja
+        // claro: la etiqueta sola era poco aviso de que el toque había servido.
+        const color = down
+          ? "#3f3f46"
+          : storm && forwardingSet.has(l.n)
+            ? "#ef4444"
+            : blocked
+              ? "#78350f"
+              : !runtime.stpOn && predicted
+                ? "#fdba74"
+                : l.gbps >= 1
+                  ? "#94a3b8"
+                  : "#64748b";
         const [a, b] = ENDS[l.n];
         return (
           <group key={l.n}>
@@ -123,24 +191,49 @@ export function StpScene({ engine, variables, setVariable }: Props) {
               from={a}
               to={b}
               color={color}
-              radius={l.gbps >= 1 ? (runtime.etherchannel && l.n <= 2 ? 0.05 : 0.035) : 0.02}
+              radius={
+                l.gbps >= 1
+                  ? runtime.etherchannel && l.n <= 2
+                    ? 0.05
+                    : 0.035
+                  : 0.02
+              }
               onSelect={() => touchLink(l.n)}
             />
-            {runtime.stpOn && !down &&
-              ([[l.a, a, b], [l.b, b, a]] as const).map(([sw, from, to]) => {
+            {runtime.stpOn &&
+              !down &&
+              (
+                [
+                  [l.a, a, b],
+                  [l.b, b, a],
+                ] as const
+              ).map(([sw, from, to]) => {
                 const role = runtime.stp.roles[`${l.n}:${sw}`];
                 const led = from.clone().lerp(to, 0.5 / from.distanceTo(to));
                 return role ? (
                   <mesh key={sw} position={led}>
                     <sphereGeometry args={[0.07, 14, 10]} />
-                    <meshBasicMaterial color={ROLE_COLOR[role]} toneMapped={false} />
+                    <meshBasicMaterial
+                      color={ROLE_COLOR[role]}
+                      toneMapped={false}
+                    />
                   </mesh>
                 ) : null;
               })}
-            <SceneLabel position={a.clone().lerp(b, 0.5).add(new THREE.Vector3(0, 0.22, 0))} center>
+            {/* Solo el número y los extremos: la velocidad está en el pizarrón y en
+                el grosor del cable, la predicción en el color, y un enlace caído
+                se ve gris y tachado. Con todo el texto, las seis etiquetas se
+                pisaban. */}
+            <SceneLabel
+              position={a
+                .clone()
+                .lerp(b, LABEL_AT[l.n].t)
+                .add(new THREE.Vector3(0, LABEL_AT[l.n].dy, 0))}
+              center
+              vrScale={LINK_LABEL_VR_SCALE}
+            >
               <div className={styles.link} data-down={down || undefined}>
-                {`${l.n} · ${linkName(l)} · ${l.gbps >= 1 ? "1 Gbps" : "100 Mbps"}`}
-                {down ? " · caído" : !runtime.stpOn && predicted ? " · ¿se bloquea? sí" : ""}
+                {`${l.n} · ${linkName(l).replace(/ \([ab]\)$/, "")}`}
               </div>
             </SceneLabel>
           </group>
@@ -165,14 +258,27 @@ export function StpScene({ engine, variables, setVariable }: Props) {
 }
 
 function Cable({
-  from, to, color, radius, onSelect,
-}: { from: THREE.Vector3; to: THREE.Vector3; color: string; radius: number; onSelect: () => void }) {
+  from,
+  to,
+  color,
+  radius,
+  onSelect,
+}: {
+  from: THREE.Vector3;
+  to: THREE.Vector3;
+  color: string;
+  radius: number;
+  onSelect: () => void;
+}) {
   const { mid, length, quaternion } = useMemo(() => {
     const dir = to.clone().sub(from);
     return {
       mid: from.clone().add(to).multiplyScalar(0.5),
       length: dir.length(),
-      quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()),
+      quaternion: new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        dir.normalize(),
+      ),
     };
   }, [from, to]);
   return (
@@ -231,7 +337,11 @@ function Frames({ stp }: { stp: StpEngine }) {
       const s = wave - depth[from];
       if (s < 0 || s > 1) continue;
       const [a, b] = ENDS[l.n];
-      cubes[k].position.lerpVectors(from === l.a ? a : b, from === l.a ? b : a, s);
+      cubes[k].position.lerpVectors(
+        from === l.a ? a : b,
+        from === l.a ? b : a,
+        s,
+      );
       cubes[k].visible = true;
       k++;
     }

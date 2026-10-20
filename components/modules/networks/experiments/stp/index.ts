@@ -1,22 +1,51 @@
-import type { ExperimentDefinition, ExperimentEngine, VariablesSchema, VrAction } from "@/types/module";
+import type {
+  ExperimentDefinition,
+  ExperimentEngine,
+  VariablesSchema,
+  VrAction,
+} from "@/types/module";
 import { actionControls } from "@/components/modules/shared/ActionList";
-import { LINKS, SWITCHES, createStpEngine, linkName, type StpEngine } from "./engine";
+import {
+  LINKS,
+  SWITCHES,
+  createStpEngine,
+  linkName,
+  type StpEngine,
+} from "./engine";
 import { StpScene } from "./StpScene";
 
-const priorityOptions = Array.from({ length: 16 }, (_, k) => ({ label: String(k * 4096), value: String(k * 4096) }));
+const priorityOptions = Array.from({ length: 16 }, (_, k) => ({
+  label: String(k * 4096),
+  value: String(k * 4096),
+}));
 
 const variablesSchema: VariablesSchema = {
   ...Object.fromEntries(
     SWITCHES.map((s) => [
       `prioridad_${s.id}`,
-      { type: "select" as const, label: `Prioridad ${s.name}`, default: "32768", options: priorityOptions, group: "Prioridades (ID de puente)" },
+      {
+        type: "select" as const,
+        label: `Prioridad ${s.name}`,
+        default: "32768",
+        options: priorityOptions,
+        group: "Prioridades (ID de puente)",
+      },
     ]),
   ),
-  etherchannel: { type: "boolean", label: "EtherChannel en Núcleo–Distribución", default: false },
+  etherchannel: {
+    type: "boolean",
+    label: "EtherChannel en Núcleo–Distribución",
+    default: false,
+  },
   ...Object.fromEntries(
     LINKS.map((l) => [
       `pred_enlace${l.n}`,
-      { type: "boolean" as const, label: `Enlace ${l.n} · ${linkName(l)}`, default: false, group: "Tu predicción: ¿se bloquea?" },
+      {
+        type: "boolean" as const,
+        label: `Enlace ${l.n} · ${linkName(l)}`,
+        default: false,
+        group: "Tu predicción: ¿se bloquea?",
+      },
     ]),
   ),
 };
@@ -35,7 +64,11 @@ function actions(engine: ExperimentEngine): VrAction[] {
     },
   ];
   if (r.lastBroadcast && r.phase !== "storm") {
-    list.push({ id: "broadcast", label: `Último broadcast: llegó a ${r.lastBroadcast.reached} de 4 PC`, info: true });
+    list.push({
+      id: "broadcast",
+      label: `Último broadcast: llegó a ${r.lastBroadcast.reached} de 4 PC`,
+      info: true,
+    });
   }
   if (r.lastPrediction) {
     list.push({
@@ -46,14 +79,33 @@ function actions(engine: ExperimentEngine): VrAction[] {
   }
   list.push({
     id: "broadcast-btn",
-    label: "Enviar un broadcast",
+    label:
+      r.phase === "converging"
+        ? "Esperando a que STP converja…"
+        : "Enviar un broadcast",
     onSelect: () => stp.sendBroadcast(),
     disabled: r.phase === "storm" || r.phase === "converging",
     primary: true,
   });
-  list.push({ id: "stp", label: r.stpOn ? "Apagar STP" : "Activar STP", onSelect: () => stp.toggleStp(), disabled: r.phase === "storm" });
-  if (r.phase === "storm") list.push({ id: "apagar", label: "Apagar los switches", onSelect: () => stp.powerCycle(), primary: true });
-  if (r.down.size) list.push({ id: "restaurar", label: "Restaurar los enlaces", onSelect: () => stp.restoreLinks() });
+  list.push({
+    id: "stp",
+    label: r.stpOn ? "Apagar STP" : "Activar STP",
+    onSelect: () => stp.toggleStp(),
+    disabled: r.phase === "storm",
+  });
+  if (r.phase === "storm")
+    list.push({
+      id: "apagar",
+      label: "Apagar los switches",
+      onSelect: () => stp.powerCycle(),
+      primary: true,
+    });
+  if (r.down.size)
+    list.push({
+      id: "restaurar",
+      label: "Restaurar los enlaces",
+      onSelect: () => stp.restoreLinks(),
+    });
   return list;
 }
 
@@ -64,7 +116,15 @@ export const stpExperiment: ExperimentDefinition = {
     "Cuatro switches con enlaces redundantes: provoca una tormenta de broadcast, activa STP y predice qué enlaces bloquea, corta enlaces y agrupa dos con EtherChannel.",
   variablesSchema,
   cameraView: { position: [0.2, 2.8, 7.6], target: [0.1, 1.7, 0] },
-  conceptTags: ["bucle de capa 2", "tormenta de broadcast", "STP", "puente raíz", "puerto raíz", "puerto designado", "EtherChannel"],
+  conceptTags: [
+    "bucle de capa 2",
+    "tormenta de broadcast",
+    "STP",
+    "puente raíz",
+    "puerto raíz",
+    "puerto designado",
+    "EtherChannel",
+  ],
   briefing: {
     what: "Para que una red no se caiga si se corta un cable, se ponen enlaces de más. Pero en capa dos eso crea bucles: un broadcast da vueltas para siempre, se multiplica en cada switch y tumba la red. El protocolo STP lo evita: elige un switch raíz y bloquea los puertos justos para que quede un árbol sin bucles, y si un enlace se cae, desbloquea otro.",
     how: "Primero, con STP apagado, envía un broadcast y mira qué pasa; para pararlo, apaga los switches. Después elige las prioridades para que el Núcleo sea la raíz, marca en tu predicción qué enlaces crees que se van a bloquear y activa STP. Los puertos se pintan: verde es raíz, azul designado y naranja bloqueado. Con STP activo, toca un enlace para cortarlo.",
@@ -82,6 +142,7 @@ export const stpExperiment: ExperimentDefinition = {
     formulas: [
       "ID de puente = prioridad + MAC",
       "Raíz = menor ID",
+      "Enlaces 1 a 4: 1 Gbps · 5 y 6: 100 Mbps",
       "Costo: 1 Gbps = 4 · 100 Mbps = 19",
       "Puerto raíz: menor costo a la raíz",
       "Designado: menor costo; empate, menor ID",
