@@ -10,7 +10,7 @@ import { chooseVoice } from "@/lib/narration/useNarration";
  * oraciones llegan de a una mientras el modelo todavía está escribiendo:
  * `enqueue` se llama varias veces y la voz va leyendo sin cortes.
  *
- * `cancel()` es el barge-in: el estudiante apretó el gatillo mientras el
+ * `cancel()` es el barge-in: el estudiante apretó B mientras el
  * tutor hablaba. Usa el mismo truco de generación que `useNarration` porque
  * `speechSynthesis.cancel()` no siempre descarta lo que estaba encolado.
  */

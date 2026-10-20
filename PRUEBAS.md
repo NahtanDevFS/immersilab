@@ -18,7 +18,7 @@ limpio, en la consola del navegador: `localStorage.clear()`.
 - [ ] **Caminar:** al caminar unos 2 m con WASD (o el stick), pasa a
       "Pregúntale al tutor".
 - [ ] Los textos coinciden con el aparato: mouse/teclado en la compu; cabeza,
-      stick y gatillo R2 en el visor con control.
+      stick y botón B en el visor con control.
 - [ ] *Celular sin control:* en "Camina" avisa que hace falta un control y
       deja pasar con "Siguiente". Al apretar un botón del control, el texto
       cambia al del stick.
@@ -51,7 +51,7 @@ Retos para probar (72 en total):
 | Experimento | Retos |
 |---|---|
 | Tiro parabólico | Primer impacto · Ronda de artillero · Contra el viento |
-| Leyes de Newton | ¿Se mueve o no? · Predice la aceleración · El ángulo crítico · Súbela con lo justo · La pesa que tira |
+| Ley de la fuerza (2da de Newton) | ¿Se mueve o no? · Predice la aceleración · El ángulo crítico · Súbela con lo justo · La pesa que tira |
 | Colisiones 1D | Predice un choque elástico · Predice un choque plástico · Masas distintas, choque a medias |
 | Péndulo | Sincroniza los relojes · ¿Y la masa? · El doble de lento |
 | Guía la carga | Primer desvío · Entre placas · Rodea el muro · Donde el campo se anula |
@@ -76,7 +76,7 @@ Pistas del catálogo v2 (comprobadas en Node con el motor de cada uno):
   10 L/s → 1.27 cm/s a cualquier altura; escalera a 0.5 m/s con la base en
   3 m → −37.5 cm/s. El doble de alto: por ejemplo 0.6 m (3.54 cm/s) y 1.2 m
   (0.88 cm/s) con 10 L/s.
-- **Leyes de Newton:** madera, 30°, 10 kg → se mueve con 2.36 m/s²; ángulo
+- **Ley de la fuerza (2da de Newton):** madera, 30°, 10 kg → se mueve con 2.36 m/s²; ángulo
   crítico de la madera 26.57° (quieta a 26°, resbala a 27°); fuerza mínima a
   30° con 10 kg: 92 N; polea 5 kg y 3 kg en madera → 1.84 m/s².
 - **Guía la carga:** nivel 1 con q2 = −1 µC a 4 m/s; nivel 2 con partícula
@@ -108,7 +108,7 @@ Pistas de los experimentos nuevos:
 - **Compuertas:** alarma AND; portón OR, NOT, AND; jueces tres AND y dos OR.
 
 *Visor:* el panel de variables aparece dentro de la escena; el cursor se
-mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
+mueve con el stick derecho y A toca; B mantenido habla con el tutor.
 
 ## 3. Tutor por voz
 
@@ -137,7 +137,7 @@ mueve con el stick derecho y A toca; R2 mantenido habla con el tutor.
 - [ ] No aparece la explicación larga; "Explicación completa" la abre.
 - [ ] "Ver el experimento" pliega la tarjeta a una pastilla arriba al centro;
       "1/9 · Ver texto" la vuelve a abrir.
-- [ ] "Siguiente" recorre las paradas: Leyes de Newton →
+- [ ] "Siguiente" recorre las paradas: Ley de la fuerza (2da de Newton) →
       La grúa electromagnética → Tornea la pieza → Divide la red →
       Encuentra el camino → Arma el paquete → Arma el circuito →
       Arma la lógica → `/progreso`.

@@ -10,12 +10,34 @@ import { Text } from "@react-three/drei";
  */
 export const VR_FONT = "/fonts/Geist-Regular.ttf";
 
-/** Los pocos caracteres que la fuente no trae, por algo que sí. */
+/**
+ * Los caracteres que la fuente no trae, por algo que sí. Las letras griegas
+ * y los subíndices aparecen en las fórmulas del tutor: sin esto se dibujaban
+ * como cuadritos vacíos.
+ */
 const MISSING: Array<[RegExp, string]> = [
   [/✓/g, "ok"],
   [/✕/g, "x"],
+  [/Δ/g, "∆"],
+  [/⋅/g, "·"],
+  [/α/g, "alfa"],
   [/β/g, "beta"],
+  [/γ/g, "gamma"],
+  [/δ/g, "delta"],
+  [/ε/g, "épsilon"],
+  [/η/g, "eta"],
+  [/θ/g, "theta"],
+  [/ρ/g, "rho"],
+  [/σ/g, "sigma"],
+  [/τ/g, "tau"],
+  [/φ/g, "phi"],
+  [/Σ/g, "∑"],
   [/ᵢ/g, "i"],
+  [/ₙ/g, "n"],
+  [/ⁿ/g, "^n"],
+  [/⁻¹/g, "^-1"],
+  [/⁻²/g, "^-2"],
+  [/⁻/g, "^-"],
 ];
 
 export function vrSafe(text: string): string {

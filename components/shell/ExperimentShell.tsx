@@ -29,6 +29,7 @@ import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { useVariables } from "@/lib/modules/useVariables";
+import { staleSelections, visibleSchema } from "@/lib/modules/visibility";
 import { VirtualCursor } from "./VirtualCursor";
 import { useVirtualCursor } from "./useVirtualCursor";
 import { VoiceTutor } from "@/components/tutor/VoiceTutor";
@@ -60,6 +61,17 @@ export function ExperimentShell({
   moduleName,
 }: Props) {
   const { values, setValue } = useVariables(experiment.variablesSchema);
+  // Solo las variables de la modalidad elegida (VariableDefinition.showWhen):
+  // las que no hacen nada en ella confundían.
+  const shownSchema = useMemo(
+    () => visibleSchema(experiment.variablesSchema, values),
+    [experiment.variablesSchema, values],
+  );
+  // Si la opción elegida de una lista ya no existe en la nueva modalidad
+  // (medir R3 al volver al circuito del LED), pasa a la primera que quedó.
+  useEffect(() => {
+    for (const [key, value] of staleSelections(experiment.variablesSchema, values)) setValue(key, value);
+  }, [experiment.variablesSchema, values, setValue]);
   const { orientation, permission, requestPermission, insecure } =
     useDeviceOrientation();
   const quality = useQualityTier();
@@ -146,7 +158,7 @@ export function ExperimentShell({
         {!gyroActive && (
           <VariablesPanel
             title="Variables"
-            schema={experiment.variablesSchema}
+            schema={shownSchema}
             values={values}
             onChange={setValue}
             selectedKey={hoveredKey ?? undefined}
@@ -189,7 +201,7 @@ export function ExperimentShell({
 
         {gyroActive && <GamepadStatus />}
 
-        {/* Tutor por voz: R2 o el botón para preguntar. Se remonta con cada
+        {/* Tutor por voz: B o el botón para preguntar. Se remonta con cada
             experimento, así que cada uno arranca con memoria nueva. */}
         <VoiceTutor
           engine={engine}
@@ -259,7 +271,7 @@ export function ExperimentShell({
 
           {gyroActive && !vr && (
             <VariablesHud3D
-              schema={experiment.variablesSchema}
+              schema={shownSchema}
               values={values}
               onChange={setValue}
               selectedKey={hoveredKey ?? undefined}
@@ -295,7 +307,7 @@ export function ExperimentShell({
           {vr ? <StereoView /> : <PostFX quality={quality} />}
 
           {/* Pizarrón con fórmulas y lugar para hacer cuentas, si el experimento lo trae. */}
-          {experiment.whiteboard && <Whiteboard spec={experiment.whiteboard} />}
+          {experiment.whiteboard && <Whiteboard spec={experiment.whiteboard} values={values} schema={experiment.variablesSchema} />}
 
           {/* La interfaz de la vista VR, dentro de la escena. */}
           {vr && (
@@ -309,7 +321,7 @@ export function ExperimentShell({
               tourIndex={touring ? tourIndex : null}
               onExitTour={exitTour}
               onBackToLobby={() => router.push("/lab")}
-              schema={experiment.variablesSchema}
+              schema={shownSchema}
               values={values}
               onChange={setValue}
               vrActions={experiment.vrActions}

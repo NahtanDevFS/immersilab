@@ -15,13 +15,15 @@ const variablesSchema: VariablesSchema = {
   ...Object.fromEntries(
     Array.from({ length: SLOTS }, (_, i) => [
       `regla${i + 1}`,
-      { type: "select" as const, label: `Ranura ${i + 1}`, default: "vacia", options: cardOptions, group: "El rack (de arriba hacia abajo)" },
+      { type: "select" as const, label: `Ranura ${i + 1}`, default: "vacia", options: cardOptions, group: "El rack (de arriba hacia abajo)", showWhen: { ronda: ["1", "2"] } },
     ]),
   ),
   nat_reenvio: {
     type: "select",
-    label: "Reenvío de puertos (ronda 3)",
+    label: "Reenvío de puertos",
     default: "ninguno",
+    // En la ronda 3 el router hace NAT en vez de filtrar: el rack no se usa.
+    showWhen: { ronda: "3" },
     options: [{ label: "Ninguno", value: "ninguno" }, ...NAT_CARDS.map((c) => ({ label: c.label, value: c.id }))],
   },
 };

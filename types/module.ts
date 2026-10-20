@@ -14,14 +14,32 @@ export interface VariableDefinition {
   max?: number;
   step?: number;
   default: number | boolean | string;
-  options?: { label: string; value: string }[]; // solo para type: "select"
+  /**
+   * Solo para type: "select". Una opción con `showWhen` aparece solo en esa
+   * modalidad (medir R3 en un circuito sin R3 no tiene sentido); si estaba
+   * elegida y desaparece, se pasa a la primera que quede.
+   */
+  options?: { label: string; value: string; showWhen?: ShowWhen }[];
   /**
    * Subtítulo que agrupa variables seguidas en el panel ("Oscilador 1").
    * Sin esto, tres osciladores con "Amplitud 1, Frecuencia 1, Fase 1…" se
    * leían como nueve controles sueltos y era fácil cruzar los valores.
    */
   group?: string;
+  /**
+   * Solo se muestra cuando otras variables valen esto: `{ escenario: "plano" }`
+   * o `{ nivel: ["divisor", "paralelo"] }` (cualquiera de la lista). Varias
+   * claves tienen que cumplirse todas. Sin esto, se ve siempre.
+   *
+   * Es para las variables que una modalidad no usa (el ángulo de la rampa en
+   * la polea): verlas confundía, porque moverlas no hacía nada. Oculta, la
+   * variable conserva su valor. Ver lib/modules/visibility.ts.
+   */
+  showWhen?: ShowWhen;
 }
+
+/** Condición de `showWhen`, `WhiteboardLine.showWhen` y `WhiteboardTerm.showWhen`. */
+export type ShowWhen = Record<string, string | boolean | Array<string | boolean>>;
 
 // El esquema completo de variables de un experimento.
 // Ejemplo (tiro parabólico):
@@ -195,11 +213,35 @@ export interface ExperimentDefinition {
   createEngine: () => ExperimentEngine;
 }
 
+/** Un renglón del pizarrón que solo aplica a una modalidad. */
+export interface WhiteboardLine {
+  text: string;
+  /** Igual que `VariableDefinition.showWhen`. */
+  showWhen?: ShowWhen;
+}
+
+/**
+ * Qué significa una letra de las fórmulas ("θ: ángulo de la rampa"). Sin
+ * esto, el pizarrón tenía la fórmula pero no decía qué era cada cosa, y el
+ * que no conocía la notación no podía usarla.
+ */
+export interface WhiteboardTerm {
+  symbol: string;
+  /** Corto: entra en un renglón al lado del símbolo. Con unidad si tiene. */
+  meaning: string;
+  showWhen?: ShowWhen;
+}
+
 /** El pizarrón de un experimento: qué fórmulas lleva y dónde va. */
 export interface WhiteboardSpec {
   title: string;
-  /** Una fórmula (o una línea de explicación) por renglón. */
-  formulas: string[];
+  /**
+   * Una fórmula (o una línea de explicación) por renglón. Un renglón que
+   * solo aplica a una modalidad va con `showWhen`.
+   */
+  formulas: Array<string | WhiteboardLine>;
+  /** "Qué es cada letra", debajo de las fórmulas. */
+  terms?: WhiteboardTerm[];
   /** Centro del pizarrón en la escena, m. */
   position: [number, number, number];
   /** Giro alrededor del eje vertical, para que mire hacia el jugador. */

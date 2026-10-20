@@ -147,7 +147,7 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
     talk: {
       title: "Pregúntale al tutor",
       body: pad
-        ? "Dentro de cada experimento, mantén el gatillo R2, pregunta en voz alta y suéltalo: el tutor te responde."
+        ? "Dentro de cada experimento, mantén presionado el botón B, pregunta en voz alta y suéltalo: el tutor te responde."
         : "Dentro de cada experimento, mantén presionado el botón del micrófono, pregunta en voz alta y suéltalo: el tutor te responde.",
     },
     doors: {

@@ -52,6 +52,15 @@ export const LEVELS: Array<{ id: Level; label: string }> = [
 
 export type MeasurePoint = "v_bat" | "v_r1" | "v_r2" | "v_r3" | "v_led" | "i_total" | "i_r2" | "i_r3";
 
+/** En qué circuitos tiene sentido medir cada punto (los demás no tienen esa pieza). */
+export const MEASURE_LEVELS: Partial<Record<MeasurePoint, Level[]>> = {
+  v_r2: ["divisor", "paralelo"],
+  i_r2: ["divisor", "paralelo"],
+  v_r3: ["paralelo"],
+  i_r3: ["paralelo"],
+  v_led: ["led"],
+};
+
 export const MEASURE_POINTS: Array<{ id: MeasurePoint; label: string; unit: "V" | "A" }> = [
   // Para ver que de la batería salen 9 V y que se reparten: sin esto, quien
   // mide 7.2 V en R1 con el LED cree que el sistema está mal.

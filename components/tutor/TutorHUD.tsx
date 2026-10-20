@@ -4,15 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import type { SpeechInputError } from "./useSpeechInput";
 import type { ChatMessage } from "./useTutorSession";
 import { setChatOpen, useChatOpen } from "@/lib/tutor/chatPreference";
+import { splitFormulas } from "@/lib/tutor/formula";
 import styles from "./TutorHUD.module.css";
 
 export type TutorStatus = "idle" | "listening" | "thinking" | "speaking";
 
 const STATUS_LABEL: Record<TutorStatus, string> = {
-  idle: "Mantén presionado para preguntar · R2",
+  idle: "Mantén presionado para preguntar · botón B",
   listening: "Te escucho… · toca para terminar",
   thinking: "Pensando…",
-  speaking: "Hablando · R2 para cortar",
+  speaking: "Hablando · B para cortar",
+};
+
+const CANCEL_LABEL: Record<Exclude<TutorStatus, "idle">, string> = {
+  listening: "Cancelar la pregunta",
+  thinking: "Cancelar la respuesta",
+  speaking: "Callar al tutor",
 };
 
 export const ERROR_LABEL: Record<Exclude<SpeechInputError, null>, string> = {
@@ -45,6 +52,8 @@ interface Props {
   onPress: () => void;
   onRelease: () => void;
   onToggle: () => void;
+  /** Descarta lo dicho, corta la respuesta y calla la voz. */
+  onCancel: () => void;
   /** La conversación entera, para la ventana desplegable. */
   log: ChatMessage[];
 }
@@ -74,6 +83,7 @@ export function TutorHUD({
   onPress,
   onRelease,
   onToggle,
+  onCancel,
   log,
 }: Props) {
   const open = useChatOpen();
@@ -125,7 +135,7 @@ export function TutorHUD({
               )}
               {reply && (
                 <p className={styles.reply} data-offline={offline}>
-                  <span className={styles.speaker}>Tutor</span> {reply}
+                  <span className={styles.speaker}>Tutor</span> <ReplyText text={reply} />
                 </p>
               )}
             </div>
@@ -167,6 +177,20 @@ export function TutorHUD({
           <span className={styles.label}>{STATUS_LABEL[status]}</span>
         </button>
 
+        {/* Solo mientras el tutor está en algo. Con el botón de hablar
+            mantenido con el mouse no se puede tocar: para eso está Escape. */}
+        {status !== "idle" && (
+          <button
+            type="button"
+            className={styles.cancel}
+            onClick={onCancel}
+            aria-label={CANCEL_LABEL[status]}
+            title={`${CANCEL_LABEL[status]} (Esc)`}
+          >
+            ✕
+          </button>
+        )}
+
         {!open && (
           <button
             type="button"
@@ -181,6 +205,26 @@ export function TutorHUD({
 
       {note && <p className={styles.note}>{note}</p>}
     </div>
+  );
+}
+
+/**
+ * Una respuesta del tutor, con cada fórmula ([[...]], ver lib/tutor/formula.ts)
+ * en su propio renglón para que se pueda leer.
+ */
+function ReplyText({ text }: { text: string }) {
+  return (
+    <>
+      {splitFormulas(text).map((part, i) =>
+        part.kind === "formula" ? (
+          <span key={i} className={styles.formula}>
+            {part.value}
+          </span>
+        ) : (
+          <span key={i}>{part.value}</span>
+        ),
+      )}
+    </>
   );
 }
 
@@ -224,7 +268,7 @@ function Conversation({
       <ol className={styles.chatList} ref={list} aria-live="polite">
         {log.length === 0 && !heard && (
           <li className={styles.chatEmpty}>
-            Todavía no le has preguntado nada. Mantén presionado el botón (o R2), pregunta en voz alta
+            Todavía no le has preguntado nada. Mantén presionado este botón (o B en el control), pregunta en voz alta
             y suelta: la conversación queda aquí.
           </li>
         )}
@@ -236,7 +280,7 @@ function Conversation({
           ) : (
             <li key={m.id} className={styles.chatMessage} data-role={m.role} data-state={m.state}>
               <span className={styles.speaker}>{m.role === "user" ? "Tú" : "Tutor"}</span>
-              {m.text || (m.state === "streaming" ? "…" : "")}
+              {m.role === "tutor" && m.text ? <ReplyText text={m.text} /> : m.text || (m.state === "streaming" ? "…" : "")}
               {m.state ? STATE_NOTE[m.state] : null}
             </li>
           ),

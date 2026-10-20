@@ -4,6 +4,7 @@ import {
   formatOhms,
   LED_COLORS,
   LEVELS,
+  MEASURE_LEVELS,
   MEASURE_POINTS,
   RESISTOR_VALUES,
   type ProtoboardEngine,
@@ -21,11 +22,12 @@ const variablesSchema: VariablesSchema = {
     options: LEVELS.map((l) => ({ label: l.label, value: l.id })),
   },
   r1: { type: "select", label: "R1", default: "1000", options: resistorOptions },
-  r2: { type: "select", label: "R2 (niveles 2 y 3)", default: "1000", options: resistorOptions },
-  r3: { type: "select", label: "R3 (nivel 3)", default: "2200", options: resistorOptions },
+  r2: { type: "select", label: "R2", default: "1000", options: resistorOptions, showWhen: { nivel: ["divisor", "paralelo"] } },
+  r3: { type: "select", label: "R3", default: "2200", options: resistorOptions, showWhen: { nivel: "paralelo" } },
   led: {
     type: "select",
-    label: "Color del LED (nivel 1)",
+    label: "Color del LED",
+    showWhen: { nivel: "led" },
     default: "rojo",
     options: LED_COLORS.map((c) => ({ label: c.label, value: c.id })),
   },
@@ -33,7 +35,10 @@ const variablesSchema: VariablesSchema = {
     type: "select",
     label: "El multímetro mide",
     default: "i_total",
-    options: MEASURE_POINTS.map((p) => ({ label: p.label, value: p.id })),
+    options: MEASURE_POINTS.map((p) => {
+      const levels = MEASURE_LEVELS[p.id];
+      return { label: p.label, value: p.id, ...(levels ? { showWhen: { nivel: levels } } : {}) };
+    }),
   },
 };
 
@@ -49,12 +54,23 @@ export const protoboardExperiment: ExperimentDefinition = {
     title: "Arma el circuito",
     formulas: [
       "Ley de Ohm: V = I · R",
-      "Kirchhoff (voltajes): 9 V = V_R1 + V_LED (o + V_R2)",
-      "LED: R = (9 V − V_LED) / I",
-      "Divisor: V_R2 = 9 V · R2 / (R1 + R2)",
-      "Paralelo: 1/Rp = 1/R2 + 1/R3",
-      "Kirchhoff (corrientes): I_total = I_R2 + I_R3",
+      { text: "Kirchhoff (voltajes): 9 V = V_R1 + V_LED", showWhen: { nivel: "led" } },
+      { text: "LED: R = (9 V − V_LED) / I", showWhen: { nivel: "led" } },
+      { text: "Kirchhoff (voltajes): 9 V = V_R1 + V_R2", showWhen: { nivel: ["divisor", "paralelo"] } },
+      { text: "Divisor: V_R2 = 9 V · R2 / (R1 + R2)", showWhen: { nivel: "divisor" } },
+      { text: "Paralelo: 1/Rp = 1/R2 + 1/R3", showWhen: { nivel: "paralelo" } },
+      { text: "Kirchhoff (corrientes): I_total = I_R2 + I_R3", showWhen: { nivel: "paralelo" } },
       "Potencia: P = I² · R (cada resistencia aguanta 0.25 W)",
+    ],
+    terms: [
+      { symbol: "V", meaning: "voltaje (diferencia de potencial), V" },
+      { symbol: "I", meaning: "corriente, A (1 mA = 0.001 A)" },
+      { symbol: "R", meaning: "resistencia, Ω" },
+      { symbol: "V_R1", meaning: "voltaje sobre la resistencia R1 (igual con R2, R3)" },
+      { symbol: "V_LED", meaning: "voltaje que se queda el LED: depende del color", showWhen: { nivel: "led" } },
+      { symbol: "Rp", meaning: "resistencia equivalente de R2 y R3 en paralelo", showWhen: { nivel: "paralelo" } },
+      { symbol: "I_R2", meaning: "corriente por la rama de R2 (igual con R3)", showWhen: { nivel: "paralelo" } },
+      { symbol: "P", meaning: "potencia que se disipa en calor, W" },
     ],
     // Detrás de la mesa, de frente al jugador.
     position: [0, 1.42, -1.4],

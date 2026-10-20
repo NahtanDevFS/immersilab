@@ -14,10 +14,12 @@ const variablesSchema: VariablesSchema = {
       `mascara_${id}`,
       {
         type: "select" as const,
-        label: id === "enlace" ? "Enlace al ISP (ronda 2)" : SUBNET_NAMES[id],
+        label: id === "enlace" ? "Enlace al ISP" : SUBNET_NAMES[id],
         default: "/24",
         options: maskOptions,
         group: "Máscaras",
+        // El enlace al ISP solo existe en la ronda 2.
+        ...(id === "enlace" ? { showWhen: { ronda: "2" } } : {}),
       },
     ]),
   ),
@@ -84,6 +86,13 @@ export const subredesVlanExperiment: ExperimentDefinition = {
       "/26 = 62 · /25 = 126 · /24 = 254",
       "Asigna de la más grande a la más chica",
       "Puerta de enlace = primera IP de la subred",
+    ],
+    terms: [
+      { symbol: "/prefijo", meaning: "cuántos bits de la IP son de la red (/26: 26 de 32)" },
+      { symbol: "Usables", meaning: "IP que se pueden dar a equipos: se restan la de red y la de broadcast" },
+      { symbol: "VLAN", meaning: "red separada dentro del mismo switch, una por departamento" },
+      { symbol: "Troncal", meaning: "enlace que lleva varias VLAN a la vez entre switches" },
+      { symbol: "Subinterfaz", meaning: "una entrada del router por VLAN: deja que VLAN distintas se hablen" },
     ],
     position: [-4.6, 1.7, 0.6],
     rotationY: 0.9,

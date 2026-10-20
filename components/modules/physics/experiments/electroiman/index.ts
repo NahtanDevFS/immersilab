@@ -75,6 +75,17 @@ export const electroimanExperiment: ExperimentDefinition = {
       "Potencia: P = I² · R (nominal: 1500 W)",
       "Mismo N·I con más vueltas: el mismo campo con menos potencia",
     ],
+    terms: [
+      { symbol: "B", meaning: "campo magnético, T (teslas)" },
+      { symbol: "N", meaning: "vueltas de la bobina" },
+      { symbol: "I", meaning: "corriente por la bobina, A" },
+      { symbol: "μr", meaning: "cuánto refuerza el núcleo el campo (aire = 1, hierro: miles)" },
+      { symbol: "g", meaning: "separación entre el imán y la pieza, m (en Levanta: gravedad, 9.81 m/s²)" },
+      { symbol: "A", meaning: "área de la cara del imán, m²" },
+      { symbol: "F", meaning: "fuerza con que el imán atrae la pieza, N" },
+      { symbol: "m", meaning: "masa de la pieza, kg" },
+      { symbol: "R, P", meaning: "resistencia de la bobina (Ω) y potencia que gasta (W)" },
+    ],
     // Detrás de la chatarra, a la mitad del patio.
     position: [8.5, 1.7, -3.6],
     width: 2.8,

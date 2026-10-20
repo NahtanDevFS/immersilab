@@ -9,7 +9,7 @@ const variablesSchema: VariablesSchema = {
   ...Object.fromEntries(
     [1, 2, 3, 4].map((i) => [
       `q${i}`,
-      { type: "number" as const, label: `Carga ${i}`, unit: "µC", min: -5, max: 5, step: 1, default: 0, group: "Cargas (niveles 1 y 3)" },
+      { type: "number" as const, label: `Carga ${i}`, unit: "µC", min: -5, max: 5, step: 1, default: 0, group: "Cargas", showWhen: { nivel: ["desvia", "obstaculo"] } },
     ]),
   ),
   signo_particula: {
@@ -21,14 +21,16 @@ const variablesSchema: VariablesSchema = {
       { label: "Negativa (−1 µC)", value: "negativa" },
     ],
     group: "Lanzador",
+    showWhen: { nivel: ["desvia", "placas", "obstaculo"] },
   },
-  velocidad: { type: "number", label: "Velocidad", unit: "m/s", min: 1, max: 6, step: 0.1, default: 3, group: "Lanzador" },
-  angulo: { type: "number", label: "Ángulo (nivel 3)", unit: "°", min: -45, max: 45, step: 1, default: 0, group: "Lanzador" },
+  velocidad: { type: "number", label: "Velocidad", unit: "m/s", min: 1, max: 6, step: 0.1, default: 3, group: "Lanzador", showWhen: { nivel: ["desvia", "placas", "obstaculo"] } },
+  angulo: { type: "number", label: "Ángulo", unit: "°", min: -45, max: 45, step: 1, default: 0, group: "Lanzador", showWhen: { nivel: "obstaculo" } },
   // El plan pedía 0 a 3000 V; con la partícula negativa hace falta el
   // campo al revés, así que el voltaje también puede ser negativo.
-  voltaje: { type: "number", label: "Voltaje de las placas (nivel 2)", unit: "V", min: -3000, max: 3000, step: 50, default: 0 },
-  sensor_x: { type: "number", label: "Posición del sensor (nivel 4)", unit: "m", min: -1.2, max: 1.2, step: 0.05, default: -1 },
-  lineas: { type: "boolean", label: "Mostrar líneas de campo", default: true },
+  voltaje: { type: "number", label: "Voltaje de las placas", unit: "V", min: -3000, max: 3000, step: 50, default: 0, showWhen: { nivel: "placas" } },
+  sensor_x: { type: "number", label: "Posición del sensor", unit: "m", min: -1.2, max: 1.2, step: 0.05, default: -1, showWhen: { nivel: "campo-nulo" } },
+  // Entre placas no hay cargas sueltas: no hay líneas que mostrar.
+  lineas: { type: "boolean", label: "Mostrar líneas de campo", default: true, showWhen: { nivel: ["desvia", "obstaculo", "campo-nulo"] } },
 };
 
 function actions(engine: ExperimentEngine): VrAction[] {
@@ -71,12 +73,27 @@ export const campoElectricoExperiment: ExperimentDefinition = {
   whiteboard: {
     title: "Guía la carga",
     formulas: [
-      "F = k · q₁ · q₂ / r²",
-      "k = 9 × 10⁹ N·m²/C²",
+      { text: "F = k · q₁ · q₂ / r²", showWhen: { nivel: ["desvia", "obstaculo", "campo-nulo"] } },
+      { text: "k = 9 × 10⁹ N·m²/C²", showWhen: { nivel: ["desvia", "obstaculo", "campo-nulo"] } },
       "E = F / q",
-      "Placas: E = V / d",
-      "a = q · E / m",
-      "Campo nulo: q₁/x² = q₂/(d − x)²",
+      { text: "E = k · q / r² (de cada carga)", showWhen: { nivel: ["desvia", "obstaculo", "campo-nulo"] } },
+      { text: "Placas: E = V / d", showWhen: { nivel: "placas" } },
+      { text: "a = q · E / m", showWhen: { nivel: ["desvia", "placas", "obstaculo"] } },
+      { text: "Campo nulo: q₁/x² = q₂/(d − x)²", showWhen: { nivel: "campo-nulo" } },
+    ],
+    terms: [
+      { symbol: "F", meaning: "fuerza eléctrica, N" },
+      { symbol: "E", meaning: "campo eléctrico: la fuerza por cada coulomb, N/C = V/m" },
+      { symbol: "q", meaning: "carga de la partícula, C (1 µC = 10⁻⁶ C)", showWhen: { nivel: ["desvia", "placas", "obstaculo"] } },
+      { symbol: "q₁, q₂", meaning: "cargas que se atraen o repelen, C", showWhen: { nivel: ["desvia", "obstaculo", "campo-nulo"] } },
+      { symbol: "r", meaning: "distancia entre las cargas, m", showWhen: { nivel: ["desvia", "obstaculo"] } },
+      { symbol: "k", meaning: "constante de Coulomb", showWhen: { nivel: ["desvia", "obstaculo", "campo-nulo"] } },
+      { symbol: "V", meaning: "voltaje entre las placas, V", showWhen: { nivel: "placas" } },
+      { symbol: "d", meaning: "separación entre las placas, 1 m", showWhen: { nivel: "placas" } },
+      { symbol: "d", meaning: "distancia entre las dos cargas, 3 m", showWhen: { nivel: "campo-nulo" } },
+      { symbol: "x", meaning: "distancia del sensor a la carga q₁, m", showWhen: { nivel: "campo-nulo" } },
+      { symbol: "a", meaning: "aceleración de la partícula, m/s²", showWhen: { nivel: ["desvia", "placas", "obstaculo"] } },
+      { symbol: "m", meaning: "masa de la partícula, 1 g = 0.001 kg", showWhen: { nivel: ["desvia", "placas", "obstaculo"] } },
     ],
     position: [-3.2, 1.7, -2.8],
     rotationY: 0.6,

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import type { ChatMessage } from "@/components/tutor/useTutorSession";
 import { useTutorHud, useTutorLog } from "@/lib/tutor/hudStore";
+import { formulasOnOwnLines } from "@/lib/tutor/formula";
 import { setChatOpen, useChatOpen } from "@/lib/tutor/chatPreference";
 import { GazeButton } from "./GazeButton";
 import { estimateLines } from "./VrCard";
@@ -32,7 +33,8 @@ function toShown(m: ChatMessage): Shown {
   return {
     key: String(m.id),
     speaker: m.role === "user" ? "TÚ" : m.role === "tutor" ? "TUTOR" : null,
-    text: (m.text || (m.state === "streaming" ? "…" : "")) + cut,
+    // Las fórmulas del tutor ([[...]]) van cada una en su renglón.
+    text: (m.role === "tutor" && m.text ? formulasOnOwnLines(m.text) : m.text || (m.state === "streaming" ? "…" : "")) + cut,
     color: m.state === "error" ? "#e24b4a" : m.state === "interrupted" ? "#93a1be" : COLOR[m.role],
   };
 }

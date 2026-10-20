@@ -18,7 +18,8 @@ const variablesSchema: VariablesSchema = {
       { label: "Automático", value: "automatico" },
     ],
   },
-  frecuencia: { type: "number", label: "Frecuencia del reloj", unit: "Hz", min: 0.5, max: 8, step: 0.5, default: 1 },
+  // Con el reloj manual no hay frecuencia: cada pulso lo da el estudiante.
+  frecuencia: { type: "number", label: "Frecuencia del reloj", unit: "Hz", min: 0.5, max: 8, step: 0.5, default: 1, showWhen: { reloj: "automatico" } },
   clk_ff2: { type: "select", label: "Reloj del FF1", default: "q", options: sourceOptions, group: "Relojes de los flip-flops" },
   clk_ff3: { type: "select", label: "Reloj del FF2", default: "q", options: sourceOptions, group: "Relojes de los flip-flops" },
   clk_ff4: { type: "select", label: "Reloj del FF3", default: "q", options: sourceOptions, group: "Relojes de los flip-flops" },
@@ -29,7 +30,8 @@ const variablesSchema: VariablesSchema = {
   valor_carga: { type: "number", label: "Valor que se carga", min: 0, max: 15, step: 1, default: 0, group: "Reinicio" },
   // El plan pedía 0 a 8 Hz con paso 0.125, pero Q3 va entre 0.03 y 0.8 Hz:
   // con ese paso solo cuatro relojes tenían una respuesta que se pudiera poner.
-  pred_frecuencia_q3: { type: "number", label: "Tu predicción: frecuencia de Q3", unit: "Hz", min: 0, max: 1, step: 0.005, default: 0 },
+  // Solo se comprueba con el reloj automático (el motor mide Q3 ahí).
+  pred_frecuencia_q3: { type: "number", label: "Tu predicción: frecuencia de Q3", unit: "Hz", min: 0, max: 1, step: 0.005, default: 0, showWhen: { reloj: "automatico" } },
 };
 
 function actions(engine: ExperimentEngine): VrAction[] {
@@ -80,12 +82,20 @@ export const contadorExperiment: ExperimentDefinition = {
   whiteboard: {
     title: "El contador",
     formulas: [
-      "f(Qn) = f(reloj) / 2^(n+1)",
-      "Sin reinicio: f(Q3) = f / 16",
+      { text: "f(Qn) = f(reloj) / 2^(n+1)", showWhen: { reloj: "automatico" } },
+      { text: "Sin reinicio: f(Q3) = f / 16", showWhen: { reloj: "automatico" } },
       "Q → cuenta hacia arriba",
       "Q̄ → cuenta hacia abajo",
       "Reinicio: NAND de las salidas que valen 1 en el número N",
       "10 = 1010 · 6 = 0110 · 15 = 1111",
+    ],
+    terms: [
+      { symbol: "Q0…Q3", meaning: "salidas de los flip-flops: los bits del número (Q0 vale 1, Q3 vale 8)" },
+      { symbol: "Q̄", meaning: "Q negada: la salida al revés" },
+      { symbol: "f(reloj)", meaning: "pulsos por segundo del reloj, Hz", showWhen: { reloj: "automatico" } },
+      { symbol: "f(Qn)", meaning: "cuántas veces por segundo se prende la salida Qn, Hz", showWhen: { reloj: "automatico" } },
+      { symbol: "NAND", meaning: "da 0 solo cuando todas sus entradas valen 1: ahí reinicia la cuenta" },
+      { symbol: "N", meaning: "primer número que NO debe aparecer en la cuenta" },
     ],
     position: [-3.0, 1.6, -0.2],
     rotationY: 0.8,

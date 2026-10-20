@@ -13,17 +13,17 @@ const variablesSchema: VariablesSchema = {
       { label: "Polea", value: "polea" },
     ],
   },
-  angulo: { type: "number", label: "Ángulo de la rampa", unit: "°", min: 0, max: 60, step: 0.5, default: 20 },
+  angulo: { type: "number", label: "Ángulo de la rampa", unit: "°", min: 0, max: 60, step: 0.5, default: 20, showWhen: { escenario: "plano" } },
   masa: { type: "number", label: "Masa de la caja", unit: "kg", min: 1, max: 20, step: 0.5, default: 10 },
-  masa_colgante: { type: "number", label: "Pesa que cuelga (polea)", unit: "kg", min: 0.5, max: 20, step: 0.5, default: 3 },
+  masa_colgante: { type: "number", label: "Pesa que cuelga", unit: "kg", min: 0.5, max: 20, step: 0.5, default: 3, showWhen: { escenario: "polea" } },
   superficie: {
     type: "select",
     label: "Superficie",
     default: "madera",
     options: SURFACES.map((s) => ({ label: `${s.label} (μs ${s.mus}, μk ${s.muk})`, value: s.id })),
   },
-  fuerza: { type: "number", label: "Fuerza aplicada (+ hacia arriba)", unit: "N", min: -150, max: 150, step: 1, default: 0 },
-  componentes: { type: "boolean", label: "Mostrar componentes del peso", default: false },
+  fuerza: { type: "number", label: "Fuerza aplicada (+ hacia arriba)", unit: "N", min: -150, max: 150, step: 1, default: 0, showWhen: { escenario: "plano" } },
+  componentes: { type: "boolean", label: "Mostrar componentes del peso", default: false, showWhen: { escenario: "plano" } },
   pred_se_mueve: {
     type: "select",
     label: "¿Se va a mover?",
@@ -64,7 +64,9 @@ function actions(engine: ExperimentEngine): VrAction[] {
 
 export const leyesNewtonExperiment: ExperimentDefinition = {
   slug: "leyes-newton",
-  name: "Leyes de Newton",
+  // Solo pone a prueba la segunda ley (ΣF = m·a): "Leyes de Newton", en
+  // plural, hacía esperar experimentos de las tres.
+  name: "Ley de la fuerza (2da de Newton)",
   description:
     "Una caja en una rampa o tirada por una pesa con una polea: dibuja las fuerzas, predice si se mueve y con qué aceleración.",
   variablesSchema,
@@ -84,15 +86,31 @@ export const leyesNewtonExperiment: ExperimentDefinition = {
     "Confusiones típicas: creer que la normal siempre vale mg (en la rampa vale mg coseno de theta); creer que la fricción estática siempre vale mu estático por N (es la necesaria, hasta ese tope); olvidar que al empujar hacia arriba la fricción cambia de sentido; en la polea, olvidar que se aceleran las dos masas. " +
     "Pide primero que dibuje o nombre las fuerzas del diagrama. No des la aceleración ni el ángulo: guía con preguntas sobre qué fuerzas actúan y cuál gana.",
   whiteboard: {
-    title: "Leyes de Newton",
+    title: "Ley de la fuerza (2da de Newton)",
     formulas: [
       "ΣF = m · a",
-      "Rampa: N = mg · cos θ",
-      "Empuja hacia abajo: mg · sen θ − F",
+      { text: "N = mg · cos θ", showWhen: { escenario: "plano" } },
+      { text: "Empuja hacia abajo: mg · sen θ − F", showWhen: { escenario: "plano" } },
+      { text: "N = m₁ · g", showWhen: { escenario: "polea" } },
+      { text: "Tira de la caja: m₂ · g", showWhen: { escenario: "polea" } },
       "Quieta si no supera f_s ≤ μs · N",
       "Resbala: f_k = μk · N",
-      "Polea: a = (m₂g − μk·m₁g)/(m₁ + m₂)",
-      "T = m₂ (g − a)",
+      { text: "a = (m₂g − μk·m₁g)/(m₁ + m₂)", showWhen: { escenario: "polea" } },
+      { text: "T = m₂ (g − a)", showWhen: { escenario: "polea" } },
+    ],
+    terms: [
+      { symbol: "ΣF", meaning: "suma de todas las fuerzas, N" },
+      { symbol: "m", meaning: "masa de la caja, kg", showWhen: { escenario: "plano" } },
+      { symbol: "m₁", meaning: "masa de la caja en la mesa, kg", showWhen: { escenario: "polea" } },
+      { symbol: "m₂", meaning: "masa de la pesa que cuelga, kg", showWhen: { escenario: "polea" } },
+      { symbol: "a", meaning: "aceleración, m/s²" },
+      { symbol: "g", meaning: "gravedad, 9.81 m/s²" },
+      { symbol: "N", meaning: "fuerza normal: lo que la superficie empuja hacia afuera, N" },
+      { symbol: "θ", meaning: "ángulo de la rampa", showWhen: { escenario: "plano" } },
+      { symbol: "F", meaning: "fuerza que aplicas a lo largo de la rampa, N", showWhen: { escenario: "plano" } },
+      { symbol: "μs, μk", meaning: "coeficientes de fricción estática (quieta) y cinética (resbalando)" },
+      { symbol: "f_s, f_k", meaning: "fricción estática y cinética, N" },
+      { symbol: "T", meaning: "tensión de la cuerda, N", showWhen: { escenario: "polea" } },
     ],
     position: [3.3, 1.6, -0.6],
     rotationY: -0.7,

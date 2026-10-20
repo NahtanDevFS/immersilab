@@ -39,6 +39,7 @@
  * Botones del ESP32 (índices de buttons[]):
  *   0 principal  → acción: clic / agarrar slider, A siguiente en el tutorial
  *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
+ *                  B + A (A apretado con B mantenido) → cancelar la pregunta
  *   Stick izquierdo a fondo ~0.5 s → correr (MovementController).
  *   Stick derecho arriba/abajo, en la vista VR → subir o bajar la interfaz.
  *   2 clic stick izquierdo → centrar la vista hacia el experimento
@@ -82,8 +83,16 @@ export interface PadState {
   right: PadAxes;
   /** Botón de acción (índice 0: X en PlayStation, A en Xbox). */
   action: boolean;
-  /** Gatillo derecho (índice 7: R2/RT). Reservado para hablarle al tutor. */
+  /**
+   * Hablarle al tutor: B en el control ImmersiLab, gatillo derecho (índice 7:
+   * R2/RT) en uno estándar.
+   */
   talk: boolean;
+  /**
+   * A apretado mientras se mantiene `talk`: cancelar la pregunta. Mientras
+   * dura, `action` se informa en false (ver `applyTalkCancel`).
+   */
+  cancelTalk: boolean;
   /** Solo para depuración con controles no estándar. */
   rawAxes: readonly number[];
   rawButtons: readonly boolean[];
@@ -117,9 +126,54 @@ export function getActivePad(): Gamepad | null {
 export function readPad(): PadState | null {
   const pad = getActivePad();
   if (!pad) return null;
+  return applyTalkCancel(isEsp32(pad) ? readEsp32(pad) : readStandard(pad));
+}
 
-  if (isEsp32(pad)) return readEsp32(pad);
+// ---------------------------------------------------------------------------
+// Cancelar la pregunta al tutor: B + A
+// ---------------------------------------------------------------------------
 
+/** Cuántos tutores montados pidieron el combo (fuera de un experimento, no aplica). */
+let talkCancelUsers = 0;
+let cancelPrevAction = false;
+let cancelLatched = false;
+
+/**
+ * Activa el combo B + A mientras haya un tutor montado. Devuelve la función
+ * para desactivarlo.
+ */
+export function enableTalkCancel(): () => void {
+  talkCancelUsers++;
+  return () => {
+    talkCancelUsers--;
+    cancelLatched = false;
+  };
+}
+
+/**
+ * A es el "tocar" del cursor y de la mirilla del visor. Si se aprieta
+ * MIENTRAS se mantiene B, es "cancelar la pregunta" y nadie más debe verlo:
+ * si no, además de cancelar, tocaría lo que quedó bajo el cursor. Por eso se
+ * filtra acá, que es por donde pasan todos los que leen A.
+ *
+ * - Cuenta solo un A que arranca con B ya apretado. Si A ya estaba apretado
+ *   (agrandando un panel) y después se aprieta B, A sigue siendo A.
+ * - El A del combo queda tapado hasta que se suelta, aunque B se suelte
+ *   antes: si no, soltar B primero lo convertía en un toque.
+ *
+ * Se llama varias veces por frame (cada componente lee el control): solo
+ * cambia de estado en los flancos de A, así que da lo mismo cuántas.
+ */
+function applyTalkCancel(state: PadState): PadState {
+  if (talkCancelUsers === 0) return state;
+  const a = state.action;
+  if (a && !cancelPrevAction && state.talk) cancelLatched = true;
+  if (!a) cancelLatched = false;
+  cancelPrevAction = a;
+  return cancelLatched ? { ...state, action: false, cancelTalk: true } : state;
+}
+
+function readStandard(pad: Gamepad): PadState {
   const [lx, ly] = stickIndices("stickL", [0, 1]);
   const [rx, ry] = stickIndices("stickR", defaultRightStick(pad));
 
@@ -136,6 +190,7 @@ export function readPad(): PadState | null {
     },
     action: pad.buttons[0]?.pressed ?? false,
     talk: pad.buttons[7]?.pressed ?? false,
+    cancelTalk: false,
     rawAxes: pad.axes,
     rawButtons: pad.buttons.map((b) => b.pressed),
   };
@@ -258,6 +313,7 @@ function readEsp32(pad: Gamepad): PadState {
     // El ESP32 no tiene R2 (índice 7), así que hablarle al tutor es el botón
     // secundario, mantenido.
     talk: buttons[1],
+    cancelTalk: false,
     rawAxes: pad.axes,
     rawButtons: buttons,
   };

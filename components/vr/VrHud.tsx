@@ -41,6 +41,7 @@ import { estimateLines, VrCard } from "./VrCard";
 import { panelAngle, SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
 import { CHAT_WIDTH, ChatPanel3D } from "./ChatPanel3D";
 import { VrText } from "./VrText";
+import { formulasOnOwnLines } from "@/lib/tutor/formula";
 
 /** Stick derecho sobre una variable: recorre el rango entero en ~3 s a fondo. */
 const STICK_RANGE_SECONDS = 3;
@@ -958,7 +959,9 @@ function TutorSubtitles() {
 
   // Las respuestas son cortas (tres oraciones como mucho), pero se acota por
   // las dudas: un bloque de texto enorme pegado a la vista marea.
-  const text = reply.length > 260 ? `${reply.slice(0, 257)}…` : reply;
+  // Cada fórmula del tutor ([[...]]) en su renglón.
+  const lines = formulasOnOwnLines(reply);
+  const text = lines.length > 260 ? `${lines.slice(0, 257)}…` : lines;
 
   return (
     <group position={[0, -0.36, -1.6]}>

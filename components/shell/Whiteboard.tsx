@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import type { WhiteboardSpec } from "@/types/module";
+import type { VariablesSchema, VariablesState, WhiteboardSpec, WhiteboardTerm } from "@/types/module";
+import { matchesShowWhen } from "@/lib/modules/visibility";
 import { GazeButton } from "@/components/vr/GazeButton";
 import { getGazed, getGazeUv, isSelectHeld, registerGazeTarget } from "@/lib/view/gaze";
 import { setDrawing } from "@/lib/view/drawing";
@@ -28,21 +29,104 @@ const PENS = [
  * se usan mutándolos, por diseño.
  */
 
-function drawBase(ctx: CanvasRenderingContext2D, spec: WhiteboardSpec) {
-  ctx.fillStyle = "#fbfbf8";
-  ctx.fillRect(0, 0, TEX_W, TEX_H);
+/** Lo que se escribe en la columna de fórmulas con la modalidad elegida. */
+interface BoardContent {
+  title: string;
+  formulas: string[];
+  terms: WhiteboardTerm[];
+}
 
-  ctx.fillStyle = "#0f172a";
-  ctx.font = "bold 54px system-ui, sans-serif";
+function boardContent(spec: WhiteboardSpec, values: VariablesState, schema?: VariablesSchema): BoardContent {
+  return {
+    title: spec.title,
+    formulas: spec.formulas
+      .filter((line) => typeof line === "string" || matchesShowWhen(line.showWhen, values, schema))
+      .map((line) => (typeof line === "string" ? line : line.text)),
+    terms: (spec.terms ?? []).filter((term) => matchesShowWhen(term.showWhen, values, schema)),
+  };
+}
+
+/** Hasta dónde se puede escribir en la columna de fórmulas (deja margen abajo). */
+const FORMULA_BOTTOM = TEX_H - 40;
+
+/**
+ * Escribe las fórmulas y "qué es cada letra" con un tamaño de letra dado y
+ * devuelve dónde terminó. Con `dry` solo mide, para achicar si no entra.
+ */
+function drawFormulas(ctx: CanvasRenderingContext2D, content: BoardContent, scale: number, dry: boolean): number {
+  const x = 50;
+  const maxWidth = TEX_W * FORMULA_COLUMN - 80;
+  const write = (text: string, tx: number, ty: number) => {
+    if (!dry) ctx.fillText(text, tx, ty);
+  };
+  const px = (size: number) => Math.round(size * scale);
+
   ctx.textBaseline = "top";
-  ctx.fillText(spec.title, 50, 40);
-
-  ctx.font = "40px system-ui, sans-serif";
+  ctx.font = `${px(40)}px system-ui, sans-serif`;
   ctx.fillStyle = "#1e3a8a";
   let y = 140;
-  for (const line of spec.formulas) {
-    y = wrapText(ctx, line, 50, y, TEX_W * FORMULA_COLUMN - 80, 50) + 22;
+  for (const line of content.formulas) {
+    y = wrapText(ctx, line, x, y, maxWidth, 50 * scale, write) + 22 * scale;
   }
+
+  if (content.terms.length > 0) {
+    y += 14 * scale;
+    ctx.font = `bold ${px(30)}px system-ui, sans-serif`;
+    ctx.fillStyle = "#475569";
+    write("Qué es cada letra", x, y);
+    y += 44 * scale;
+    // Todas las explicaciones arrancan en la misma columna (la del símbolo
+    // más largo, con tope para que no se coma el renglón).
+    ctx.font = `bold ${px(30)}px system-ui, sans-serif`;
+    const widest = Math.max(...content.terms.map((t) => ctx.measureText(`${t.symbol}:`).width));
+    const indent = Math.min(widest + 14 * scale, maxWidth * 0.35);
+    for (const term of content.terms) {
+      // El símbolo en azul, como en las fórmulas; lo que significa, en gris.
+      ctx.font = `bold ${px(30)}px system-ui, sans-serif`;
+      ctx.fillStyle = "#1e3a8a";
+      const label = `${term.symbol}:`;
+      // Un símbolo más largo que la columna va solo en su renglón.
+      const own = ctx.measureText(label).width + 14 * scale > indent;
+      write(label, x, y);
+      if (own) y += 38 * scale;
+      ctx.font = `${px(30)}px system-ui, sans-serif`;
+      ctx.fillStyle = "#334155";
+      y = wrapText(ctx, term.meaning, x + indent, y, maxWidth - indent, 38 * scale, write) + 6 * scale;
+    }
+  }
+  return y;
+}
+
+/**
+ * La columna de fórmulas, con el título. Si no entra, achica la letra: un
+ * experimento con muchas fórmulas y letras no debe salirse del pizarrón.
+ */
+function drawFormulaColumn(ctx: CanvasRenderingContext2D, content: BoardContent) {
+  // Solo esta columna: lo que el estudiante dibujó a la derecha se queda.
+  ctx.fillStyle = "#fbfbf8";
+  ctx.fillRect(0, 0, TEX_W * FORMULA_COLUMN - 4, TEX_H);
+
+  // El título también se achica si es largo: si no, cruzaba la línea y se
+  // metía en la zona de las cuentas.
+  ctx.fillStyle = "#0f172a";
+  ctx.textBaseline = "top";
+  let titleSize = 54;
+  ctx.font = `bold ${titleSize}px system-ui, sans-serif`;
+  while (titleSize > 32 && ctx.measureText(content.title).width > TEX_W * FORMULA_COLUMN - 80) {
+    titleSize -= 2;
+    ctx.font = `bold ${titleSize}px system-ui, sans-serif`;
+  }
+  ctx.fillText(content.title, 50, 40 + (54 - titleSize) / 2);
+
+  let scale = 1;
+  while (scale > 0.55 && drawFormulas(ctx, content, scale, true) > FORMULA_BOTTOM) scale -= 0.05;
+  drawFormulas(ctx, content, scale, false);
+}
+
+function drawBase(ctx: CanvasRenderingContext2D, content: BoardContent) {
+  ctx.fillStyle = "#fbfbf8";
+  ctx.fillRect(0, 0, TEX_W, TEX_H);
+  drawFormulaColumn(ctx, content);
 
   // Separación entre fórmulas y lugar para las cuentas.
   ctx.strokeStyle = "#cbd5e1";
@@ -66,20 +150,21 @@ function wrapText(
   y: number,
   maxWidth: number,
   lineHeight: number,
+  write: (text: string, x: number, y: number) => void = (t, tx, ty) => ctx.fillText(t, tx, ty),
 ): number {
   const words = text.split(" ");
   let line = "";
   for (const word of words) {
     const test = line ? `${line} ${word}` : word;
     if (ctx.measureText(test).width > maxWidth && line) {
-      ctx.fillText(line, x, y);
+      write(line, x, y);
       line = word;
       y += lineHeight;
     } else {
       line = test;
     }
   }
-  ctx.fillText(line, x, y);
+  write(line, x, y);
   return y + lineHeight;
 }
 
@@ -148,22 +233,51 @@ function boardUvAt(
  *
  * Debajo, los plumones (tres colores) y el borrador, como botones 3D: se
  * tocan con el mouse o se apuntan con la mira.
+ *
+ * Las fórmulas y las letras de otra modalidad no se escriben (`showWhen`,
+ * igual que en el panel de variables). Al cambiar de modalidad se reescribe
+ * solo esa columna: las cuentas del estudiante no se borran.
  */
-export function Whiteboard({ spec }: { spec: WhiteboardSpec }) {
+export function Whiteboard({
+  spec,
+  values,
+  schema,
+}: {
+  spec: WhiteboardSpec;
+  values: VariablesState;
+  schema?: VariablesSchema;
+}) {
   const width = spec.width ?? 2.2;
   const height = (width * TEX_H) / TEX_W;
+
+  const content = useMemo(() => boardContent(spec, values, schema), [spec, values, schema]);
+  // Se reescribe solo si cambia lo que se ve, no con cada slider que se mueve.
+  const contentKey = JSON.stringify(content);
+  const contentRef = useRef(content);
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
 
   const surface = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = TEX_W;
     canvas.height = TEX_H;
     const ctx = canvas.getContext("2d")!;
-    drawBase(ctx, spec);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 4;
     return { ctx, texture };
-  }, [spec]);
+  }, []);
+
+  // El primer dibujo y, después, cada vez que cambia la modalidad.
+  const drawnKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (drawnKey.current === contentKey) return;
+    if (drawnKey.current === null) drawBase(surface.ctx, contentRef.current);
+    else drawFormulaColumn(surface.ctx, contentRef.current);
+    drawnKey.current = contentKey;
+    refresh(surface.texture);
+  }, [contentKey, surface]);
 
   const [pen, setPen] = useState(PENS[0].color);
   const penRef = useRef(pen);
@@ -243,7 +357,7 @@ export function Whiteboard({ spec }: { spec: WhiteboardSpec }) {
   });
 
   const clear = () => {
-    drawBase(surface.ctx, spec);
+    drawBase(surface.ctx, contentRef.current);
     refresh(surface.texture);
   };
 

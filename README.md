@@ -11,8 +11,8 @@ Gemini) que responde con los valores actuales del experimento.
 ## Qué incluye
 
 - **20 experimentos** en cuatro áreas, con **72 retos** en total:
-  - **Física:** tiro parabólico (artillería), leyes de Newton (plano
-    inclinado, fricción y polea), colisiones 1D (predice el resultado),
+  - **Física:** tiro parabólico (artillería), ley de la fuerza, la 2da de Newton
+    (plano inclinado, fricción y polea), colisiones 1D (predice el resultado),
     péndulo, guía la carga (campo eléctrico), la grúa electromagnética
     (electroimán).
   - **Cálculo:** derivada (frena en el pico), llena el tanque (razones de
@@ -26,7 +26,7 @@ Gemini) que responde con los valores actuales del experimento.
     contador (flip-flops y contadores de módulo N).
 - **Lobby** en 3D con una puerta por experimento: se entra caminando.
 - **Tutor por voz:** se mantiene presionado el botón del micrófono (o el
-  gatillo R2 del control), se pregunta en voz alta y responde hablando.
+  botón B del control), se pregunta en voz alta y responde hablando.
   Comenta solo cuando se logra un reto.
 - **Progreso:** sin cuenta se guarda en el dispositivo; con cuenta se guarda
   en Supabase y se ve desde cualquier lado (`/progreso`). Lo logrado como
@@ -97,7 +97,8 @@ Controles:
 | Mirar | Girar la cabeza | Arrastrar con el mouse |
 | Caminar | Stick izquierdo | W A S D o flechas (Shift corre) |
 | Cursor | Stick derecho; A (✕ en PlayStation) para tocar | Mouse |
-| Tutor | Mantener R2 | Mantener el botón del micrófono |
+| Tutor | Mantener B | Mantener el botón del micrófono |
+| Cancelar al tutor | Mantener B y apretar A | La ✕ junto al micrófono o Esc |
 
 Algunos atajos por URL, útiles para depurar en el dispositivo: `?q=low` o
 `?q=high` fuerzan la calidad gráfica (queda guardada).

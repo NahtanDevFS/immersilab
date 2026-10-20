@@ -60,7 +60,7 @@ export function LobbyVrHud({
     ],
     ["Elegir", pad ? "mira un botón y presiona A." : "mira un botón y toca la pantalla."],
     ["Entrar", "camina hacia una puerta: cada una es un experimento."],
-    ["Tutor", "adentro, mantén R2 (B en el control ImmersiLab) o usa el botón del panel."],
+    ["Tutor", "adentro, mantén B o usa el botón del panel."],
     ["Paneles", "Y (clic del stick derecho) los oculta; su barra de arriba los mueve."],
     ["Acercar", "mantén A (o el dedo) mirando un panel y se agranda para leerlo."],
     ["Altura", "stick derecho arriba o abajo sube o baja los paneles."],

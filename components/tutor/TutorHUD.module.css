@@ -88,6 +88,27 @@
   color: var(--lab-text);
 }
 
+/* Una fórmula del tutor: renglón propio, centrada y sobre un fondo, para
+   que se distinga del texto hablado y se lea de un vistazo. Con la letra
+   monoespaciada quedaba muy espaciada y los subíndices se perdían. */
+.formula {
+  display: block;
+  margin: 0.35rem 0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  /* Un poco de aire: sin él, "m₁·v₁" se veía como una sola mancha. */
+  letter-spacing: 0.03em;
+  word-spacing: 0.1em;
+  font-style: normal;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .reply[data-offline="true"] {
   color: var(--lab-danger);
 }
@@ -166,6 +187,26 @@
 
 .chatToggle:hover {
   color: var(--lab-text);
+}
+
+/* Cancelar: redonda, del alto del botón de hablar. */
+.cancel {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-glass);
+  color: var(--lab-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.cancel:hover {
+  color: var(--lab-danger);
+  border-color: var(--lab-danger);
 }
 
 /* La conversación desplegada: como un chat, con lo último abajo. */

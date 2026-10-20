@@ -4,7 +4,7 @@ import type { VariablesState } from "@/types/module";
  * Recorrido guiado: una demo del laboratorio, pensada para mostrarlo en
  * clase (PLAN_DESARROLLO.md, Fase F.4). Son nueve paradas repartidas entre
  * las cuatro áreas, siguiendo el temario: dos de mecánica (tiro parabólico
- * y leyes de Newton), una de electromagnetismo, una de cálculo, tres de
+ * y segunda ley de Newton), una de electromagnetismo, una de cálculo, tres de
  * redes (segmentación, enrutamiento y arquitectura) y dos de electrónica.
  * Termina en la pantalla de progreso para mostrar que lo logrado queda
  * guardado. Recorrer los veinte experimentos tomaría más de una hora y
@@ -41,9 +41,9 @@ export const TOUR: TourStop[] = [
   {
     slug: "leyes-newton",
     href: "/lab/physics/leyes-newton",
-    name: "Leyes de Newton",
+    name: "Ley de la fuerza (2da de Newton)",
     say:
-      "Seguimos con las leyes de Newton. Sobre la caja ves sus fuerzas como flechas: el peso, la normal y la fricción. " +
+      "Seguimos con la ley de la fuerza, la segunda de Newton. Sobre la caja ves sus fuerzas como flechas: el peso, la normal y la fricción. " +
       "Antes de soltarla, di si crees que se va a mover. La fricción estática aguanta hasta un tope: sube el ángulo de la rampa y busca el punto donde ya no alcanza.",
   },
   {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AIContext } from "@/types/module";
 import { SentenceBuffer } from "@/lib/tutor/sentence-buffer";
+import { SpokenFilter } from "@/lib/tutor/formula";
 import { formatUserTurn, type TutorTurn } from "@/lib/tutor/protocol";
 
 /** Lo que se dice si no hay red o el servidor falla: en una defensa, un fallo no puede ser silencioso. */
@@ -116,6 +117,9 @@ export function useTutorSession(options: {
       const { getContext, hints, onSentence } = optionsRef.current;
       const context = getContext();
       const buffer = new SentenceBuffer();
+      // Las fórmulas escritas ([[...]]) se leen, no se dicen: el tutor ya
+      // las dijo en palabras (lib/tutor/formula.ts).
+      const spoken = new SpokenFilter();
       let text = "";
 
       setPending(true);
@@ -147,8 +151,9 @@ export function useTutorSession(options: {
           text += chunk;
           setReply(text);
           updateReply({ text });
-          for (const sentence of buffer.push(chunk)) onSentence(sentence);
+          for (const sentence of buffer.push(spoken.push(chunk))) onSentence(sentence);
         }
+        for (const sentence of buffer.push(spoken.flush())) onSentence(sentence);
         const rest = buffer.flush();
         if (rest) onSentence(rest);
         updateReply({ state: "done" });

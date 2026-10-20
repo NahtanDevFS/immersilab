@@ -14,12 +14,12 @@ const variablesSchema: VariablesSchema = {
   },
   A: { type: "boolean", label: "Interruptor A", default: false, group: "Interruptores" },
   B: { type: "boolean", label: "Interruptor B", default: false, group: "Interruptores" },
-  C: { type: "boolean", label: "Interruptor C (niveles 2 y 3)", default: false, group: "Interruptores" },
+  C: { type: "boolean", label: "Interruptor C", default: false, group: "Interruptores", showWhen: { nivel: ["porton", "jueces"] } },
   g1: { type: "select", label: "Zócalo 1", default: "vacio", options: gateOptions, group: "Compuertas" },
-  g2: { type: "select", label: "Zócalo 2 (niveles 2 y 3)", default: "vacio", options: gateOptions, group: "Compuertas" },
-  g3: { type: "select", label: "Zócalo 3 (niveles 2 y 3)", default: "vacio", options: gateOptions, group: "Compuertas" },
-  g4: { type: "select", label: "Zócalo 4 (nivel 3)", default: "vacio", options: gateOptions, group: "Compuertas" },
-  g5: { type: "select", label: "Zócalo 5 (nivel 3)", default: "vacio", options: gateOptions, group: "Compuertas" },
+  g2: { type: "select", label: "Zócalo 2", default: "vacio", options: gateOptions, group: "Compuertas", showWhen: { nivel: ["porton", "jueces"] } },
+  g3: { type: "select", label: "Zócalo 3", default: "vacio", options: gateOptions, group: "Compuertas", showWhen: { nivel: ["porton", "jueces"] } },
+  g4: { type: "select", label: "Zócalo 4", default: "vacio", options: gateOptions, group: "Compuertas", showWhen: { nivel: "jueces" } },
+  g5: { type: "select", label: "Zócalo 5", default: "vacio", options: gateOptions, group: "Compuertas", showWhen: { nivel: "jueces" } },
 };
 
 export const compuertasExperiment: ExperimentDefinition = {

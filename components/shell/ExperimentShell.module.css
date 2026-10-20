@@ -5,7 +5,7 @@
  * escena y la salida; los paneles en 3D vienen en la etapa 2.
  *
  * Los componentes siguen montados (solo ocultos): el tutor sigue
- * escuchando el gatillo R2 y hablando, y los retos se siguen registrando.
+ * escuchando el botón B y hablando, y los retos se siguen registrando.
  */
 .container[data-view="vr"] > :not([data-vr-keep]) {
   display: none !important;

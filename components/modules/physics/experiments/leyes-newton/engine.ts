@@ -6,7 +6,7 @@ import type {
 } from "@/types/module";
 
 /**
- * Motor de "Leyes de Newton": segunda ley, fricción estática y cinética y
+ * Motor de "Ley de la fuerza (2da de Newton)": fricción estática y cinética y
  * diagrama de cuerpo libre, en un plano inclinado o con una polea.
  *
  * Plano (eje a lo largo de la rampa, positivo hacia abajo):
@@ -416,7 +416,7 @@ export function createNewtonEngine(): NewtonEngine {
         if (last.aError !== null) result.error_aceleracion_pct = Number((last.aError * 100).toFixed(1));
       }
       return {
-        experimentName: "Leyes de Newton",
+        experimentName: "Ley de la fuerza (2da de Newton)",
         disciplineName: "Física",
         variables: lastVariables,
         result,

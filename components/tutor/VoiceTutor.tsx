@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type { ExperimentEngine, VariablesSchema } from "@/types/module";
-import { readPad } from "@/components/shell/gamepad";
+import { enableTalkCancel, readPad } from "@/components/shell/gamepad";
 import { onChallengeCompleted, type ChallengeCompletedEvent } from "@/lib/tutor/events";
 import { useSpeechInput } from "./useSpeechInput";
 import { useSpeechOutput } from "./useSpeechOutput";
 import { useTutorSession } from "./useTutorSession";
 import { ERROR_LABEL, TutorHUD, type TutorStatus } from "./TutorHUD";
 import { describePanel } from "@/lib/tutor/panel";
+import { visibleSchema, visibleValues } from "@/lib/modules/visibility";
 import { publishTutorHud, publishTutorLog, setTutorCommands } from "@/lib/tutor/hudStore";
 
 interface Props {
@@ -25,13 +26,18 @@ interface Props {
  * hablar (STT) → engine.getState() → /api/tutor (streaming) → TTS por oración
  *
  * Tres formas de hablarle, para cubrir cada situación de uso:
- * - **Gatillo R2 del gamepad**, mantenido: el caso del visor.
+ * - **Botón B del control** (R2 en un control genérico), mantenido: el caso
+ *   del visor.
  * - **Botón en pantalla, mantenido** con mouse o dedo: escritorio.
  * - **Toque corto del cursor virtual** sobre el botón: alterna grabar/parar,
  *   porque el cursor del modo visor solo sabe hacer click, no mantener.
  *
  * Apretar mientras el tutor habla lo corta en seco (barge-in): sin esto, una
  * respuesta larga se vuelve una cárcel.
+ *
+ * Cancelar (descartar lo dicho, cortar la respuesta y callar la voz): la ✕ al
+ * lado del botón, Escape en la compu, B + A en el control y "Cancelar" en el
+ * panel de la vista VR.
  */
 /**
  * Lo que se le pide al tutor cuando el alumno logra un reto. Va como un turno
@@ -56,7 +62,11 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
   const session = useTutorSession({
     getContext: () => {
       const state = engine.getState();
-      return schema ? { ...state, panel: describePanel(schema, state.variables) } : state;
+      if (!schema) return state;
+      // Lo mismo que ve el estudiante: sin las variables que esta modalidad
+      // oculta, para que el tutor no hable de un ángulo que no está.
+      const variables = visibleValues(schema, state.variables);
+      return { ...state, variables, panel: describePanel(visibleSchema(schema, state.variables), state.variables) };
     },
     hints,
     onSentence: output.enqueue,
@@ -101,6 +111,19 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
     controls.current = { press, release, toggle, cancel };
   }, [press, release, toggle, cancel]);
 
+  const status: TutorStatus = input.listening
+    ? "listening"
+    : output.speaking
+      ? "speaking"
+      : session.pending
+        ? "thinking"
+        : "idle";
+
+  const statusRef = useRef(status);
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
   // Los botones del tutor en la vista VR (lib/tutor/hudStore.ts).
   useEffect(
     () =>
@@ -111,27 +134,53 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
     [],
   );
 
+  // B + A cancela. Apretar B ya corta la respuesta y la voz (barge-in), así
+  // que el combo sirve en cualquier estado. Después, soltar B no envía nada:
+  // el reconocimiento ya no existe.
   useEffect(() => {
+    const disable = enableTalkCancel();
     let rafId = 0;
     let wasPressed = false;
+    let wasCancel = false;
     const tick = () => {
       rafId = requestAnimationFrame(tick);
-      const talk = readPad()?.talk ?? false;
+      const pad = readPad();
+      const talk = pad?.talk ?? false;
+      const cancelTalk = pad?.cancelTalk ?? false;
       if (talk && !wasPressed) controls.current.press();
+      if (cancelTalk && !wasCancel) controls.current.cancel();
       if (!talk && wasPressed) controls.current.release();
       wasPressed = talk;
+      wasCancel = cancelTalk;
     };
     rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      disable();
+    };
   }, []);
 
-  const status: TutorStatus = input.listening
-    ? "listening"
-    : output.speaking
-      ? "speaking"
-      : session.pending
-        ? "thinking"
-        : "idle";
+  // Escape cancela en la compu. Solo si el tutor está en algo, y no dentro de
+  // una casilla (ahí Escape deshace lo escrito). En captura y frenando el
+  // evento: en la vista VR, Escape también sale del visor, y un solo Escape
+  // no debe hacer las dos cosas.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || statusRef.current === "idle") return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || target.closest("input, textarea, select"))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      controls.current.cancel();
+    };
+    window.addEventListener("keydown", onKey, { capture: true });
+    return () => window.removeEventListener("keydown", onKey, { capture: true });
+  }, []);
 
   // Para los subtítulos 3D de la vista VR (components/vr/VrHud.tsx).
   useEffect(() => {
@@ -155,10 +204,6 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
   // Primero una frase fija, al instante y sin red; después Gemini agrega una
   // o dos oraciones con los valores reales del experimento (el AIContext
   // viaja solo con cada pregunta).
-  const statusRef = useRef(status);
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
   useEffect(() => {
     return onChallengeCompleted((event) => {
       // No se interrumpe: si el alumno está hablando con el tutor, si el
@@ -186,6 +231,7 @@ export function VoiceTutor({ engine, hints, schema }: Props) {
       onPress={press}
       onRelease={release}
       onToggle={toggle}
+      onCancel={cancel}
       log={session.log}
     />
   );

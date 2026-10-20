@@ -82,7 +82,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     const rec = new Ctor();
     // es-GT existe en Chrome; si el motor no lo tiene, cae a español genérico.
     rec.lang = "es-GT";
-    // Continuo: mientras el gatillo esté apretado, una pausa para pensar no
+    // Continuo: mientras B esté apretado, una pausa para pensar no
     // corta la grabación.
     rec.continuous = true;
     rec.interimResults = true;
