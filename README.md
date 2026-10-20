@@ -72,6 +72,10 @@ Después, en orden, las migraciones que agregan experimentos:
 `20261020120000_catalogo_v2.sql` (los siete experimentos del catálogo v2; no
 borra los retirados, para no perder el historial).
 
+Para que cada alumno pueda borrar su progreso desde la página de progreso,
+corre también `20261021120000_borrar_progreso.sql` (agrega la regla de RLS
+que permite borrar los retos propios).
+
 Si cambia el catálogo de experimentos, la migración se regenera con:
 
 ```bash

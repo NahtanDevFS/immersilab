@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   GUEST,
   adoptGuestProgress,
+  clearCompletions,
   completionKey,
   currentOwner,
   markSynced,
@@ -73,6 +74,43 @@ export async function pushPending(): Promise<void> {
   } finally {
     syncing = false;
   }
+}
+
+/**
+ * Borra el progreso del dueño activo, todo o el de un experimento, para poder
+ * volver a hacer los retos. Con cuenta se borra primero en Supabase y después
+ * en el dispositivo; si lo de Supabase falla (sin red), no se borra nada y se
+ * lanza el error, para que la cuenta y el dispositivo no queden distintos.
+ */
+export async function deleteProgress(experiment?: string): Promise<void> {
+  const owner = currentOwner();
+  if (owner !== GUEST) {
+    const supabase = createClient();
+    // Un experimento que la base no conoce no tiene filas que borrar allá.
+    const experimentId = experiment ? (await experimentIdBySlug()).get(experiment) : undefined;
+    if (!experiment || experimentId) {
+      let remove = supabase.from("challenge_completions").delete().eq("user_id", owner);
+      if (experimentId) remove = remove.eq("experiment_id", experimentId);
+      const { error } = await remove;
+      if (error) throw error;
+
+      // Sin la política de borrado (RLS), Supabase no da error: simplemente
+      // no borra nada. Se comprueba que no haya quedado ninguna fila.
+      let check = supabase
+        .from("challenge_completions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", owner);
+      if (experimentId) check = check.eq("experiment_id", experimentId);
+      const { count, error: checkError } = await check;
+      if (checkError) throw checkError;
+      if (count) {
+        throw new Error(
+          "La base de datos no dejó borrar el progreso: falta correr la migración 20261021120000_borrar_progreso.sql en Supabase.",
+        );
+      }
+    }
+  }
+  clearCompletions(experiment);
 }
 
 /** Trae los logros de la cuenta y los mezcla con los del dispositivo. */

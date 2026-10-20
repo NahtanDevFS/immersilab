@@ -278,3 +278,44 @@
   font-weight: 600;
   color: var(--lab-accent);
 }
+
+/* Borrar progreso: discreto en cada experimento, más visible el de "todo". */
+.experimentActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.erase {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--lab-text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.erase:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.danger {
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-danger);
+  background: rgba(226, 75, 74, 0.1);
+  color: var(--lab-text);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}

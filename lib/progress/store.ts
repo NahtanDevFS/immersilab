@@ -127,6 +127,21 @@ export function recordCompletion(experiment: string, challenge: string, title: s
   return true;
 }
 
+/**
+ * Borra logros del dueño activo: todos, o solo los de `experiment`. Para una
+ * cuenta, primero hay que borrarlos de Supabase (ver deleteProgress en
+ * ./sync.ts): si no, al volver a ingresar se traerían de nuevo.
+ */
+export function clearCompletions(experiment?: string) {
+  load();
+  const own = bucket(activeOwner);
+  for (const [key, c] of Object.entries(own)) {
+    if (!experiment || c.experiment === experiment) delete own[key];
+  }
+  persist();
+  refreshSnapshot();
+}
+
 /** Marca como subidos los logros indicados del dueño dado. */
 export function markSynced(owner: string, keys: string[]) {
   const own = bucket(owner);

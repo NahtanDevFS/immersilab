@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DISCIPLINES, EXPERIMENTS, MODULES } from "@/lib/catalog";
 import { EXPERIMENT_DEFINITIONS, challengesOf } from "@/components/modules/registry";
 import { GUEST, completionKey } from "@/lib/progress/store";
+import { deleteProgress } from "@/lib/progress/sync";
 import { displayName, useProgress, useSession } from "@/lib/progress/useSession";
 import styles from "@/components/progress/Page.module.css";
 
@@ -38,6 +39,31 @@ export default function ProgresoPage() {
     0,
   );
   const guest = progress.owner === GUEST;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /** Borra el progreso (todo, o el de un experimento) después de confirmar. */
+  async function erase(experiment?: { slug: string; name: string }) {
+    const what = experiment ? `los retos de "${experiment.name}"` : "todos tus retos";
+    const where = guest ? "de este dispositivo" : "de tu cuenta";
+    if (!window.confirm(`¿Borrar ${what} ${where}? Vas a poder volver a hacerlos, pero no se puede deshacer.`)) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteProgress(experiment?.slug);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(
+        message.toLowerCase().includes("fetch")
+          ? "No hay conexión con el servidor: no se borró nada. Prueba de nuevo con internet."
+          : message,
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <main className={styles.page}>
@@ -76,6 +102,8 @@ export default function ProgresoPage() {
             cuenta: se sube solo cuando vuelva la conexión.
           </p>
         )}
+
+        {error && <p className={`${styles.note} ${styles.error}`}>{error}</p>}
 
         {DISCIPLINES.map((discipline) => (
           <section key={discipline.slug} className={styles.inner} style={{ gap: "0.7rem" }}>
@@ -123,9 +151,21 @@ export default function ProgresoPage() {
                             );
                           })}
                         </ul>
-                        <Link href={experiment.href} className={styles.go}>
-                          {achieved === 0 ? "Empezar →" : "Seguir →"}
-                        </Link>
+                        <div className={styles.experimentActions}>
+                          <Link href={experiment.href} className={styles.go}>
+                            {achieved === 0 ? "Empezar →" : "Seguir →"}
+                          </Link>
+                          {achieved > 0 && (
+                            <button
+                              type="button"
+                              className={styles.erase}
+                              onClick={() => void erase(experiment)}
+                              disabled={busy}
+                            >
+                              Borrar estos retos
+                            </button>
+                          )}
+                        </div>
                       </article>
                     );
                   })}
@@ -133,6 +173,20 @@ export default function ProgresoPage() {
             ))}
           </section>
         ))}
+
+        {done > 0 && (
+          <section className={styles.card}>
+            <p className={styles.lead}>
+              ¿Quieres volver a hacer todos los retos desde cero? Esto borra tu progreso
+              {guest ? " de este dispositivo" : " de tu cuenta, en todos tus dispositivos"}.
+            </p>
+            <div className={styles.row} style={{ marginTop: "0.8rem" }}>
+              <button type="button" className={styles.danger} onClick={() => void erase()} disabled={busy}>
+                {busy ? "Borrando…" : "Borrar todo mi progreso"}
+              </button>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
