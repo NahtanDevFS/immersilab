@@ -3,7 +3,8 @@
 /**
  * Teclado como fuente de movimiento, para jugar desde la computadora.
  *
- * WASD o flechas para caminar, Shift para correr. Devuelve los ejes con la
+ * WASD o flechas para caminar, Shift para correr, Q y E para bajar y subir
+ * la vista (en la compu, ver MovementController). Devuelve los ejes con la
  * misma forma que el stick izquierdo del gamepad ({ x, y }, y negativo =
  * adelante), así `MovementController` los suma sin distinguir de dónde
  * vienen.
@@ -19,6 +20,8 @@ const FORWARD = ["KeyW", "ArrowUp"];
 const BACK = ["KeyS", "ArrowDown"];
 const LEFT = ["KeyA", "ArrowLeft"];
 const RIGHT = ["KeyD", "ArrowRight"];
+const DOWN = ["KeyQ"];
+const UP = ["KeyE"];
 const MOVEMENT = new Set([...FORWARD, ...BACK, ...LEFT, ...RIGHT]);
 const ARROWS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -81,7 +84,7 @@ export function attachKeyboard(): () => void {
 const isDown = (codes: string[]) => codes.some((code) => pressed.has(code));
 
 /** Ejes de movimiento del teclado, normalizados (en diagonal no se camina más rápido). */
-export function readKeyboard(): { x: number; y: number; run: boolean } {
+export function readKeyboard(): { x: number; y: number; vertical: number; run: boolean } {
   let x = (isDown(RIGHT) ? 1 : 0) - (isDown(LEFT) ? 1 : 0);
   let y = (isDown(BACK) ? 1 : 0) - (isDown(FORWARD) ? 1 : 0);
   const length = Math.hypot(x, y);
@@ -92,6 +95,8 @@ export function readKeyboard(): { x: number; y: number; run: boolean } {
   return {
     x,
     y,
+    /** +1 subir (E), −1 bajar (Q). */
+    vertical: (isDown(UP) ? 1 : 0) - (isDown(DOWN) ? 1 : 0),
     run: pressed.has("ShiftLeft") || pressed.has("ShiftRight"),
   };
 }

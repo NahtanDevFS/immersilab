@@ -96,6 +96,8 @@ Controles:
 |---|---|---|
 | Mirar | Girar la cabeza | Arrastrar con el mouse |
 | Caminar | Stick izquierdo | W A S D o flechas (Shift corre) |
+| Caminar en el celular sin control | — | El joystick de la pantalla, abajo a la izquierda |
+| Bajar y subir la vista | — (la da la cabeza) | Q / E, la rueda del mouse o el stick derecho del control |
 | Cursor | Stick derecho; A (✕ en PlayStation) para tocar | Mouse |
 | Tutor | Mantener B | Mantener el botón del micrófono |
 | Cancelar al tutor | Mantener B y apretar A | La ✕ junto al micrófono o Esc |

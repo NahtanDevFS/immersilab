@@ -5,9 +5,11 @@ import type {
   VariablesState,
 } from "@/types/module";
 import {
+  MASS,
   NULL_CHARGES,
   NULL_X,
   PEDESTALS,
+  Q_PARTICLE,
   fieldAt,
   getLevel,
   simulate,
@@ -73,6 +75,43 @@ export const END_TEXT: Record<ShotEnd, string> = {
   fuera: "se salió de la cámara",
   tiempo: "se quedó dando vueltas",
 };
+
+/**
+ * Para el tutor: la cuenta de las placas (que sí tiene fórmula cerrada) y lo
+ * que pasaría si se lanza ahora. Con cargas sueltas la trayectoria no tiene
+ * fórmula: la fuerza cambia en cada punto, así que solo se puede simular; sin
+ * esto el modelo de voz esquivaba la pregunta o inventaba un número.
+ */
+function fieldNotes(level: Level, charges: Charge[], variables: VariablesState): Record<string, string> {
+  if (level.id === "campo-nulo") return {};
+  const sign = variables.signo_particula === "negativa" ? -1 : 1;
+  const speed = Number(variables.velocidad ?? 3);
+  const voltage = Number(variables.voltaje ?? 0);
+  const shot = simulate({ level, charges, sign, speed, angleDeg: Number(variables.angulo ?? 0), voltage });
+  const notes: Record<string, string> = {
+    si_lanzas_ahora: `la partícula ${END_TEXT[shot.end]} a los ${shot.duration.toFixed(2)} s (simulado con los valores actuales)`,
+  };
+  const p = level.plates;
+  if (p) {
+    const e = voltage / p.d;
+    const a = (sign * Q_PARTICLE * e) / MASS;
+    const length = p.x1 - p.x0;
+    const t = length / speed;
+    const z = 0.5 * a * t * t;
+    const hits = Math.abs(z) >= p.d / 2;
+    notes.calculo_con_los_valores_actuales = [
+      `E = V / d = ${voltage} / ${p.d} = ${e} V/m`,
+      `a = q · E / m = ${sign > 0 ? "" : "−"}1×10⁻⁶ · ${e} / 1×10⁻³ = ${a.toFixed(2)} m/s² (hacia ${a >= 0 ? "arriba, z positivo" : "abajo, z negativo"})`,
+      `tiempo entre las placas: t = L / v = ${length} / ${speed} = ${t.toFixed(3)} s`,
+      `desvío al salir: z = ½ · a · t² = ${z.toFixed(3)} m${hits ? `: es más de ${p.d / 2} m, así que choca con una placa antes de salir` : ""}`,
+      "afuera de las placas no hay campo: sigue en línea recta con la velocidad vertical que ganó (a · t)",
+    ].join("; ");
+  } else {
+    notes.sin_formula_cerrada =
+      "con cargas puntuales la fuerza cambia en cada punto del camino (Coulomb, 1/r²), así que la trayectoria no tiene una fórmula: se calcula paso a paso. Sí se puede calcular la fuerza o el campo en un punto dado con F = k·q₁·q₂/r²";
+  }
+  return notes;
+}
 
 export function createFieldEngine(): FieldEngine {
   let lastVariables: VariablesState = {};
@@ -223,6 +262,7 @@ export function createFieldEngine(): FieldEngine {
         disciplineName: "Física",
         variables: lastVariables,
         result,
+        tutorNotes: fieldNotes(level, runtime.charges, lastVariables),
         conceptTags: ["ley de Coulomb", "campo eléctrico", "líneas de campo", "movimiento de una carga en un campo", "placas paralelas"],
       };
     },

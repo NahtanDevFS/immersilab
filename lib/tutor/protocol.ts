@@ -36,7 +36,12 @@ export function formatUserTurn(transcript: string, context: AIContext): string {
 /** Límites duros del endpoint: es público y cada request cuesta plata. */
 export const TUTOR_LIMITS = {
   transcriptChars: 600,
-  hintsChars: 2000,
+  /**
+   * Las pistas más largas (Cobertura, Newton) pasan de 2000: con el límite
+   * anterior se cortaban y el tutor perdía justo el final, que suele traer
+   * las confusiones típicas y qué no debe dar resuelto.
+   */
+  hintsChars: 3500,
   /** Estado del experimento + panel. El más grande (Ondas) ronda 1500. */
   contextChars: 6000,
   historyTurns: 20,

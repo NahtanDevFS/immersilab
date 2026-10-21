@@ -81,6 +81,40 @@ function freshPendulum(angleDeg: number): PendulumState {
 }
 
 /** Un paso de RK4 de θ'' = −(g/L)·sen θ − b·θ'. */
+/** Media aritmético-geométrica: con ella sale el período exacto a cualquier ángulo. */
+function agm(a: number, b: number): number {
+  for (let i = 0; i < 20; i++) [a, b] = [(a + b) / 2, Math.sqrt(a * b)];
+  return a;
+}
+
+/**
+ * Las cuentas que el tutor tiene que poder explicar, con el modelo de este
+ * motor (θ'' = −(g/L)·sen θ − b·θ'). El modelo de voz se equivocaba justo
+ * en lo que no es la fórmula de siempre: con amortiguamiento decía que la
+ * amplitud baja a la mitad en ln 2 / b, y en este modelo es el doble.
+ */
+export function pendulumCalculation(length: number, g: number, angleDeg: number, damping: number): string {
+  const f = (n: number, d = 3) => n.toFixed(d);
+  const t0 = 2 * Math.PI * Math.sqrt(length / g);
+  const theta = (angleDeg * Math.PI) / 180;
+  const exact = t0 / agm(1, Math.cos(theta / 2));
+  const lines = [
+    `período de oscilaciones pequeñas: T = 2π · √(${length} / ${g}) = ${f(t0)} s`,
+    `a ${angleDeg}° de suelta la fórmula de oscilaciones pequeñas no es exacta: el período real es ${f(exact)} s (${f((exact / t0 - 1) * 100, 1)} % más); sale de una integral elíptica, no de una fórmula simple`,
+  ];
+  if (damping > 0) {
+    const w0 = Math.sqrt(g / length);
+    const wd = Math.sqrt(Math.max(0, w0 * w0 - (damping * damping) / 4));
+    lines.push(
+      `con amortiguamiento b = ${damping} 1/s (modelo θ'' = −(g/L)·sen θ − b·θ'), la amplitud baja como e^(−b·t/2): a la mitad en t = 2 · ln 2 / b = ${f((2 * Math.LN2) / damping, 2)} s`,
+      wd > 0
+        ? `el período con amortiguamiento (oscilaciones pequeñas) es 2π / √(g/L − b²/4) = ${f((2 * Math.PI) / wd)} s, casi igual al de sin amortiguar`
+        : "con tanto amortiguamiento ya no oscila: vuelve al centro sin pasarse",
+    );
+  }
+  return lines.join("; ");
+}
+
 function step(p: PendulumState, g: number, length: number, damping: number, dt: number) {
   const accel = (theta: number, omega: number) =>
     -(g / length) * Math.sin(theta) - damping * omega;
@@ -350,6 +384,14 @@ export function createPendulumEngine(): PendulumEngine {
           reto_sincronizar: sincronizar.done ? "logrado" : "pendiente",
           reto_masa: masa.done ? "logrado" : "pendiente",
           reto_doble_periodo: doble.done ? "logrado" : "pendiente",
+        },
+        tutorNotes: {
+          calculo_con_los_valores_actuales: pendulumCalculation(
+            Number(lastVariables.longitud ?? 1),
+            runtime.gravity,
+            Number(lastVariables.angulo ?? 15),
+            Number(lastVariables.amortiguamiento ?? 0),
+          ),
         },
         conceptTags: [
           "péndulo simple",

@@ -19,9 +19,13 @@ limpio, en la consola del navegador: `localStorage.clear()`.
       "Pregúntale al tutor".
 - [ ] Los textos coinciden con el aparato: mouse/teclado en la compu; cabeza,
       stick y botón B en el visor con control.
-- [ ] *Celular sin control:* en "Camina" avisa que hace falta un control y
-      deja pasar con "Siguiente". Al apretar un botón del control, el texto
-      cambia al del stick.
+- [ ] *Celular sin control:* en "Camina" pide arrastrar el joystick de abajo
+      a la izquierda, y el paso se completa caminando. Al apretar un botón
+      del control, el joystick desaparece y el texto cambia al del stick.
+- [ ] *Joystick en pantalla:* en el lobby y en los experimentos con
+      giroscopio (no en el visor). Con un pulgar se camina y con el otro se
+      mueve el cursor; llevarlo al borde un momento hace correr; soltarlo
+      fuera del círculo frena.
 - [ ] Los pasos del tutor y de las puertas avanzan solos (9 s y 7 s) o con
       Enter / botón A.
 - [ ] "Saltar tutorial" (o Escape / botón B) lo cierra. Al recargar, ya no
@@ -72,6 +76,9 @@ Retos para probar (72 en total):
 | El contador | Divide la frecuencia · Cuenta hacia atrás · Solo hasta 9 · El temporizador · Las decenas del reloj |
 
 Pistas del catálogo v2 (comprobadas en Node con el motor de cada uno):
+- **Tiro parabólico:** sale del suelo (el cañón está en una trinchera), así
+  que vale v²·sen(2θ)/g exacto: sin aire, 20 m/s a 45° → 40.77 m; a 30° y a
+  60° → 35.31 m los dos. La bala no se ve hasta que sale de la boca.
 - **Llena el tanque:** cono con 10 L/s y meta 1 m → 1.27 cm/s; cilindro con
   10 L/s → 1.27 cm/s a cualquier altura; escalera a 0.5 m/s con la base en
   3 m → −37.5 cm/s. El doble de alto: por ejemplo 0.6 m (3.54 cm/s) y 1.2 m

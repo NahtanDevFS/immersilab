@@ -39,6 +39,10 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
   const [finePointer] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
   );
+  /** Pantalla táctil: ahí aparece el joystick de la pantalla. */
+  const [coarse] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
+  );
 
   const done: Record<Step, boolean> = {
     look: looked || Boolean(read.look),
@@ -65,11 +69,11 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
     return () => window.clearTimeout(id);
   }, [step]);
 
-  // Sin forma de caminar (celular sin control ni teclado), el paso se puede
-  // pasar a mano; con control o teclado hay que caminar de verdad. El
-  // giroscopio no cuenta: un celular con giroscopio puede estar en la mano,
-  // sin control, y quedaría trabado en este paso.
-  const canWalk = hasPad || finePointer;
+  // Con control, teclado o el joystick de la pantalla (cualquier pantalla
+  // táctil, ver TouchJoystick) hay que caminar de verdad. El giroscopio no
+  // cuenta: el paso del joystick vale con o sin él. Si no hay ninguna forma,
+  // el paso se puede pasar a mano.
+  const canWalk = hasPad || finePointer || coarse;
   const canAdvance = step === "talk" || step === "doors" || (step === "walk" && !canWalk);
 
   const stepRef = useRef(step);
@@ -140,9 +144,11 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
         ? "Mueve el stick izquierdo del control. Empújalo a fondo un momento para correr."
         : finePointer
           ? "Usa W A S D o las flechas. Con Shift corres."
-          : // El navegador no muestra un control hasta que se aprieta
-            // algún botón: si ya está conectado, así aparece.
-            "Para caminar hace falta un control (Bluetooth o USB) o un teclado. Si ya conectaste uno, aprieta cualquier botón.",
+          : coarse
+            ? "Arrastra el círculo de abajo a la izquierda con el pulgar. Llévalo hasta el borde un momento para correr."
+            : // El navegador no muestra un control hasta que se aprieta
+              // algún botón: si ya está conectado, así aparece.
+              "Para caminar hace falta un control (Bluetooth o USB) o un teclado. Si ya conectaste uno, aprieta cualquier botón.",
     },
     talk: {
       title: "Pregúntale al tutor",

@@ -58,7 +58,14 @@ export interface AIContext {
   experimentName: string;
   disciplineName: string;
   variables: VariablesState;
+  /** Se muestra en el panel de resultados (pantalla y visor) y lo lee el tutor. */
   result?: Record<string, number | string>;
+  /**
+   * Solo para el tutor, no se dibuja en ningún panel: de qué intento es el
+   * resultado, cuentas ya hechas con los valores actuales, avisos. En
+   * `result` aparecía en pantalla como si fuera un dato del experimento.
+   */
+  tutorNotes?: Record<string, number | string>;
   conceptTags?: string[];
   /**
    * El panel de variables tal como lo ve el estudiante (nombre visible,

@@ -74,6 +74,38 @@ const STEPS_PER_CYCLE = 600;
  * o sea dV = I·dt/C). No es la fórmula aproximada del rizado: es la misma
  * cuenta en el tiempo, y de paso da las curvas del osciloscopio.
  */
+/**
+ * Para el tutor: las cuentas de cada etapa con los valores actuales, y la
+ * fórmula aproximada del rizado comparada con lo que mide la simulación. El
+ * modelo de voz "acomodaba" la fórmula para que diera el número medido; la
+ * aproximación solo vale cuando el rizado es chico comparado con el pico.
+ */
+function supplyCalculation(variables: VariablesState, r: SupplyResult): string {
+  const turns = Number(variables.espiras ?? 60);
+  const bridge = variables.rectificador === "puente";
+  const cUf = Number(variables.capacitor ?? 470);
+  const iMa = Number(variables.carga ?? 250);
+  const f = bridge ? 2 * MAINS_HZ : MAINS_HZ;
+  const lines = [
+    `pico del secundario: ${MAINS_PEAK.toFixed(1)} · ${turns} / ${PRIMARY_TURNS} = ${r.secondaryPeak.toFixed(2)} V`,
+    `después de ${bridge ? "los dos diodos que conducen en el puente" : "el diodo"}: ${r.secondaryPeak.toFixed(2)} − ${bridge ? "1.4" : "0.7"} = ${r.rectifiedPeak.toFixed(2)} V`,
+  ];
+  if (cUf === 0) {
+    lines.push("sin capacitor no hay filtro: la salida es la onda rectificada, baja a 0 V en cada ciclo");
+    return lines.join("; ");
+  }
+  const approx = (iMa / 1000) / (f * cUf * 1e-6);
+  const small = approx < 0.3 * r.rectifiedPeak;
+  lines.push(
+    `rizado aproximado: I / (f · C) = ${iMa / 1000} / (${f} · ${cUf}×10⁻⁶) = ${approx.toFixed(2)} V (f = ${f} Hz con ${bridge ? "puente" : "media onda"})`,
+    `la simulación mide ${r.ripple.toFixed(2)} V de rizado`,
+    small
+      ? "coinciden bien porque el rizado es chico comparado con el pico (la fórmula supone que el capacitor se descarga a corriente constante durante todo el período)"
+      : `no coinciden: la fórmula supone un rizado chico, y acá es grande (casi como el pico de ${r.rectifiedPeak.toFixed(2)} V), así que el capacitor se recarga antes de lo que supone. No ajustes la fórmula para que dé el número medido: explica la diferencia`,
+  );
+  return lines.join("; ");
+}
+
 export function simulate(
   secondaryTurns: number,
   rectifier: Rectifier,
@@ -313,6 +345,7 @@ export function createSupplyEngine(): SupplyEngine {
                 : "no carga",
           osciloscopio_en: STAGES.find((s) => s.id === runtime.stage)?.label ?? runtime.stage,
         },
+        tutorNotes: { calculo_con_los_valores_actuales: supplyCalculation(lastVariables, r) },
         conceptTags: [
           "transformador",
           "diodo",

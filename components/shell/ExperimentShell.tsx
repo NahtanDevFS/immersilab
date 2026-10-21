@@ -31,6 +31,7 @@ import { useDeviceOrientation } from "./useDeviceOrientation";
 import { useVariables } from "@/lib/modules/useVariables";
 import { staleSelections, visibleSchema } from "@/lib/modules/visibility";
 import { VirtualCursor } from "./VirtualCursor";
+import { TouchJoystick } from "./TouchJoystick";
 import { useVirtualCursor } from "./useVirtualCursor";
 import { VoiceTutor } from "@/components/tutor/VoiceTutor";
 import type { ExperimentDefinition, VrAction } from "@/types/module";
@@ -231,7 +232,7 @@ export function ExperimentShell({
                 // TIENE giroscopio, pero el navegador no lo entrega fuera de
                 // HTTPS o localhost, y no avisa de ninguna forma.
                 "El navegador bloquea el giroscopio fuera de HTTPS — abre el laboratorio por https:// o desde localhost."
-              : "Sin giroscopio: WASD o flechas para caminar, arrastra para mirar."}
+              : "Sin giroscopio: WASD o flechas para caminar, Q/E o la rueda para bajar y subir, arrastra para mirar."}
           </p>
         )}
 
@@ -297,7 +298,7 @@ export function ExperimentShell({
           />
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
-          <MovementController />
+          <MovementController lift={!gyroActive} />
           {!gyroActive && (
             <DragLookControls target={experiment.cameraView?.target ?? [5, 1, 0]} />
           )}
@@ -330,6 +331,10 @@ export function ExperimentShell({
           )}
         </Canvas>
         <VirtualCursor position={cursorPos} visible={gyroActive} />
+        {/* Caminar en el celular sin control, con giroscopio. Sin giroscopio
+            no: ahí el panel de variables va abajo a la izquierda y quedaba
+            tapado. En el visor tampoco: nadie toca la pantalla. */}
+        <TouchJoystick enabled={gyroActive && !vr} />
 
         {vr && <VrExit />}
 

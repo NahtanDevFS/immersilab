@@ -7,6 +7,7 @@ import { Canvas } from "@react-three/fiber";
 import { Header } from "./Header";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
+import { TouchJoystick } from "./TouchJoystick";
 import { DragLookControls } from "./DragLookControls";
 import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
@@ -183,6 +184,9 @@ export function LobbyShell() {
             />
           )}
         </Canvas>
+
+        {/* Caminar hasta las puertas en el celular sin control. */}
+        <TouchJoystick enabled={!vr} />
 
         {vr && <VrExit />}
 

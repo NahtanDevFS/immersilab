@@ -66,7 +66,9 @@ export const tiroParabolicoExperiment: ExperimentDefinition = {
   },
   tutorHints:
     "Las variables son angle (grados), velocity (metros por segundo), gravity (metros por segundo al cuadrado) y drag (coeficiente de resistencia del aire, en uno sobre segundo). " +
-    "result solo aparece después de un disparo que ya aterrizó: alcance_m, altura_maxima_m y tiempo_vuelo_s. Si no hay result, invita a disparar. " +
+    "Después de un disparo que aterrizó, result trae alcance_m, altura_maxima_m y tiempo_vuelo_s de ese disparo, y tutorNotes.resultado_es_del_disparo dice con qué valores se hizo. Si tutorNotes trae aviso, el estudiante cambió valores después y esos números no sirven para los valores actuales. " +
+    "tutorNotes.calculo_con_los_valores_actuales trae siempre la cuenta con lo que hay ahora en el panel. Si el estudiante pide que hagas el cálculo, explica los pasos y usa esos números; nunca respondas con el alcance de un disparo hecho con otro ángulo o velocidad. " +
+    "Sin aire: fórmulas de siempre. Con viento y sin aire: el tiempo de vuelo no cambia y en horizontal se suma un medio por a_v por t al cuadrado. Con aire (k mayor que cero) sí hay ecuaciones exactas de x(t) e y(t), con exponenciales; lo único sin fórmula cerrada es despejar el t donde y vuelve a cero, que se resuelve numéricamente. No digas que no se puede calcular: explica eso y da el alcance que trae la cuenta. Con aire no escribas fórmulas del caso sin aire (como H = vy²/(2g)): no valen. Las fórmulas están en el pizarrón de la escena. " +
     "Sin resistencia del aire el alcance es v al cuadrado por seno de dos theta, sobre ge, y es máximo a cuarenta y cinco grados; ángulos complementarios, como treinta y sesenta, llegan igual de lejos. " +
     "Con resistencia del aire el ángulo óptimo baja de cuarenta y cinco. " +
     "Confusión típica: creer que el proyectil 'pierde' velocidad horizontal sin aire; sin drag la componente horizontal es constante. " +
@@ -76,6 +78,34 @@ export const tiroParabolicoExperiment: ExperimentDefinition = {
   // Lejos y de costado: el cañón a la izquierda y el tercer blanco (45 m) a
   // la derecha entran juntos en la vista, y cada disparo se ve completo.
   cameraView: { position: [21, 7, 34], target: [21, 3, 0] },
+  // Detrás del campo, entre el cañón y el primer blanco: se ve desde la vista
+  // de entrada y las trayectorias pasan por delante. Más ancho que en los
+  // otros experimentos porque se mira de lejos.
+  whiteboard: {
+    title: "Tiro parabólico",
+    formulas: [
+      "vx = v · cos θ   ·   vy = v · sen θ",
+      "x = vx · t   ·   y = vy · t − ½ · g · t²",
+      "Alcance: R = v² · sen(2θ) / g",
+      "Altura máxima: H = (v · sen θ)² / (2g)",
+      "Tiempo de vuelo: T = 2 · v · sen θ / g",
+      { text: "Con viento: x = vx · t + ½ · a_v · t² (T no cambia)", showWhen: { modo: "viento" } },
+      "Con aire (k > 0): x(t) = (vx/k) · (1 − e^(−k·t))",
+      "y(t) = (vy/k + g/k²) · (1 − e^(−k·t)) − (g/k) · t",
+    ],
+    terms: [
+      { symbol: "v", meaning: "velocidad inicial, m/s" },
+      { symbol: "θ", meaning: "ángulo del cañón sobre el suelo" },
+      { symbol: "vx, vy", meaning: "velocidad horizontal y vertical al salir, m/s" },
+      { symbol: "g", meaning: "gravedad, m/s²" },
+      { symbol: "t", meaning: "tiempo desde el disparo, s" },
+      { symbol: "R, H, T", meaning: "alcance (m), altura máxima (m) y tiempo de vuelo (s), sin aire" },
+      { symbol: "k", meaning: "resistencia del aire, 1/s: con aire R no tiene fórmula, se busca el t donde y = 0" },
+      { symbol: "a_v", meaning: "aceleración del viento, m/s² (+ a favor, − en contra)", showWhen: { modo: "viento" } },
+    ],
+    position: [10, 1.9, -5],
+    width: 3.2,
+  },
   SceneComponent: ProjectileScene,
   ControlsComponent: ProjectileControls,
   // Las mismas acciones que el panel HTML, para la vista VR (botones 3D).

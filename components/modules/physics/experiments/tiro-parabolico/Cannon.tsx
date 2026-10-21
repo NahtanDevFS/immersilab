@@ -12,8 +12,9 @@ const WOOD_MAP = "/textures/wood/red-oak.jpg";
 const WOOD_BUMP = "/textures/wood/red-oak-bump.jpg";
 
 useGLTF.preload("/models/cannon-barrel.glb");
-useGLTF.preload("/models/cannon-carriage.glb");
-useTexture.preload([WOOD_MAP, WOOD_BUMP]);
+// La cureña (y su madera) no se precarga: con el cañón en la trinchera queda
+// bajo el pasto y la escena no la dibuja. CannonCarriage sigue acá por si
+// otra escena la necesita entera.
 
 /**
  * Cañón naval, partido en dos piezas: el tubo (que se eleva con el slider de

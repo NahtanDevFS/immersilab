@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { readPad } from "./gamepad";
+import { startsOnJoystick } from "@/lib/input/touchJoystick";
 
 export interface CursorPosition {
   x: number;
@@ -44,6 +45,10 @@ function setNativeSliderValue(input: HTMLInputElement, value: number) {
  * el stick ajusta su valor (esto resuelve el pendiente de Fase 1: los
  * sliders no eran arrastrables con el cursor virtual); si es cualquier
  * otro elemento clickeable, X lo activa directo, como un tap.
+ *
+ * Sigue a UN dedo (por su identificador), y no a "el primero que haya": con
+ * el joystick de la pantalla (TouchJoystick) un pulgar camina y el otro
+ * mueve el cursor, y los toques que empiezan sobre el joystick no lo mueven.
  */
 export function useVirtualCursor(enabled: boolean) {
   const [position, setPosition] = useState<CursorPosition>({ x: 0, y: 0 });
@@ -53,6 +58,8 @@ export function useVirtualCursor(enabled: boolean) {
   const gestureStart = useRef<{ x: number; y: number; time: number } | null>(
     null,
   );
+  /** El dedo que maneja el cursor; null si no hay ninguno. */
+  const finger = useRef<number | null>(null);
 
   useEffect(() => {
     positionRef.current = position;
@@ -70,8 +77,10 @@ export function useVirtualCursor(enabled: boolean) {
 
   const handleTouchStart = useCallback(
     (e: TouchEvent) => {
-      if (!enabled) return;
-      const touch = e.touches[0];
+      if (!enabled || finger.current !== null) return;
+      const touch = Array.from(e.changedTouches).find((t) => !startsOnJoystick(t.target));
+      if (!touch) return;
+      finger.current = touch.identifier;
       lastTouch.current = { x: touch.clientX, y: touch.clientY };
       gestureStart.current = {
         x: touch.clientX,
@@ -85,9 +94,10 @@ export function useVirtualCursor(enabled: boolean) {
   const handleTouchMove = useCallback(
     (e: TouchEvent) => {
       if (!enabled || !lastTouch.current) return;
+      const touch = Array.from(e.touches).find((t) => t.identifier === finger.current);
+      if (!touch) return; // se movió solo el pulgar del joystick
       e.preventDefault(); // evita el scroll de la página mientras se usa el trackpad
 
-      const touch = e.touches[0];
       const deltaX = (touch.clientX - lastTouch.current.x) * SENSITIVITY;
       const deltaY = (touch.clientY - lastTouch.current.y) * SENSITIVITY;
 
@@ -101,8 +111,11 @@ export function useVirtualCursor(enabled: boolean) {
     [enabled],
   );
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
     if (!enabled || !gestureStart.current) return;
+    // Terminó otro dedo (el del joystick): el del cursor sigue apoyado.
+    if (!Array.from(e.changedTouches).some((t) => t.identifier === finger.current)) return;
+    finger.current = null;
 
     const { x, y, time } = gestureStart.current;
     const lastPos = lastTouch.current;
@@ -110,7 +123,8 @@ export function useVirtualCursor(enabled: boolean) {
     const duration = Date.now() - time;
 
     // Gesto corto y sin desplazamiento = click en la posición del cursor.
-    if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) {
+    // Un toque cancelado por el sistema (una notificación, un gesto) no es un click.
+    if (e.type !== "touchcancel" && distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) {
       setPosition((current) => {
         const target = document.elementFromPoint(current.x, current.y);
         if (target instanceof HTMLElement) {
@@ -130,11 +144,13 @@ export function useVirtualCursor(enabled: boolean) {
     window.addEventListener("touchstart", handleTouchStart, { passive: false });
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
 
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, [enabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
 

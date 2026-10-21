@@ -17,7 +17,6 @@ import {
 import styles from "./ProjectileScene.module.css";
 import {
   CannonBarrel,
-  CannonCarriage,
   MODEL_MIN_Y,
   MUZZLE_DISTANCE,
   REST_TILT,
@@ -26,6 +25,7 @@ import {
   TRUNNION_Z,
 } from "./Cannon";
 import { SceneLabel } from "@/components/vr/SceneLabel";
+import { Trench } from "./Trench";
 
 const DEG = Math.PI / 180;
 const MAX_TRAIL_POINTS = 300;
@@ -34,19 +34,21 @@ const MAX_TRAIL_POINTS = 300;
 // (que no tiene emissiveIntensity) supere el umbral de luminancia del bloom.
 const TRAIL_COLOR = new THREE.Color(2.4, 1.5, 0.7);
 
-// Posicion del canon. Con el punto de lanzamiento ya atado a la boca, esto
-// solo decide donde queda la pieza en el campo: elegido para que la boca a
-// 45 grados caiga cerca del origen.
-const CANNON_X = -1.2;
-
-// Posicion del munon (el pivote del tubo) en el mundo, derivada de la
-// jerarquia de grupos de abajo. Se calcula una vez porque no depende del
-// angulo: lo unico que gira alrededor de este punto es el tubo.
-const PIVOT_X = CANNON_X + TRUNNION_Z * SCALE;
-const PIVOT_Y = (TRUNNION_Y - MODEL_MIN_Y) * SCALE;
+// El canon va hundido en una trinchera, con el munon (el pivote del tubo)
+// justo en el origen: de ahi sale el disparo, a nivel del suelo (ver
+// engine.ts). Antes estaba apoyado en el pasto y la bala salia de la boca,
+// a 2.4-3.8 m de alto, y esa altura descuadraba la formula del curso.
+// Estos desplazamientos llevan el munon del modelo al origen del mundo.
+const CANNON_X = -TRUNNION_Z * SCALE;
+const CANNON_Y = -(TRUNNION_Y - MODEL_MIN_Y) * SCALE;
 
 /** Largo del munon a la boca, ya en metros. */
 const BARREL_REACH = MUZZLE_DISTANCE * SCALE;
+
+/** La bala va por dentro del tubo hasta que pasa la boca: ahi no se ve. */
+function insideBarrel(p: { x: number; y: number }): boolean {
+  return Math.hypot(p.x, p.y) < BARREL_REACH;
+}
 
 interface Props {
   engine: ExperimentEngine;
@@ -60,13 +62,12 @@ export function ProjectileScene({ engine, variables }: Props) {
   const cannonRef = useRef<THREE.Group>(null);
   const trailGeometryRef = useRef<THREE.BufferGeometry>(null);
 
-  // El cañón como obstáculo: sin esto se le puede caminar a través, que es
-  // lo que más delata que la escena es un decorado. Las medidas son las de
-  // la cureña (~2.5 m de largo por 1.4 de ancho, ya escalada), no las del
-  // tubo, que queda por encima de la cabeza.
+  // La trinchera como obstáculo: sin esto se le puede caminar a través (y
+  // meterse en el cañón), que es lo que más delata que la escena es un
+  // decorado. Cubre el parapeto de sacos entero.
   useCollider({
-    center: [CANNON_X + 0.4, 0.9, 0],
-    size: [2.6, 1.8, 1.4],
+    center: [0, 0.5, 0],
+    size: [5.6, 1, 5.6],
   });
 
   const trailPositions = useMemo(
@@ -87,12 +88,13 @@ export function ProjectileScene({ engine, variables }: Props) {
       // El motor ya trabaja en coordenadas del mundo desde que la escena le
       // fija la boca como punto de lanzamiento: no hace falta desplazarlo.
       ballRef.current.position.set(runtime.position.x, runtime.position.y, 0);
-      // En reposo la bala está CARGADA, o sea dentro del ánima: el punto de
-      // lanzamiento es la boca, así que dejarla visible ahí la mostraba
-      // asomada en la punta como si estuviera a medio salir. Se oculta hasta
-      // que el disparo empieza (y se deja visible al aterrizar, que es el
-      // resultado que el alumno tiene que poder mirar).
-      ballRef.current.visible = runtime.phase !== "idle";
+      // En reposo la bala está CARGADA, dentro del ánima, y al disparar
+      // recorre el tubo antes de salir: hasta la boca no se ve. En esos dos
+      // metros la gravedad la baja unos centímetros, así que al aparecer
+      // coincide con el tubo. Al aterrizar se deja visible: es el resultado
+      // que el alumno tiene que poder mirar.
+      ballRef.current.visible =
+        runtime.phase === "landed" || (runtime.phase === "flying" && !insideBarrel(runtime.position));
     }
 
     const angle = Number(variables.angle ?? 45) * DEG;
@@ -104,15 +106,9 @@ export function ProjectileScene({ engine, variables }: Props) {
       cannonRef.current.rotation.x = REST_TILT - angle;
     }
 
-    // La boca se mueve al elevar el tubo, y es de ahi de donde tiene que
-    // salir el proyectil — no del origen del mundo.
-    projectile.setLaunch(
-      PIVOT_X + Math.cos(angle) * BARREL_REACH,
-      PIVOT_Y + Math.sin(angle) * BARREL_REACH,
-    );
-
     if (trailGeometryRef.current) {
-      const points = runtime.trail.slice(-MAX_TRAIL_POINTS);
+      // La estela empieza en la boca: lo de adentro del tubo no se dibuja.
+      const points = runtime.trail.filter((p) => !insideBarrel(p)).slice(-MAX_TRAIL_POINTS);
       points.forEach((p, i) => {
         trailPositions[i * 3] = p.x;
         trailPositions[i * 3 + 1] = p.y;
@@ -132,18 +128,16 @@ export function ProjectileScene({ engine, variables }: Props) {
           tiene el cero a media altura) y lo gira para que apunte a +X, que
           es hacia donde vuela el proyectil. +90 en Y lleva el +Z del modelo
           —donde esta la boca— al +X del mundo. */}
+      <Trench />
       <group
-        position={[CANNON_X, 0, 0]}
+        position={[CANNON_X, CANNON_Y, 0]}
         rotation={[0, Math.PI / 2, 0]}
         scale={SCALE}
       >
         <group position={[0, -MODEL_MIN_Y, 0]}>
-          {/* Cada modelo en su propio Suspense: dos cargas bajo el mismo
-              límite se cuelgan entre sí y no aparece ninguna. Ver la
-              "TRAMPA IMPORTANTE" en components/lobby/LobbyScene.tsx. */}
-          <Suspense fallback={null}>
-            <CannonCarriage />
-          </Suspense>
+          {/* Sin cureña: con el cañón en la trinchera queda entera bajo el
+              pasto, y aunque no se veía seguía proyectando su sombra sobre
+              la tierra (un rectángulo con ruedas en el piso). */}
 
           {/* El pivote va en los muñones, no en el origen del archivo: es
               el eje sobre el que gira un cañón de verdad. El ref está aquí

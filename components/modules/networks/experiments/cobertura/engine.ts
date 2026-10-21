@@ -5,9 +5,16 @@ import type {
   VariablesState,
 } from "@/types/module";
 import {
+  ANTENNA_GAIN_DB,
+  METERS_PER_UNIT,
+  PATH_LOSS_EXPONENT,
   PEAK_HOUR,
   POINTS,
+  SENSITIVITY_DBM,
   SITES,
+  buildingsBetween,
+  fsplDb,
+  pathLossDb,
   coverageOf,
   getBand,
   loadOf,
@@ -64,6 +71,34 @@ export interface CoverageRuntime {
 
 export interface CoverageEngine extends ExperimentEngine {
   getRuntime: () => CoverageRuntime;
+}
+
+/**
+ * Para el tutor: el presupuesto de enlace ya hecho, punto por punto, con la
+ * antena que mejor llega. Las fórmulas están en las pistas, pero el modelo
+ * de voz no sabía la distancia ni los edificios de cada punto y esquivaba
+ * la cuenta.
+ */
+function coverageNotes(antennas: Antenna[], band: Band, power: number): Record<string, string> {
+  const at1m = fsplDb(1 / METERS_PER_UNIT, band.mhz);
+  const notes: Record<string, string> = {
+    formula_con_los_valores_actuales:
+      `potencia recibida = ${power} dBm + ${ANTENNA_GAIN_DB} dB de antenas − pérdida de trayecto − ${band.buildingLossDb} dB por edificio; ` +
+      `pérdida de trayecto = ${at1m.toFixed(1)} dB (espacio libre a 1 m en ${band.label}) + 10 · ${PATH_LOSS_EXPONENT} · log₁₀(d en m); ` +
+      `por ejemplo a 100 m: ${pathLossDb(100 / METERS_PER_UNIT, band.mhz).toFixed(1)} dB; se cubre con ${SENSITIVITY_DBM} dBm o más`,
+  };
+  if (antennas.length === 0) return notes;
+  notes.cada_punto = POINTS.map((point) => {
+    const options = antennas.map((a, index) => {
+      const d = Math.hypot(point.x - a.site.x, point.z - a.site.z);
+      const walls = buildingsBetween(a.site.x, a.site.z, point.x, point.z);
+      const dbm = power + ANTENNA_GAIN_DB - pathLossDb(d, band.mhz) - walls * band.buildingLossDb;
+      return { dbm, meters: d * METERS_PER_UNIT, walls, index };
+    });
+    const b = options.reduce((x, y) => (y.dbm > x.dbm ? y : x));
+    return `${point.name}: ${b.dbm.toFixed(1)} dBm (antena ${b.index + 1}, a ${Math.round(b.meters)} m, ${b.walls} edificio${b.walls === 1 ? "" : "s"} en medio)`;
+  }).join("; ");
+  return notes;
 }
 
 export function createCoverageEngine(): CoverageEngine {
@@ -228,6 +263,7 @@ export function createCoverageEngine(): CoverageEngine {
           reto_reutilizar_canales: reutilizar.done ? "logrado" : "pendiente",
           reto_hora_pico: horaPico.done ? "logrado" : "pendiente",
         },
+        tutorNotes: coverageNotes(antennas, band, power),
         conceptTags: [
           "pérdida de trayecto",
           "presupuesto de enlace",
