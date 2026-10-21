@@ -22,7 +22,7 @@ const EVERY_MS = 500;
  * con cada arreglo que haya que probar en el aparato: si el log llega con una
  * marca vieja, el celular sigue con la página de antes (hay que recargarla).
  */
-export const CODE_STAMP = "2026-10-21 · interfaz del visor encima de la escena";
+export const CODE_STAMP = "2026-10-21 · luces falsas en el lobby";
 
 /** Lo que cada pantalla informa de sí misma (vista, giroscopio, cámara). */
 const report: Record<string, unknown> = {};

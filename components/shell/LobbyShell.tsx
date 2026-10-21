@@ -32,6 +32,7 @@ import { useQualityTier } from "./useQualityTier";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { LobbyScene } from "@/components/lobby/LobbyScene";
 import { LobbyVrHud } from "@/components/vr/LobbyVrHud";
+import { readReturnZ } from "@/components/lobby/returnSpot";
 import styles from "./ExperimentShell.module.css";
 
 /**
@@ -65,6 +66,9 @@ export function LobbyShell() {
   const onLook = useCallback(() => setLooked(true), []);
   const onWalk = useCallback(() => setWalked(true), []);
   const router = useRouter();
+  // Frente a la puerta del último experimento, o en la entrada. Se lee una
+  // vez: el <Canvas> solo usa la posición de la cámara al montarse.
+  const [startZ] = useState(readReturnZ);
   const reopenTutorial = () => {
     setLooked(false);
     setWalked(false);
@@ -154,7 +158,7 @@ export function LobbyShell() {
              una escena 3D se arrastre en móvil. */
           dpr={[1, quality === "high" ? 2 : 1.5]}
           camera={{
-            position: [0, 1.6, 6],
+            position: [0, 1.6, startZ],
             fov: 55,
             // La sala mide 20 m: no hace falta un far de 1000, y acortarlo
             // gana precisión de profundidad (ver ExperimentShell).
@@ -175,7 +179,7 @@ export function LobbyShell() {
           {/* Subir y bajar, con tope bajo el techo del pasillo (3.1 m). */}
           <MovementController lift={!gyroActive || vr} maxLift={2.6} />
           {!tutorialSeen && !vr && <TutorialProbe onLook={onLook} onWalk={onWalk} />}
-          {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
+          {!gyroActive && <DragLookControls target={[0, 1.4, startZ - 16]} />}
 
           {vr ? <StereoView /> : <PostFX quality={quality} />}
 

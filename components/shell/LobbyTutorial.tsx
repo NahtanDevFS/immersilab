@@ -141,9 +141,13 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
     walk: {
       title: "Camina",
       body: pad
-        ? "Mueve el stick izquierdo del control. Empújalo a fondo un momento para correr."
+        ? gyroActive
+          ? "Mueve el stick izquierdo del control. Empújalo a fondo un momento para correr."
+          : // Sin giroscopio el stick derecho sube y baja la cámara (con
+            // el celular en la mano mueve el cursor: ahí no se menciona).
+            "Mueve el stick izquierdo del control; empújalo a fondo un momento para correr. El stick derecho hacia arriba o abajo sube o baja la cámara."
         : finePointer
-          ? "Usa W A S D o las flechas. Con Shift corres."
+          ? "Usa W A S D o las flechas; con Shift corres. Q y E (o la rueda del mouse) suben o bajan la cámara."
           : coarse
             ? "Arrastra el círculo de abajo a la izquierda con el pulgar. Llévalo hasta el borde un momento para correr."
             : // El navegador no muestra un control hasta que se aprieta
@@ -153,12 +157,12 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
     talk: {
       title: "Pregúntale al tutor",
       body: pad
-        ? "Dentro de cada experimento, mantén presionado el botón B, pregunta en voz alta y suéltalo: el tutor te responde."
-        : "Dentro de cada experimento, mantén presionado el botón del micrófono, pregunta en voz alta y suéltalo: el tutor te responde.",
+        ? "Dentro de cada experimento, mantén presionado B, pregunta en voz alta y suéltalo: el tutor te responde. Para cancelar la pregunta, aprieta A sin soltar B. Mientras habla, B lo calla."
+        : "Dentro de cada experimento, mantén presionado el botón del micrófono, pregunta en voz alta y suéltalo: el tutor te responde. El botón de al lado cancela la pregunta o lo calla.",
     },
     doors: {
       title: "Entra a un experimento",
-      body: "Cada puerta es un experimento. Camina hacia una y entra.",
+      body: "Cada puerta es un experimento. Camina hasta una y quédate mirándola un momento: el marco se enciende y entras.",
     },
   };
   const index = STEPS.indexOf(step);

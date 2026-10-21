@@ -3,15 +3,17 @@
 import { Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Billboard } from "@react-three/drei";
 import { VrText } from "@/components/vr/VrText";
-import { useViewMode } from "@/lib/view/viewMode";
 import * as THREE from "three";
 import { useTiledPbrTexture } from "../shell/useTiledPbrTexture";
 import { DOOR_HEIGHT, DOOR_WIDTH } from "./corridor";
-import styles from "./Door.module.css";
+import { saveReturnDoor } from "./returnSpot";
 
-/** Color de cada área, igual que en la etiqueta HTML (Door.module.css). */
+/** Cuánto sale el cartel de la pared hacia el pasillo, m (mide 1.5 de ancho). */
+const LABEL_OUT = 0.8;
+
+/** Color de cada área en el cartel de la puerta: ayuda a ubicarse sin leer. */
 const AREA_COLOR: Record<string, string> = {
   physics: "#f2a65a",
   calculus: "#2dd4bf",
@@ -79,7 +81,6 @@ export function Door({
   rotationY = 0,
 }: Props) {
   const router = useRouter();
-  const vr = useViewMode() === "vr";
   const { camera } = useThree();
 
   // 1 repetición: la hoja mide ~1×2.25 m y la textura ~1 m — tilearla más
@@ -134,6 +135,8 @@ export function Door({
 
     if (dwell.current >= DWELL_SECONDS) {
       triggered.current = true;
+      // Al volver, se aparece frente a esta puerta (returnSpot.ts).
+      saveReturnDoor(href);
       router.push(href);
     }
   });
@@ -199,31 +202,30 @@ export function Door({
         <meshStandardMaterial color="#b9c0cc" metalness={0.95} roughness={0.2} />
       </mesh>
 
-      {vr ? (
-        // En la vista VR el HTML no se ve (se dibujaría una sola vez para
-        // los dos ojos): la etiqueta va como texto dentro de la escena.
-        <Suspense fallback={null}>
-          <group position={[0, DOOR_HEIGHT + 0.38, 0.07]}>
-            <mesh position={[0, 0, -0.005]}>
-              <planeGeometry args={[1.5, 0.3]} />
-              <meshBasicMaterial color="#131b2e" transparent opacity={0.85} toneMapped={false} />
-            </mesh>
-            <VrText position={[0, 0.07, 0]} anchorX="center" fontSize={0.055} color={AREA_COLOR[discipline] ?? "#2dd4bf"}>
-              {disciplineName.toUpperCase()}
-            </VrText>
-            <VrText position={[0, -0.04, 0]} anchorX="center" fontSize={0.085} maxWidth={1.4} textAlign="center">
-              {name}
-            </VrText>
-          </group>
-        </Suspense>
-      ) : (
-        <Html position={[0, DOOR_HEIGHT + 0.35, 0.06]} center>
-          <div className={styles.label} data-discipline={discipline}>
-            <span className={styles.discipline}>{disciplineName}</span>
+      {/* El cartel va como texto dentro de la escena, en todas las vistas.
+          Antes, fuera del visor era un <Html> de drei (un div encima del
+          canvas): al aparecer frente a una puerta (returnSpot.ts) algunos
+          quedaban corridos de lugar hasta girar la cámara, y reubicar 20
+          divs en cada cuadro también costaba rendimiento.
+
+          Gira hacia el jugador (solo en horizontal, como un cartel colgado):
+          pegado a la pared se veía de canto desde el pasillo, y es justo
+          desde ahí que hay que leerlo. Va separado de la pared más que la
+          mitad de su ancho: si no, al girar se metía adentro de ella. */}
+      <Suspense fallback={null}>
+        <Billboard position={[0, DOOR_HEIGHT + 0.38, LABEL_OUT]} lockX lockZ>
+          <mesh position={[0, 0, -0.005]}>
+            <planeGeometry args={[1.5, 0.3]} />
+            <meshBasicMaterial color="#131b2e" transparent opacity={0.85} toneMapped={false} />
+          </mesh>
+          <VrText position={[0, 0.07, 0]} anchorX="center" fontSize={0.055} color={AREA_COLOR[discipline] ?? "#2dd4bf"}>
+            {disciplineName.toUpperCase()}
+          </VrText>
+          <VrText position={[0, -0.04, 0]} anchorX="center" fontSize={0.085} maxWidth={1.4} textAlign="center">
             {name}
-          </div>
-        </Html>
-      )}
+          </VrText>
+        </Billboard>
+      </Suspense>
     </group>
   );
 }

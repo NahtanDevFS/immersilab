@@ -114,6 +114,42 @@ export interface RatesEngine extends ExperimentEngine {
   getRuntime: () => RatesRuntime;
 }
 
+/**
+ * La cuenta ya hecha con las variables actuales, solo para el tutor (no se
+ * muestra). Sin esto, el modelo hacía la aritmética "en voz alta" y a veces
+ * escribía su borrador como si fuera la respuesta.
+ */
+function rateNotes(variables: VariablesState): Record<string, number | string> {
+  const scenario = getScenario(variables.escenario);
+  const r2 = (v: number) => Number(v.toFixed(2));
+  if (scenario === "escalera") {
+    const v = Number(variables.velocidad_base ?? 0.5);
+    const x = Number(variables.x_meta ?? 3);
+    const y = Math.sqrt(LADDER ** 2 - x ** 2);
+    return {
+      punta_en_meta_m: r2(y),
+      rapidez_punta_en_meta_cm_s: r2(ladderRate(v, x) * 100),
+      cuenta: `y = raíz de (25 − ${x}²) = ${r2(y)} m; dy/dt = −(${x} / ${r2(y)}) · ${v} m/s = ${r2(ladderRate(v, x))} m/s`,
+    };
+  }
+  const q = Number(variables.caudal ?? 10) / 1000;
+  const meta = Number(variables.altura_meta ?? 1);
+  if (scenario === "cilindro") {
+    return {
+      caudal_m3_s: q,
+      rapidez_en_meta_cm_s: r2(cylinderRate(q) * 100),
+      cuenta: `dh/dt = Q / (π · 0.5²) = ${q} / ${r2(Math.PI * CYLINDER_RADIUS ** 2)} = ${cylinderRate(q).toFixed(4)} m/s, igual a cualquier altura`,
+    };
+  }
+  return {
+    caudal_m3_s: q,
+    radio_en_meta_m: r2(meta / 2),
+    rapidez_en_meta_cm_s: r2(coneRate(q, meta) * 100),
+    cuenta: `dh/dt = 4Q / (π · h²) = ${4 * q} / (π · ${meta}²) = ${coneRate(q, meta).toFixed(4)} m/s`,
+    nota: "Si el estudiante dice aceleración pero pide centímetros por segundo, está pidiendo esta rapidez de subida: aclárale con suavidad que es una rapidez, no una aceleración.",
+  };
+}
+
 /** El enunciado de la situación, para la escena, el visor y el tutor. */
 export function situation(variables: VariablesState): string {
   const scenario = getScenario(variables.escenario);
@@ -398,6 +434,7 @@ export function createRatesEngine(): RatesEngine {
       }
       result.mejor_puntaje = bestScore;
       return {
+        tutorNotes: rateNotes(lastVariables),
         experimentName: "Llena el tanque",
         disciplineName: "Cálculo",
         variables: lastVariables,

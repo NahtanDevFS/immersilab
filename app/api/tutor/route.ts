@@ -3,7 +3,6 @@ import {
   GoogleGenAI,
   ThinkingLevel,
   type Content,
-  type GenerateContentResponse,
   type ThinkingConfig,
 } from "@google/genai";
 import {
@@ -13,6 +12,7 @@ import {
   type TutorTurn,
 } from "@/lib/tutor/protocol";
 import { checkRateLimit, clientIp } from "@/lib/tutor/rate-limit";
+import { cleanPrefix, reasoningStart } from "@/lib/tutor/leak";
 
 /**
  * Tutor por voz — ver PLAN_DESARROLLO.md §4.3.
@@ -68,6 +68,7 @@ Tu respuesta se convierte en AUDIO con un sintetizador de voz, y además se mues
 - Cada vez que digas una fórmula o una ecuación, escríbela además entre dobles corchetes justo después de la oración que la dice, por ejemplo: El período es dos pi por la raíz de ele sobre ge. [[T = 2π·√(L / g)]]
   Lo que va entre dobles corchetes NO se dice en voz alta, solo se lee en pantalla, así que la oración hablada tiene que decir la fórmula completa igual. Dentro de los corchetes usa símbolos Unicode legibles (π, √, ², ·, /, Δ, θ, ω, subíndices como v₁) y paréntesis cuando haga falta. Nada de LaTeX ni barras invertidas. Una fórmula por par de corchetes. Las fórmulas escritas no cuentan para el límite de tres oraciones.
 - Redondea los números a dos decimales como mucho y di las unidades completas ("metros por segundo").
+- Todo lo que escribes se dice en voz alta: escribe SOLO la respuesta final, en español. Nunca escribas tu razonamiento, borradores, cuentas sueltas ni repases estas reglas (nada de "wait", "round to two decimals" ni nada en inglés). Piensa antes, en silencio.
 - Es una conversación en tiempo real: empieza a responder de inmediato, sin preámbulos. No saludes ni elogies la pregunta ("hola", "qué buena pregunta"): ve directo a la respuesta.
 
 Pedagogía:
@@ -81,6 +82,9 @@ Pedagogía:
 /** Si el modelo bloquea la respuesta (filtros de seguridad), al menos se dice algo. */
 const BLOCKED_LINE =
   "Esa no te la puedo responder, pero pregúntame lo que quieras del experimento.";
+
+/** Si todos los intentos salieron con el razonamiento escrito. */
+const LEAK_LINE = "Perdón, se me enredó la respuesta. ¿Me lo preguntas otra vez?";
 
 export async function POST(req: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -147,78 +151,145 @@ export async function POST(req: Request) {
 
   const ai = new GoogleGenAI({ apiKey });
   // Barge-in: si el estudiante habla encima, el cliente corta la conexión y
-  // esto corta la generación en Google (deja de consumir tokens).
-  const abort = new AbortController();
+  // esto corta la generación en Google (deja de consumir tokens). Cada
+  // intento tiene su propio AbortController (uno descartado por razonamiento
+  // se corta solo); `cancelled` corta el que esté vivo.
+  let current: AbortController | null = null;
+  let cancelled = false;
 
-  let chunks: AsyncGenerator<GenerateContentResponse> | null = null;
-  let first: IteratorResult<GenerateContentResponse> | null = null;
+  /**
+   * Abre un intento y junta la primera oración antes de mandar nada: así se
+   * puede revisar que no sea razonamiento (lib/tutor/leak.ts) y, si lo es,
+   * probar de nuevo sin que el estudiante escuche nada. No suma demora: el
+   * cliente igual habla de a oraciones enteras.
+   */
+  const open = async (model: (typeof MODELS)[number], nudge: boolean) => {
+    const controller = new AbortController();
+    current = controller;
+    const stream = await ai.models.generateContentStream({
+      model: model.name,
+      contents: nudge ? withNudge(contents) : contents,
+      config: {
+        systemInstruction,
+        thinkingConfig: model.thinking,
+        // En la familia 3.x lo que piensa cuenta dentro de este tope: con
+        // 1024, una respuesta con fórmulas a veces se quedaba sin lugar y
+        // terminaba a media oración.
+        maxOutputTokens: 2048,
+        abortSignal: controller.signal,
+      },
+    });
+    let text = "";
+    let done = false;
+    while (!/[.?!](\s|$)/.test(text) && text.length < 160) {
+      const next = await stream.next();
+      if (next.done) {
+        done = true;
+        break;
+      }
+      text += next.value.text ?? "";
+    }
+    const leakAt = reasoningStart(text);
+    if (leakAt !== -1) {
+      controller.abort();
+      const clean = cleanPrefix(text, leakAt);
+      // Si arrancó bien y se desvió después, se manda lo bueno y nada más.
+      return clean ? { stream: null, text: clean, done: true } : null;
+    }
+    return { stream, text, done };
+  };
+
+  let opened: Awaited<ReturnType<typeof open>> = null;
+  let leaked = false;
   let lastError: unknown = null;
-  for (const model of MODELS) {
-    try {
-      chunks = await ai.models.generateContentStream({
-        model: model.name,
-        contents,
-        config: {
-          systemInstruction,
-          thinkingConfig: model.thinking,
-          maxOutputTokens: 1024,
-          abortSignal: abort.signal,
-        },
-      });
-      // Se espera el primer pedazo ANTES de responder: si la key es
-      // inválida o el modelo está saturado, falla aquí — se puede probar
-      // otro modelo, o devolver un status de error de verdad en vez de un
-      // 200 con el stream cortado.
-      first = await chunks.next();
-      break;
-    } catch (error) {
-      lastError = error;
-      logError(error, model.name);
-      chunks = null;
-      if (!(error instanceof ApiError && RETRYABLE.has(error.status))) break;
+  attempts: for (const model of MODELS) {
+    // Si el modelo se puso a razonar en el texto, se le pide de nuevo una
+    // vez con un recordatorio; si vuelve a pasar, se prueba el siguiente.
+    for (const nudge of leaked ? [true] : [false, true]) {
+      try {
+        opened = await open(model, nudge);
+        if (opened) break attempts;
+        leaked = true;
+        console.warn(`[tutor] ${model.name} escribió su razonamiento; se reintenta`);
+      } catch (error) {
+        lastError = error;
+        logError(error, model.name);
+        if (!(error instanceof ApiError && RETRYABLE.has(error.status))) break attempts;
+        continue attempts;
+      }
     }
   }
 
-  if (!chunks || !first) {
+  if (!opened) {
+    if (leaked) return plainText(LEAK_LINE);
     const status = lastError instanceof ApiError ? lastError.status : 502;
     return Response.json(
       { error: "el tutor no está disponible" },
       { status: status >= 400 ? status : 502 },
     );
   }
-  const stream = chunks;
-  const firstChunk = first;
+  const { stream, text: head, done: headDone } = opened;
 
   const encoder = new TextEncoder();
 
   return new Response(
     new ReadableStream({
       async start(controller) {
-        let emitted = false;
+        // Se manda solo hasta la última oración completa y el resto espera
+        // a cerrarse: si después hay que cortar (razonamiento escrito), no
+        // queda una frase colgando como "Dado que". No suma demora: el
+        // cliente igual habla de a oraciones enteras.
+        let received = head;
+        let sent = 0;
+        let finish = headDone ? "head" : "";
+        let cut = "";
+        const flush = (upTo: number) => {
+          if (upTo > sent) {
+            controller.enqueue(encoder.encode(received.slice(sent, upTo)));
+            sent = upTo;
+          }
+        };
         try {
-          for (
-            let next = firstChunk;
-            !next.done;
-            next = await stream.next()
-          ) {
-            const text = next.value.text;
-            if (text) {
-              emitted = true;
-              controller.enqueue(encoder.encode(text));
+          flush(headDone ? received.length : sentenceEnd(received));
+          if (stream && !headDone) {
+            for (let next = await stream.next(); !next.done; next = await stream.next()) {
+              finish = next.value.candidates?.[0]?.finishReason ?? finish;
+              const text = next.value.text;
+              if (!text) continue;
+              const full = received + text;
+              const leakAt = reasoningStart(full);
+              if (leakAt !== -1) {
+                // Se desvió a mitad de la respuesta: se manda hasta la
+                // última oración completa y se corta la generación.
+                const clean = cleanPrefix(full, leakAt);
+                received = clean.length >= sent ? clean : received.slice(0, sent);
+                cut = full.slice(leakAt, leakAt + 300);
+                console.warn("[tutor] razonamiento a mitad de la respuesta; se corta");
+                current?.abort();
+                break;
+              }
+              received = full;
+              flush(sentenceEnd(received));
             }
           }
+          // Si se quedó sin tokens, lo último es media oración: se descarta.
+          if (finish === "MAX_TOKENS") received = received.slice(0, Math.max(sent, sentenceEnd(received)));
+          flush(received.length);
           // Sin un solo pedazo de texto = bloqueado por seguridad o vacío.
-          if (!emitted) controller.enqueue(encoder.encode(BLOCKED_LINE));
+          if (!received) controller.enqueue(encoder.encode(BLOCKED_LINE));
           controller.close();
+          void debugLog({ pregunta: transcript, fin: finish, cortado: cut || undefined, respuesta: received });
         } catch (error) {
-          if (abort.signal.aborted) return;
+          if (cancelled || current?.signal.aborted) return;
           // El cliente ve el stream cortado y dice el mensaje sin conexión.
           logError(error);
+          void debugLog({ pregunta: transcript, error: String(error), respuesta: received });
           controller.error(error);
         }
       },
       cancel() {
-        abort.abort();
+        cancelled = true;
+        current?.abort();
       },
     }),
     {
@@ -228,6 +299,53 @@ export async function POST(req: Request) {
       },
     },
   );
+}
+
+/**
+ * Dónde termina la última oración completa de `text` (un punto, signo de
+ * pregunta o exclamación seguido de espacio, o el cierre de una fórmula
+ * [[ ]]). Un punto pegado a un número ("0.57") no cuenta: sigue la cifra.
+ */
+function sentenceEnd(text: string): number {
+  let end = 0;
+  for (const match of text.matchAll(/[.?!](?=\s)|\]\]/g)) {
+    end = (match.index ?? 0) + match[0].length;
+  }
+  return end;
+}
+
+/**
+ * Solo en desarrollo: cada respuesta queda en .debug/tutor.log, con por qué
+ * terminó (STOP, MAX_TOKENS…) y lo que se cortó si hubo razonamiento. Sirve
+ * para ver qué pasó cuando una respuesta sale a medias.
+ */
+async function debugLog(entry: Record<string, unknown>) {
+  if (process.env.NODE_ENV !== "development") return;
+  try {
+    const { appendFile, mkdir } = await import("node:fs/promises");
+    const path = await import("node:path");
+    const file = path.join(process.cwd(), ".debug", "tutor.log");
+    await mkdir(path.dirname(file), { recursive: true });
+    await appendFile(file, JSON.stringify({ hora: new Date().toISOString(), ...entry }) + "\n", "utf8");
+  } catch {
+    // Un registro de depuración nunca debe tumbar al tutor.
+  }
+}
+
+/** El recordatorio del reintento, al final de la pregunta del estudiante. */
+function withNudge(contents: Content[]): Content[] {
+  const last = contents[contents.length - 1];
+  const text = last.parts?.[0]?.text ?? "";
+  return [
+    ...contents.slice(0, -1),
+    { ...last, parts: [{ text: `${text}\n\n(Recuerda: escribe solo lo que le vas a decir al estudiante, en español. Nada de razonamientos, borradores ni revisiones de las reglas.)` }] },
+  ];
+}
+
+function plainText(text: string) {
+  return new Response(text, {
+    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
 }
 
 function sanitizeHistory(raw: unknown): TutorTurn[] | null {

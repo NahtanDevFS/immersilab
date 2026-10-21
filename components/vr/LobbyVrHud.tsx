@@ -15,6 +15,13 @@ import { VrCard } from "./VrCard";
 
 const WIDTH = 1.25;
 const LINE = 0.075;
+/**
+ * Cuántos caracteres entran por renglón en la columna del texto (a 0.033 de
+ * letra) y cuánto mide cada renglón extra: las filas largas ocupan más de una
+ * línea y, con un alto fijo, se encimaban con la siguiente.
+ */
+const CHARS_PER_ROW = 46;
+const EXTRA_ROW = 0.042;
 const BUTTON = 0.11;
 
 /**
@@ -59,9 +66,9 @@ export function LobbyVrHud({
         : "hace falta un control. Si ya lo conectaste, presiona cualquier botón.",
     ],
     ["Elegir", pad ? "mira un botón y presiona A." : "mira un botón y toca la pantalla."],
-    ["Entrar", "camina hacia una puerta: cada una es un experimento."],
-    ["Tutor", "adentro, mantén B o usa el botón del panel."],
-    ["Paneles", "Y (clic del stick derecho) los oculta; su barra de arriba los mueve."],
+    ["Entrar", "camina hasta una puerta y quédate mirándola un momento: cada una es un experimento."],
+    ["Tutor", "adentro, mantén B mientras preguntas. A sin soltar B cancela; B lo calla mientras habla."],
+    ["Paneles", "adentro, las pestañas de abajo los abren. Y (clic del stick derecho) los oculta; A sobre su barra de arriba los mueve."],
     ["Acercar", "mantén A (o el dedo) mirando un panel y se agranda para leerlo."],
     ["Altura", "stick derecho arriba o abajo te sube o te baja; centrar la vista vuelve a la altura de los ojos."],
     ["Centrar", "clic del stick izquierdo (o el botón de abajo) mira de nuevo al pasillo."],
@@ -76,7 +83,12 @@ export function LobbyVrHud({
   const accountWidth = (WIDTH - 0.1 - 0.03 * (accountButtons.length - 1)) / accountButtons.length;
 
   const left = -WIDTH / 2 + 0.05;
-  const linesEnd = -0.1 - lines.length * LINE;
+  const lineY: number[] = [];
+  let linesEnd = -0.1;
+  for (const [, text] of lines) {
+    lineY.push(linesEnd);
+    linesEnd -= LINE + (Math.ceil(text.length / CHARS_PER_ROW) - 1) * EXTRA_ROW;
+  }
   const buttons = [
     { id: "recorrido", label: "Empezar el recorrido guiado", onSelect: onStartTour, primary: true },
     { id: "centrar", label: "Centrar la vista", onSelect: requestRecenter },
@@ -100,7 +112,7 @@ export function LobbyVrHud({
             CÓMO MOVERTE
           </VrText>
           {lines.map(([label, text], i) => (
-            <group key={label} position={[0, -0.1 - i * LINE, 0]}>
+            <group key={label} position={[0, lineY[i], 0]}>
               <VrText position={[left, 0, 0]} fontSize={0.036} color="#2dd4bf">
                 {label}
               </VrText>

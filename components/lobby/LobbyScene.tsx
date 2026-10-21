@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useTiledPbrTexture } from "../shell/useTiledPbrTexture";
 import { useBounds } from "@/lib/collision/useCollider";
@@ -91,8 +92,8 @@ export function LobbyScene() {
 
       {/* Luminarias lineales, como las del pasillo de referencia: una barra
           oscura con el tubo emisivo adentro. El material emisivo da el brillo
-          y el bloom; la pointLight de al lado es la que ilumina de verdad —
-          un emissive por sí solo no ilumina nada en three.js. */}
+          y el bloom, pero un emissive no ilumina nada en three.js: la luz
+          que cae al piso es la de LightPools y la de NearbyLampLights. */}
       {LAMPS.map((z) => (
         <group key={z}>
           {/* Carcasa. */}
@@ -113,40 +114,26 @@ export function LobbyScene() {
               Está bajo a propósito (0.16): el objetivo es que se distinga la
               FORMA rectangular de la luminaria. Cuanto más se sube, más se
               come el borde del panel el resplandor, hasta que la lámpara
-              deja de tener silueta y queda una mancha. */}
+              deja de tener silueta y queda una mancha.
+
+              Va sin iluminación (meshBasic): con las luces reales solo cerca
+              del jugador, un difusor iluminado se veía blanco en la luminaria
+              de al lado y gris en las del fondo. Así todas se ven igual de
+              encendidas. */}
           <mesh position={[0, CORRIDOR_HEIGHT - 0.1, z]}>
             <boxGeometry args={[0.38, 0.015, 1.94]} />
-            <meshStandardMaterial
-              color="#e9ecf1"
-              emissive="#fdf7ee"
-              emissiveIntensity={0.16}
-              roughness={0.9}
-            />
+            <meshBasicMaterial color="#f1efe9" />
           </mesh>
 
-          {/* La luz de verdad (un emissive no ilumina nada en three.js). Va
-              repartida en dos puntos a lo largo del panel en vez de uno solo
-              en el medio: una fuente puntual dibuja un óvalo marcado en el
-              piso, y dos separadas se leen como una luz de panel.
-
-              La altura importa MÁS que la intensidad. Estas luces estaban a
-              35 cm del techo y, por la caída con el cuadrado de la distancia,
-              lo quemaban a blanco puro: esa era la mancha enorme sobre cada
-              lámpara — no era el bloom. Bajadas a 90 cm, el techo recibe una
-              fracción de eso y la luminaria se lee como un panel encendido y
-              no como un agujero al sol. */}
-          {[-0.55, 0.55].map((dz) => (
-            <pointLight
-              key={dz}
-              position={[0, CORRIDOR_HEIGHT - 0.9, z + dz]}
-              intensity={1.5}
-              distance={7}
-              decay={2}
-              color="#fdf7ee"
-            />
-          ))}
         </group>
       ))}
+
+      <LightPools />
+      <NearbyLampLights />
+      {/* Relleno propio del pasillo: con las luces reales solo cerca del
+          jugador, el fondo quedaba más apagado que antes. Una luz de
+          hemisferio cuesta casi nada (no depende de la distancia). */}
+      <hemisphereLight args={["#fdf7ee", "#8a8f96", 0.2]} />
 
       {/* Zócalo corrido en las dos paredes: además de dar escala, tapa la
           juntura piso-pared, que en ángulo rasante se ve como una fisura. */}
@@ -185,6 +172,150 @@ export function LobbyScene() {
         </Suspense>
       ))}
     </group>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Luz "falsa" de las luminarias                                             */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * Antes cada luminaria tenía dos pointLight: unas 30 luces reales. Era lo que
+ * más pesaba del lobby (≈20 fps en el visor de un celular de gama media):
+ * three.js recorre TODAS las luces en cada píxel de cada superficie, y en la
+ * vista VR la escena se dibuja dos veces.
+ *
+ * Ahora la luz se reparte en dos capas, como en los juegos de celular:
+ * - LightPools: un charco de luz pintado en el piso bajo cada luminaria. No
+ *   calcula nada, solo se suma al color del piso; desde lejos el pasillo se
+ *   ve iluminado igual que antes.
+ * - NearbyLampLights: solo 4 luces reales, que se ubican en las luminarias
+ *   más cercanas al jugador. Son las que iluminan de verdad lo que está al
+ *   lado (puertas, objetos, las paredes cercanas).
+ */
+
+/** Cuántas luces reales hay en total, vayan donde vayan. */
+const REAL_LIGHTS = 4;
+/**
+ * Las luces reales se apagan suave con la distancia al jugador: enteras
+ * hasta FADE_START y en cero a FADE_END. Con luminarias cada 4 m, la quinta
+ * más cercana siempre está a 8 m o más, así que al cambiar una luz de
+ * luminaria nunca se ve un salto: la que se va ya estaba apagada.
+ */
+const FADE_START = 5;
+const FADE_END = LAMP_SPACING * 2;
+/** Lo que antes daban las dos luces de cada luminaria, juntas en una. */
+const LAMP_INTENSITY = 3;
+/**
+ * Más abajo que las de antes (estaban a 90 cm del techo): con una sola luz
+ * por luminaria en vez de dos, a 90 cm quemaba un círculo en el techo. El
+ * resplandor del techo ahora lo pinta LightPools, parejo en todas.
+ */
+const LAMP_LIGHT_Y = CORRIDOR_HEIGHT - 1.2;
+
+function NearbyLampLights() {
+  const lights = useRef<Array<THREE.PointLight | null>>([]);
+  const work = useRef({ order: LAMPS.map((z) => ({ z, d: 0 })), camPos: new THREE.Vector3() });
+
+  useFrame(({ camera }) => {
+    const { order, camPos } = work.current;
+    camera.getWorldPosition(camPos);
+    for (const lamp of order) lamp.d = Math.abs(lamp.z - camPos.z);
+    order.sort((a, b) => a.d - b.d);
+    for (let i = 0; i < REAL_LIGHTS; i++) {
+      const light = lights.current[i];
+      if (!light) continue;
+      const lamp = order[i];
+      if (!lamp) {
+        light.intensity = 0;
+        continue;
+      }
+      light.position.z = lamp.z;
+      const fade = THREE.MathUtils.clamp((FADE_END - lamp.d) / (FADE_END - FADE_START), 0, 1);
+      light.intensity = LAMP_INTENSITY * fade;
+    }
+  });
+
+  // Siempre las mismas 4: cambiar cuántas luces hay obliga a three.js a
+  // recompilar todos los materiales, que es un tirón de medio segundo.
+  return (
+    <>
+      {Array.from({ length: REAL_LIGHTS }, (_, i) => (
+        <pointLight
+          key={i}
+          ref={(light) => {
+            lights.current[i] = light;
+          }}
+          position={[0, LAMP_LIGHT_Y, LAMPS[0]]}
+          intensity={0}
+          distance={7}
+          decay={2}
+          color="#fdf7ee"
+        />
+      ))}
+    </>
+  );
+}
+
+/** Un degradé radial blanco → transparente, para los charcos de luz. */
+function usePoolTexture() {
+  return useMemo(() => {
+    const size = 128;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    // Caída suave, parecida a la de una luz real: casi plana en el centro
+    // y sin borde visible.
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.35, "rgba(255,255,255,0.75)");
+    g.addColorStop(0.7, "rgba(255,255,255,0.22)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
+}
+
+/**
+ * Un charco de luz pintado bajo cada luminaria en el piso, y otro alrededor
+ * de ella en el techo (el resplandor que antes le daban sus luces). Mezcla
+ * aditiva: aclara la superficie como lo haría la luz, sin tapar la textura.
+ * El del techo queda detrás de la carcasa, así que solo se ve el halo.
+ */
+function LightPools() {
+  const texture = usePoolTexture();
+  return (
+    <>
+      {LAMPS.map((z) => (
+        <group key={z}>
+          <mesh position={[0, 0.004, z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
+            <planeGeometry args={[CORRIDOR_WIDTH, 4.6]} />
+            <meshBasicMaterial
+              map={texture}
+              color="#fdf7ee"
+              transparent
+              opacity={0.1}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[0, CORRIDOR_HEIGHT - 0.004, z]} rotation={[Math.PI / 2, 0, 0]} renderOrder={-1}>
+            <planeGeometry args={[CORRIDOR_WIDTH * 0.9, 3.6]} />
+            <meshBasicMaterial
+              map={texture}
+              color="#fdf7ee"
+              transparent
+              opacity={0.22}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
+      ))}
+    </>
   );
 }
 
