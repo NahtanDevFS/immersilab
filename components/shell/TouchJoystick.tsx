@@ -25,9 +25,9 @@ const DEADZONE = 0.12;
  * conectado: con el teléfono en el visor nadie toca la pantalla, y con un
  * control ya está el stick izquierdo. Si se conecta uno, desaparece.
  *
- * Cada dedo se sigue por separado: el que empieza acá camina, y el cursor
- * virtual del modo giroscopio no lo ve (useVirtualCursor), así que con el
- * otro pulgar se puede seguir apuntando y tocando.
+ * Cada dedo se sigue por separado: el que empieza acá camina, y con el otro
+ * pulgar se tocan los botones de siempre. Mientras se ve, el panel de
+ * variables le deja libre la esquina de abajo.
  */
 export function TouchJoystick({ enabled }: { enabled: boolean }) {
   // En el servidor no hay pantalla: false, y aparece al hidratar.
@@ -62,6 +62,14 @@ export function TouchJoystick({ enabled }: { enabled: boolean }) {
     pointer.current = null;
   }, [visible]);
   useEffect(() => () => setJoystickAxes(0, 0), []);
+
+  // Avisa que está a la vista: el panel de variables le deja libre la
+  // esquina de abajo a la izquierda (VariablesPanel.module.css).
+  useEffect(() => {
+    if (!visible) return;
+    document.documentElement.setAttribute("data-touch-joystick-on", "");
+    return () => document.documentElement.removeAttribute("data-touch-joystick-on");
+  }, [visible]);
 
   const move = useCallback((clientX: number, clientY: number) => {
     const rect = base.current?.getBoundingClientRect();

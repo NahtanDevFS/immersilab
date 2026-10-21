@@ -14,7 +14,6 @@ import { exitVr, useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { useQualityTier } from "./useQualityTier";
 import { VariablesPanel } from "./VariablesPanel";
-import { VariablesHud3D } from "./VariablesHud3D";
 import { ResultPanel } from "./ResultPanel";
 import { BriefingPanel } from "./BriefingPanel";
 import { TourPanel } from "./TourPanel";
@@ -81,10 +80,10 @@ export function ExperimentShell({
   // Vista VR: pantalla partida para el visor (ver lib/view/viewMode.ts).
   const view = useViewMode();
   const vr = view === "vr";
-  // hoveredKey: qué slider está bajo el cursor ahora mismo (con dedo o con
-  // el stick derecho del gamepad) — se usa para resaltarlo en el panel.
+  // hoveredKey: qué slider está bajo el cursor ahora mismo (stick derecho
+  // del control, con el celular en la mano) — se usa para resaltarlo.
   // En la vista VR no hay cursor: se apunta con la mira (lib/view/gaze.ts).
-  const { position: cursorPos, hoveredKey } = useVirtualCursor(gyroActive && !vr);
+  const { position: cursorPos, hoveredKey, active: cursorActive } = useVirtualCursor(gyroActive && !vr);
 
   // Una única instancia del motor durante toda la vida del componente.
   const engine = useMemo(() => experiment.createEngine(), [experiment]);
@@ -153,10 +152,12 @@ export function ExperimentShell({
           showBackLink
         />
 
-        {/* En modo visor el panel NO va pegado a la pantalla: se dibuja
-            dentro del Canvas, a distancia de lectura (VariablesHud3D). Con
-            mouse, en cambio, la esquina es lo cómodo. */}
-        {!gyroActive && (
+        {/* Fuera del visor, el panel en la esquina, con mouse o con el dedo.
+            En el visor van los paneles 3D de VrHud. Con el celular en la mano
+            había un panel flotante pegado a la cámara que se encendía al
+            mirarlo, pero como iba pegado a la cámara nunca se lo podía mirar
+            de frente: quedaba siempre medio transparente, como un fantasma. */}
+        {!vr && (
           <VariablesPanel
             title="Variables"
             schema={shownSchema}
@@ -270,15 +271,6 @@ export function ExperimentShell({
           </Suspense>
           <SceneComponent engine={engine} variables={values} setVariable={setValue} />
 
-          {gyroActive && !vr && (
-            <VariablesHud3D
-              schema={shownSchema}
-              values={values}
-              onChange={setValue}
-              selectedKey={hoveredKey ?? undefined}
-            />
-          )}
-
           {/* Sombra de contacto: sin esto los objetos se ven "flotando"
               sobre el pasto aunque tengan sombra proyectada. Es la mejora
               más barata que hay para asentar algo en el suelo. */}
@@ -298,7 +290,7 @@ export function ExperimentShell({
           />
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
-          <MovementController lift={!gyroActive} />
+          <MovementController lift={!gyroActive || vr} />
           {!gyroActive && (
             <DragLookControls target={experiment.cameraView?.target ?? [5, 1, 0]} />
           )}
@@ -330,11 +322,12 @@ export function ExperimentShell({
             />
           )}
         </Canvas>
-        <VirtualCursor position={cursorPos} visible={gyroActive} />
-        {/* Caminar en el celular sin control, con giroscopio. Sin giroscopio
-            no: ahí el panel de variables va abajo a la izquierda y quedaba
-            tapado. En el visor tampoco: nadie toca la pantalla. */}
-        <TouchJoystick enabled={gyroActive && !vr} />
+        {/* El cursor solo con un control conectado (stick derecho). */}
+        <VirtualCursor position={cursorPos} visible={cursorActive} />
+        {/* Caminar en el celular sin control. En el visor no: nadie toca la
+            pantalla. Mientras se ve, el panel de variables le deja libre la
+            esquina de abajo (VariablesPanel.module.css). */}
+        <TouchJoystick enabled={!vr} />
 
         {vr && <VrExit />}
 

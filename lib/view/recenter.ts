@@ -17,7 +17,6 @@ let alignment = { version: 0, yaw: 0 };
 /** Pide volver a centrar la vista hacia el experimento. */
 export function requestRecenter() {
   requested += 1;
-  uiPitch = 0;
 }
 
 export function recenterRequests(): number {
@@ -31,21 +30,4 @@ export function publishAlignment(yaw: number) {
 
 export function currentAlignment(): { version: number; yaw: number } {
   return alignment;
-}
-
-/*
- * Altura de la interfaz en la vista VR (grados). Con el stick derecho hacia
- * arriba o abajo se sube o se baja todo lo que acompaña al cuerpo (paneles,
- * tarjetas), como agacharse o elevarse: así se llega a la parte de abajo de
- * un cuadro alto sin torcer el cuello. Centrar la vista la vuelve a 0.
- */
-let uiPitch = 0;
-export const UI_PITCH_LIMIT = 45;
-
-export function getUiPitch(): number {
-  return uiPitch;
-}
-
-export function nudgeUiPitch(degrees: number) {
-  uiPitch = Math.max(-UI_PITCH_LIMIT, Math.min(UI_PITCH_LIMIT, uiPitch + degrees));
 }

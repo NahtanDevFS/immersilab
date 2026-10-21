@@ -15,7 +15,7 @@ Gemini) que responde con los valores actuales del experimento.
     (plano inclinado, fricción y polea), colisiones 1D (predice el resultado),
     péndulo, guía la carga (campo eléctrico), la grúa electromagnética
     (electroimán).
-  - **Cálculo:** derivada (frena en el pico), llena el tanque (razones de
+  - **Cálculo:** derivada (frena en la cima), llena el tanque (razones de
     cambio relacionadas), suma de Riemann, sólidos de revolución.
   - **Redes y Telecomunicaciones:** encapsulación OSI/TCP-IP, divide la red
     (subredes VLSM y VLAN), rompe el bucle (STP y EtherChannel),
@@ -97,7 +97,7 @@ Controles:
 | Mirar | Girar la cabeza | Arrastrar con el mouse |
 | Caminar | Stick izquierdo | W A S D o flechas (Shift corre) |
 | Caminar en el celular sin control | — | El joystick de la pantalla, abajo a la izquierda |
-| Bajar y subir la vista | — (la da la cabeza) | Q / E, la rueda del mouse o el stick derecho del control |
+| Bajar y subir la vista | Stick derecho arriba o abajo (centrar la vista vuelve a la altura de los ojos) | Q / E, la rueda del mouse o el stick derecho del control |
 | Cursor | Stick derecho; A (✕ en PlayStation) para tocar | Mouse |
 | Tutor | Mantener B | Mantener el botón del micrófono |
 | Cancelar al tutor | Mantener B y apretar A | La ✕ junto al micrófono o Esc |

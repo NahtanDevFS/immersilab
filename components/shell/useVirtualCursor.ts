@@ -1,20 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { readPad } from "./gamepad";
-import { startsOnJoystick } from "@/lib/input/touchJoystick";
 
 export interface CursorPosition {
   x: number;
   y: number;
 }
-
-/** Distancia máxima (px) y tiempo (ms) para considerar un gesto como "tap". */
-const TAP_MAX_DISTANCE = 10;
-const TAP_MAX_DURATION = 300;
-
-/** Multiplicador de sensibilidad del trackpad táctil. */
-const SENSITIVITY = 1.6;
 
 /** Velocidad del cursor cuando lo mueve el stick derecho. */
 const CURSOR_SPEED = 900; // px/segundo con el stick a fondo
@@ -35,31 +27,25 @@ function setNativeSliderValue(input: HTMLInputElement, value: number) {
 }
 
 /**
- * Convierte la pantalla táctil en un trackpad: arrastrar mueve un cursor
- * virtual (movimiento relativo, no absoluto), y un toque corto sin arrastre
- * cuenta como click sobre el elemento que esté bajo el cursor.
+ * Cursor virtual para usar la interfaz con el control, con el celular en la
+ * mano (giroscopio, sin visor): el stick derecho lo mueve y el botón de
+ * acción (A en el control ImmersiLab, X en PlayStation) agarra lo que esté
+ * debajo — si es un slider, moverlo con el stick ajusta su valor; si es
+ * cualquier otro elemento, lo activa como un toque.
  *
- * También acepta el gamepad como segunda fuente de entrada, sobre el mismo
- * cursor: el stick derecho lo mueve, y el botón X (índice 0, layout
- * "standard") agarra lo que esté debajo — si es un slider, arrastrarlo con
- * el stick ajusta su valor (esto resuelve el pendiente de Fase 1: los
- * sliders no eran arrastrables con el cursor virtual); si es cualquier
- * otro elemento clickeable, X lo activa directo, como un tap.
- *
- * Sigue a UN dedo (por su identificador), y no a "el primero que haya": con
- * el joystick de la pantalla (TouchJoystick) un pulgar camina y el otro
- * mueve el cursor, y los toques que empiezan sobre el joystick no lo mueven.
+ * Solo existe con un control conectado (`active`). Antes la pantalla también
+ * hacía de touchpad (arrastrar movía el cursor y un toque hacía clic donde
+ * estaba el cursor, no donde se tocaba): era para el visor viejo, sin la
+ * vista VR de dos ojos. Con el teléfono en la mano confundía — tocar un botón
+ * no lo tocaba —, así que ahora los toques van directo a lo que hay debajo
+ * del dedo.
  */
 export function useVirtualCursor(enabled: boolean) {
   const [position, setPosition] = useState<CursorPosition>({ x: 0, y: 0 });
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const positionRef = useRef(position);
-  const lastTouch = useRef<CursorPosition | null>(null);
-  const gestureStart = useRef<{ x: number; y: number; time: number } | null>(
-    null,
-  );
-  /** El dedo que maneja el cursor; null si no hay ninguno. */
-  const finger = useRef<number | null>(null);
+  /** Hay un control conectado: sin él, no hay cursor. */
+  const [padPresent, setPadPresent] = useState(false);
 
   useEffect(() => {
     positionRef.current = position;
@@ -75,85 +61,6 @@ export function useVirtualCursor(enabled: boolean) {
     return () => cancelAnimationFrame(id);
   }, [enabled]);
 
-  const handleTouchStart = useCallback(
-    (e: TouchEvent) => {
-      if (!enabled || finger.current !== null) return;
-      const touch = Array.from(e.changedTouches).find((t) => !startsOnJoystick(t.target));
-      if (!touch) return;
-      finger.current = touch.identifier;
-      lastTouch.current = { x: touch.clientX, y: touch.clientY };
-      gestureStart.current = {
-        x: touch.clientX,
-        y: touch.clientY,
-        time: Date.now(),
-      };
-    },
-    [enabled],
-  );
-
-  const handleTouchMove = useCallback(
-    (e: TouchEvent) => {
-      if (!enabled || !lastTouch.current) return;
-      const touch = Array.from(e.touches).find((t) => t.identifier === finger.current);
-      if (!touch) return; // se movió solo el pulgar del joystick
-      e.preventDefault(); // evita el scroll de la página mientras se usa el trackpad
-
-      const deltaX = (touch.clientX - lastTouch.current.x) * SENSITIVITY;
-      const deltaY = (touch.clientY - lastTouch.current.y) * SENSITIVITY;
-
-      setPosition((prev) => ({
-        x: Math.max(0, Math.min(window.innerWidth, prev.x + deltaX)),
-        y: Math.max(0, Math.min(window.innerHeight, prev.y + deltaY)),
-      }));
-
-      lastTouch.current = { x: touch.clientX, y: touch.clientY };
-    },
-    [enabled],
-  );
-
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
-    if (!enabled || !gestureStart.current) return;
-    // Terminó otro dedo (el del joystick): el del cursor sigue apoyado.
-    if (!Array.from(e.changedTouches).some((t) => t.identifier === finger.current)) return;
-    finger.current = null;
-
-    const { x, y, time } = gestureStart.current;
-    const lastPos = lastTouch.current;
-    const distance = lastPos ? Math.hypot(lastPos.x - x, lastPos.y - y) : 0;
-    const duration = Date.now() - time;
-
-    // Gesto corto y sin desplazamiento = click en la posición del cursor.
-    // Un toque cancelado por el sistema (una notificación, un gesto) no es un click.
-    if (e.type !== "touchcancel" && distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) {
-      setPosition((current) => {
-        const target = document.elementFromPoint(current.x, current.y);
-        if (target instanceof HTMLElement) {
-          target.click();
-        }
-        return current;
-      });
-    }
-
-    lastTouch.current = null;
-    gestureStart.current = null;
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!enabled) return;
-
-    window.addEventListener("touchstart", handleTouchStart, { passive: false });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd);
-    window.addEventListener("touchcancel", handleTouchEnd);
-
-    return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
-      window.removeEventListener("touchcancel", handleTouchEnd);
-    };
-  }, [enabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
-
   // Entrada por gamepad: stick derecho mueve el cursor, botón X agarra o
   // clickea lo que esté debajo.
   useEffect(() => {
@@ -164,6 +71,7 @@ export function useVirtualCursor(enabled: boolean) {
     let wasXPressed = false;
     let dragTarget: HTMLInputElement | null = null;
     let lastHoveredKey: string | null = null;
+    let lastPresent = false;
 
     const tick = (time: number) => {
       rafId = requestAnimationFrame(tick);
@@ -171,6 +79,10 @@ export function useVirtualCursor(enabled: boolean) {
       lastTime = time;
 
       const pad = readPad();
+      if (Boolean(pad) !== lastPresent) {
+        lastPresent = Boolean(pad);
+        setPadPresent(lastPresent);
+      }
       if (!pad) return;
 
       const mx = pad.right.x;
@@ -241,5 +153,5 @@ export function useVirtualCursor(enabled: boolean) {
     return () => cancelAnimationFrame(rafId);
   }, [enabled]);
 
-  return { position, active: enabled, hoveredKey };
+  return { position, active: enabled && padPresent, hoveredKey };
 }

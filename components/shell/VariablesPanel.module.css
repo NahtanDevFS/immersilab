@@ -17,6 +17,13 @@
   backdrop-filter: blur(6px);
 }
 
+/* Con el joystick en pantalla (celular sin control), el panel arranca más
+   arriba: la esquina de abajo es del joystick (120 px + margen). */
+:global(html[data-touch-joystick-on]) .panel {
+  bottom: calc(9.5rem + env(safe-area-inset-bottom));
+  max-height: calc(100% - 14.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
 .title {
   margin: 0 0 0.6rem 0;
   font-size: 0.68rem;
@@ -155,33 +162,4 @@
   border: 0.5px solid var(--lab-panel-border);
   border-radius: 6px;
   font-size: 0.78rem;
-}
-/*
- * Variante para el panel dentro de la escena (VariablesHud3D). Se le quita el
- * posicionamiento fijo: adentro de un <Html transform> la posición la da la
- * transformación 3D, y un `position: absolute` con `top/left` lo mandaría a
- * la esquina de ESE contenedor, no a donde está el objeto.
- *
- * Además va más ancho y con la tipografía más grande: a un metro de
- * distancia y a través de las lentes de un visor barato, el texto del panel
- * de escritorio es ilegible.
- */
-.hud {
-  position: static;
-  width: 20rem;
-  max-height: none;
-  overflow: visible;
-  font-size: 1.15rem;
-}
-
-.hud .title {
-  font-size: 0.85rem;
-}
-
-.hud .label {
-  font-size: 0.95rem;
-}
-
-.hud .slider {
-  height: 1.6rem;
 }

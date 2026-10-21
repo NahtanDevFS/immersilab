@@ -22,10 +22,13 @@ limpio, en la consola del navegador: `localStorage.clear()`.
 - [ ] *Celular sin control:* en "Camina" pide arrastrar el joystick de abajo
       a la izquierda, y el paso se completa caminando. Al apretar un botón
       del control, el joystick desaparece y el texto cambia al del stick.
-- [ ] *Joystick en pantalla:* en el lobby y en los experimentos con
-      giroscopio (no en el visor). Con un pulgar se camina y con el otro se
-      mueve el cursor; llevarlo al borde un momento hace correr; soltarlo
-      fuera del círculo frena.
+- [ ] *Joystick en pantalla:* en el celular sin control, en el lobby y en
+      los experimentos (no en el visor). Con un pulgar se camina y con el
+      otro se tocan los botones; llevarlo al borde un momento hace correr;
+      soltarlo fuera del círculo frena. El panel de variables no lo tapa.
+- [ ] *Celular en la mano (giroscopio, sin visor):* los toques van directo a
+      lo que hay bajo el dedo; el panel de variables es el normal (no medio
+      transparente). El cursor azul aparece solo con un control conectado.
 - [ ] Los pasos del tutor y de las puertas avanzan solos (9 s y 7 s) o con
       Enter / botón A.
 - [ ] "Saltar tutorial" (o Escape / botón B) lo cierra. Al recargar, ya no
@@ -60,7 +63,7 @@ Retos para probar (72 en total):
 | Péndulo | Sincroniza los relojes · ¿Y la masa? · El doble de lento |
 | Guía la carga | Primer desvío · Entre placas · Rodea el muro · Donde el campo se anula |
 | La grúa electromagnética | Levanta la lata · Separa la chatarra · Levanta el carro sin recalentar |
-| Derivada | Frena en un pico o un valle · Frenado perfecto · En las tres pistas |
+| Derivada | Frena en una cima o un valle · Frenado perfecto · En las tres pistas |
 | Llena el tanque | El cono que se llena · ¿Y si es un cilindro? · La escalera que resbala · El doble de alto |
 | Suma de Riemann | Menos de 1 % de error · Con 6 bloques o menos · En las cuatro funciones |
 | Sólidos de revolución | Copa · Pesa de gimnasio · Trompo · Jarrón |

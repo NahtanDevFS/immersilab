@@ -63,7 +63,7 @@ export function LobbyVrHud({
     ["Tutor", "adentro, mantén B o usa el botón del panel."],
     ["Paneles", "Y (clic del stick derecho) los oculta; su barra de arriba los mueve."],
     ["Acercar", "mantén A (o el dedo) mirando un panel y se agranda para leerlo."],
-    ["Altura", "stick derecho arriba o abajo sube o baja los paneles."],
+    ["Altura", "stick derecho arriba o abajo te sube o te baja; centrar la vista vuelve a la altura de los ojos."],
     ["Centrar", "clic del stick izquierdo (o el botón de abajo) mira de nuevo al pasillo."],
   ];
 

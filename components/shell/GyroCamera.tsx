@@ -128,6 +128,9 @@ export function GyroCamera({ orientation, enabled, faceTarget = [0, 0, -1000] }:
     if (recenterRequests() !== lastRequest.current) {
       lastRequest.current = recenterRequests();
       yawOffset.current = null;
+      // Centrar también vuelve a la altura de los ojos, si se subió o se
+      // bajó con el stick derecho.
+      camera.position.setY(EYE_HEIGHT);
     }
     if (yawOffset.current === null) {
       const sensorYaw = yawEuler.current.setFromQuaternion(target.current, "YXZ").y;

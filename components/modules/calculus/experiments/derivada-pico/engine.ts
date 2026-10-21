@@ -44,7 +44,7 @@ const PERFECT_SLOPE = 0.05;
 const GOOD_BRAKE = 80;
 
 /**
- * Motor de "Frena en el pico" (C1).
+ * Motor de "Frena en la cima" (C1).
  *
  * El vagón recorre la pista a velocidad constante EN X (no en longitud de
  * arco). Es una simplificación consciente: con velocidad sobre el arco, los
@@ -132,14 +132,14 @@ export function createDerivativeEngine(): DerivativeEngine {
 
     getState(): AIContext {
       return {
-        experimentName: "Frena en el pico",
+        experimentName: "Frena en la cima",
         disciplineName: "Cálculo",
         variables: lastVariables,
         result:
           runtime.phase === "frenado"
             ? {
                 pendiente_al_frenar: Number(runtime.slope.toFixed(3)),
-                distancia_al_pico: Number(runtime.missDistance.toFixed(3)),
+                distancia_a_la_cima: Number(runtime.missDistance.toFixed(3)),
                 puntaje: runtime.score,
                 mejor_puntaje: runtime.bestScore,
                 intentos: runtime.attempts,
@@ -193,7 +193,7 @@ export function createDerivativeEngine(): DerivativeEngine {
       return [
         {
           id: "critico",
-          title: "Frena en un pico o un valle",
+          title: "Frena en una cima o un valle",
           detail: `Saca ${GOOD_BRAKE} puntos o más: la derivada tiene que estar casi en cero.`,
           done: bestEver >= GOOD_BRAKE,
           progress: Math.min(1, bestEver / GOOD_BRAKE),

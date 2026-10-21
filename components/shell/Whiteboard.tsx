@@ -184,6 +184,22 @@ function refresh(texture: THREE.Texture) {
 }
 
 /**
+ * Cada cuánto se sube la textura mientras se dibuja, s. Subirla entera
+ * (1600×1000) en cada cuadro bajaba los cuadros por segundo del celular
+ * justo mientras se dibujaba, y con menos cuadros el giroscopio iba a saltos.
+ */
+const UPLOAD_EVERY = 1 / 30;
+
+/*
+ * Estabilizador de la tiza en el visor (como el "lazy brush" de los programas
+ * de dibujo). La tiza va atada a la mira con un hilo de LAZY_PX: los
+ * temblores de la cabeza y el ruido del sensor que quedan dentro del hilo no
+ * mueven la tiza; fuera de él, la tiza sigue a la mira de forma suave.
+ */
+const LAZY_PX = 9;
+const FOLLOW = 14; // 1/s: qué tan rápido alcanza la tiza a la mira
+
+/**
  * Cursor de lápiz sobre el pizarrón (en la compu). La punta está abajo a la
  * izquierda: ese es el punto que dibuja.
  */
@@ -288,7 +304,11 @@ export function Whiteboard({
   const boardRef = useRef<THREE.Mesh>(null);
   /** Último punto del trazo en curso (con mouse o con la mira). */
   const last = useRef<THREE.Vector2 | null>(null);
-  const gazeLast = useRef<THREE.Vector2 | null>(null);
+  /** La punta de la tiza en el visor (estabilizada), en px de la textura. */
+  const chalk = useRef<THREE.Vector2 | null>(null);
+  /** Hay trazos nuevos sin subir a la textura, y cuándo se subió la última vez. */
+  const dirty = useRef(false);
+  const lastUpload = useRef(0);
 
   // El pizarrón se registra en la mira para poder dibujar en el visor.
   useEffect(() => {
@@ -322,7 +342,7 @@ export function Whiteboard({
       const uv = boardUvAt(event, element, camera, boardRef.current);
       if (!uv) return; // fuera del pizarrón: se retoma al volver
       stroke(surface.ctx, last.current, uv, penRef.current);
-      refresh(surface.texture);
+      dirty.current = true;
       last.current = uv;
     };
     const onUp = () => {
@@ -341,18 +361,41 @@ export function Whiteboard({
   }, [element, camera, surface, vr]);
 
   // Vista VR: mirando el pizarrón con A apretado (o el dedo apoyado en la
-  // pantalla), se dibuja donde cae la mira.
-  useFrame(() => {
+  // pantalla), se dibuja donde cae la mira, con la tiza estabilizada.
+  useFrame((state, delta) => {
     const pressed = vr && isSelectHeld();
     const uv = getGazed() === boardRef.current ? getGazeUv() : null;
     if (pressed && uv) {
-      if (gazeLast.current) {
-        stroke(surface.ctx, gazeLast.current, uv, penRef.current);
-        refresh(surface.texture);
+      const target = new THREE.Vector2(uv.x * TEX_W, (1 - uv.y) * TEX_H);
+      if (!chalk.current) {
+        chalk.current = target;
+      } else {
+        const from = chalk.current.clone();
+        const offset = target.clone().sub(from);
+        const distance = offset.length();
+        if (distance > LAZY_PX) {
+          // Hasta el borde del hilo, de forma suave.
+          const goal = from.clone().addScaledVector(offset, (distance - LAZY_PX) / distance);
+          chalk.current.lerp(goal, 1 - Math.exp(-FOLLOW * delta));
+          stroke(
+            surface.ctx,
+            new THREE.Vector2(from.x / TEX_W, 1 - from.y / TEX_H),
+            new THREE.Vector2(chalk.current.x / TEX_W, 1 - chalk.current.y / TEX_H),
+            penRef.current,
+          );
+          dirty.current = true;
+        }
       }
-      gazeLast.current = uv.clone();
     } else {
-      gazeLast.current = null;
+      chalk.current = null;
+    }
+
+    // Los trazos se juntan y la textura se sube como mucho 30 veces por segundo.
+    const now = state.clock.elapsedTime;
+    if (dirty.current && now - lastUpload.current >= UPLOAD_EVERY) {
+      dirty.current = false;
+      lastUpload.current = now;
+      refresh(surface.texture);
     }
   });
 

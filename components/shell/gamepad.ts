@@ -41,7 +41,8 @@
  *   1 secundario → hablarle al tutor (mantener) · B saltar en el tutorial
  *                  B + A (A apretado con B mantenido) → cancelar la pregunta
  *   Stick izquierdo a fondo ~0.5 s → correr (MovementController).
- *   Stick derecho arriba/abajo, en la vista VR → subir o bajar la interfaz.
+ *   Stick derecho arriba/abajo, en la vista VR o en la compu → subir o bajar
+ *                            la cámara (MovementController).
  *   2 clic stick izquierdo → centrar la vista hacia el experimento
  *                            (X / cuadrado en un control estándar)
  *   3 clic stick derecho   → en el celular, fuera del visor: entrar al visor.

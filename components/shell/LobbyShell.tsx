@@ -167,7 +167,8 @@ export function LobbyShell() {
           <GyroCamera orientation={orientation} enabled={gyroActive} faceTarget={[0, 1.4, -1000]} />
           {/* Caminar funciona siempre (gamepad o teclado). Mirar: con visor
               lo hace el giroscopio; sin él, arrastrando el mouse o el dedo. */}
-          <MovementController />
+          {/* Subir y bajar, con tope bajo el techo del pasillo (3.1 m). */}
+          <MovementController lift={!gyroActive || vr} maxLift={2.6} />
           {!tutorialSeen && !vr && <TutorialProbe onLook={onLook} onWalk={onWalk} />}
           {!gyroActive && <DragLookControls target={[0, 1.4, -10]} />}
 

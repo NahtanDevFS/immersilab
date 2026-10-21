@@ -8,8 +8,15 @@ import { attachKeyboard, readKeyboard } from "./keyboard";
 import { readJoystick } from "@/lib/input/touchJoystick";
 import { resolveCollisions } from "@/lib/collision/colliders";
 
-const SPEED = 4; // metros por segundo, caminando
-const RUN_MULTIPLIER = 2; // con Shift, o el stick a fondo un momento
+/*
+ * 3 m/s caminando y 1.6 veces eso corriendo. Antes eran 4 y el doble (8 m/s):
+ * en el pasillo del lobby, con el stick del control a fondo, se sentía como
+ * una aceleración brusca, y en el visor marea.
+ */
+const SPEED = 3; // metros por segundo, caminando
+const RUN_MULTIPLIER = 1.6; // con Shift, o el stick a fondo un momento
+/** Qué tan rápido entra la carrera (1/s): en ~0.4 s, no de golpe. */
+const RUN_RAMP = 2.5;
 
 /**
  * Correr con el control: no hay botón libre (el ESP32 tiene los cuatro
@@ -17,8 +24,8 @@ const RUN_MULTIPLIER = 2; // con Shift, o el stick a fondo un momento
  * momento, como en muchos juegos de celular. Soltarlo un poco vuelve a
  * caminar.
  */
-const RUN_STICK = 0.92;
-const RUN_AFTER = 0.5; // s con el stick a fondo
+const RUN_STICK = 0.95;
+const RUN_AFTER = 1; // s con el stick a fondo (con 0.5 s se corría sin querer)
 
 /**
  * Subir y bajar la vista (solo en la compu): cada experimento arranca la
@@ -53,26 +60,35 @@ const PLAYER_RADIUS = 0.35;
  * un shooter), y se mantiene a la altura del piso aunque mires hacia arriba
  * o abajo — por eso se anula la componente Y de "forward" antes de mover.
  *
- * Con `lift` (en la compu, sin giroscopio) además se sube y se baja: Q y E,
- * la rueda del mouse sobre la escena, o el stick derecho del control, que en
- * la compu no tiene otro uso (en el visor mueve el cursor o la interfaz, y
- * ahí la altura la da la cabeza).
+ * Con `lift` (en la compu y en el visor) además se sube y se baja: Q y E, la
+ * rueda del mouse sobre la escena, o el stick derecho del control hacia
+ * arriba o abajo. Con el celular en la mano no: ahí el stick derecho mueve
+ * el cursor virtual.
  */
-export function MovementController({ lift = false }: { lift?: boolean }) {
+export function MovementController({
+  lift = false,
+  maxLift = MAX_HEIGHT,
+}: {
+  lift?: boolean;
+  /** Tope de altura, m: en el lobby, por debajo del techo. */
+  maxLift?: number;
+}) {
   const { camera, gl } = useThree();
   const forward = useRef(new THREE.Vector3());
   const right = useRef(new THREE.Vector3());
   const fullStick = useRef(0);
+  /** Multiplicador de carrera actual: va hacia RUN_MULTIPLIER de a poco. */
+  const runFactor = useRef(1);
   /** Lo que movió la rueda desde el último frame, m. */
   const wheel = useRef(0);
-  const maxHeight = useRef(MAX_HEIGHT);
+  const maxHeight = useRef(maxLift);
 
   useEffect(() => attachKeyboard(), []);
 
   useEffect(() => {
     if (!lift) return;
     // Si la vista inicial ya está más alta que el tope, el tope es ella.
-    maxHeight.current = Math.max(MAX_HEIGHT, camera.position.y);
+    maxHeight.current = Math.max(maxLift, camera.position.y);
     const element = gl.domElement;
     const onWheel = (event: WheelEvent) => {
       // Rueda hacia adelante (deltaY negativo) sube, como acercarse a algo.
@@ -81,15 +97,19 @@ export function MovementController({ lift = false }: { lift?: boolean }) {
     };
     element.addEventListener("wheel", onWheel, { passive: false });
     return () => element.removeEventListener("wheel", onWheel);
-  }, [lift, camera, gl]);
+  }, [lift, maxLift, camera, gl]);
 
   useFrame((_, delta) => {
     const pad = readPad();
     const keys = readKeyboard();
 
     if (lift) {
-      // Stick derecho hacia arriba (y negativo) sube.
-      const stickLift = Math.abs(pad?.right.y ?? 0) > 0.3 ? -(pad?.right.y ?? 0) : 0;
+      // Stick derecho hacia arriba (y negativo) sube. Solo si se empuja más
+      // en vertical que en horizontal: en el visor, el stick hacia los lados
+      // ajusta la variable que se está mirando, y no debe subir de paso.
+      const ry = pad?.right.y ?? 0;
+      const rx = pad?.right.x ?? 0;
+      const stickLift = Math.abs(ry) > 0.3 && Math.abs(ry) > Math.abs(rx) ? -ry : 0;
       const rate = clampAxis(keys.vertical + stickLift) * LIFT_SPEED * (keys.run ? RUN_MULTIPLIER : 1);
       const change = rate * delta + wheel.current;
       wheel.current = 0;
@@ -102,13 +122,25 @@ export function MovementController({ lift = false }: { lift?: boolean }) {
     const touch = readJoystick();
 
     // Eje Y negativo = stick hacia arriba = caminar hacia adelante.
-    const moveX = clampAxis((pad?.left.x ?? 0) + keys.x + touch.x);
-    const moveY = clampAxis((pad?.left.y ?? 0) + keys.y + touch.y);
+    let moveX = clampAxis((pad?.left.x ?? 0) + keys.x + touch.x);
+    let moveY = clampAxis((pad?.left.y ?? 0) + keys.y + touch.y);
+    // En diagonal no se camina más rápido: con cada eje limitado por separado,
+    // el stick en la esquina daba 1.41 veces la velocidad.
+    const length = Math.hypot(moveX, moveY);
+    if (length > 1) {
+      moveX /= length;
+      moveY /= length;
+    }
     // A fondo un momento = correr, sea el stick del control o el de la pantalla.
     const stick = Math.max(Math.hypot(pad?.left.x ?? 0, pad?.left.y ?? 0), Math.hypot(touch.x, touch.y));
     fullStick.current = stick >= RUN_STICK ? fullStick.current + delta : 0;
-    if (moveX === 0 && moveY === 0) return;
+    if (moveX === 0 && moveY === 0) {
+      runFactor.current = 1;
+      return;
+    }
     const running = keys.run || fullStick.current >= RUN_AFTER;
+    const target = running ? RUN_MULTIPLIER : 1;
+    runFactor.current += (target - runFactor.current) * Math.min(1, RUN_RAMP * delta);
 
     camera.getWorldDirection(forward.current);
     forward.current.y = 0;
@@ -116,7 +148,7 @@ export function MovementController({ lift = false }: { lift?: boolean }) {
 
     right.current.crossVectors(forward.current, camera.up).normalize();
 
-    const step = SPEED * (running ? RUN_MULTIPLIER : 1) * delta;
+    const step = SPEED * runFactor.current * delta;
     camera.position.addScaledVector(forward.current, -moveY * step);
     camera.position.addScaledVector(right.current, moveX * step);
 

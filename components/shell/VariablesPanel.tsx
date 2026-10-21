@@ -11,12 +11,6 @@ interface Props {
   onChange: (key: string, value: number | boolean | string) => void;
   /** Clave de la variable resaltada (ej. seleccionada con el gamepad). */
   selectedKey?: string;
-  /**
-   * "overlay" (por defecto): flotando en una esquina de la pantalla, para
-   * mouse y pantalla plana. "hud": sin posicionamiento propio, porque lo
-   * coloca `VariablesHud3D` como objeto dentro de la escena para el visor.
-   */
-  variant?: "overlay" | "hud";
 }
 
 /**
@@ -31,12 +25,9 @@ export function VariablesPanel({
   values,
   onChange,
   selectedKey,
-  variant = "overlay",
 }: Props) {
   return (
-    <div
-      className={variant === "hud" ? `${styles.panel} ${styles.hud}` : styles.panel}
-    >
+    <div className={styles.panel}>
       <h2 className={styles.title}>{title}</h2>
 
       {Object.entries(schema).map(([key, def], index, entries) => {
@@ -65,24 +56,16 @@ export function VariablesPanel({
             >
               <label className={styles.label} htmlFor={key}>
                 <span>{def.label}</span>
-                {variant === "hud" ? (
-                  // En el visor no hay teclado: solo se muestra el valor.
-                  <span className={styles.value}>
-                    {formatNumber(Number(value))}
-                    {def.unit ? ` ${def.unit}` : ""}
-                  </span>
-                ) : (
-                  <span className={styles.value}>
-                    <NumberInput
-                      def={def}
-                      value={Number(value)}
-                      onCommit={(v) => onChange(key, v)}
-                    />
-                    {/* Siempre presente, aunque no haya unidad: con el
-                        mismo ancho, todas las casillas quedan alineadas. */}
-                    <span className={styles.unit}>{def.unit ?? ""}</span>
-                  </span>
-                )}
+                <span className={styles.value}>
+                  <NumberInput
+                    def={def}
+                    value={Number(value)}
+                    onCommit={(v) => onChange(key, v)}
+                  />
+                  {/* Siempre presente, aunque no haya unidad: con el
+                      mismo ancho, todas las casillas quedan alineadas. */}
+                  <span className={styles.unit}>{def.unit ?? ""}</span>
+                </span>
               </label>
               <input
                 id={key}

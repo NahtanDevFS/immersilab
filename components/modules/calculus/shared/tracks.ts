@@ -1,5 +1,5 @@
 /**
- * Pistas para "Frena en el pico" (C1).
+ * Pistas para "Frena en la cima" (C1).
  *
  * Van aparte del catálogo de `functions.ts` a propósito: aquellas son
  * monótonas y positivas porque las pide la suma de Riemann (área sin signo),
