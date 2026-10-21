@@ -119,8 +119,11 @@ Pistas de los experimentos nuevos:
 
 *Visor:* abajo al frente, la barra de pestañas (Variables · Retos ·
 Resultado · Tutor · Menú) y la acción principal debajo. Mirar una pestaña y
-apretar A abre ese panel al frente; otra vez, lo cierra. El panel abierto no
-tapa la barra (si es alto, sube solo). El stick derecho a la derecha sube el
+apretar A abre o cierra su panel sin cerrar los demás: hasta tres, uno al
+lado del otro en el orden de la barra (con el cuarto se cierra el primero).
+Los paneles abiertos no tapan la barra (si uno es alto, sube solo). La
+barra se sube o se baja manteniendo A sobre la franja del texto de ayuda y
+queda guardada; "Acomodar los paneles" la devuelve a su lugar. El stick derecho a la derecha sube el
 valor de la variable que se mira; arriba y abajo sube y baja la cámara. B
 mantenido habla con el tutor.
 

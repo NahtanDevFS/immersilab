@@ -110,8 +110,10 @@ export function VrDashboard({
       </BodyAnchor>
       {hint ? (
         <HeadAnchor>
+          {/* Arriba del centro: abajo tapaba la barra de pestañas justo
+              cuando se bajaba la vista para usarla. */}
           <VrText
-            position={[0, -0.12, -1.6]}
+            position={[0, 0.3, -1.6]}
             anchorX="center"
             fontSize={0.045}
             maxWidth={1.3}
@@ -184,6 +186,8 @@ export function SidePanel({
   yaw,
   height = 1.2,
   minBottomPitch,
+  scale = PANEL_SCALE,
+  follow = false,
   children,
 }: {
   id: string;
@@ -205,6 +209,14 @@ export function SidePanel({
    * jugador lo llevó a otro lugar.
    */
   minBottomPitch?: number;
+  /** Tamaño del panel (por defecto PANEL_SCALE); los cambios se animan. */
+  scale?: number;
+  /**
+   * El lugar lo decide quien lo usa (las pestañas del visor): si cambian
+   * `yaw` o `pitch`, el panel se desliza hasta ahí. No se aplica si el
+   * jugador lo llevó a otro lugar con la barra.
+   */
+  follow?: boolean;
   children: ReactNode;
 }) {
   const s = side === "left" ? 1 : -1;
@@ -226,6 +238,9 @@ export function SidePanel({
   const backing = useRef<THREE.Mesh>(null);
   const lupa = useRef({ held: 0, on: false, zoom: 1 });
   const sinceMeasure = useRef(MEASURE_EVERY);
+  /** Cuánto se subió el panel para no pisar la barra (grados). */
+  const raise = useRef(0);
+  const shownScale = useRef(scale);
 
   // La barra se puede mirar (no hace nada al tocarla: hay que mantener). El
   // fondo también, para que la lupa sepa que se está mirando este panel.
@@ -275,6 +290,24 @@ export function SidePanel({
       }
     }
     heldBefore.current = held;
+
+    // Acomodo automático: hacia el lugar que le toca, de forma suave.
+    const custom = getPanelPlacement(id) !== undefined;
+    const ease = 1 - Math.exp(-8 * dt);
+    const targetPitch = clamp(defaults.pitch + raise.current, MIN_PITCH, MAX_PITCH);
+    if (follow && !dragging && !custom) {
+      current.yaw += (defaults.yaw - current.yaw) * ease;
+      current.pitch += (targetPitch - current.pitch) * ease;
+    }
+    shownScale.current += (scale - shownScale.current) * ease;
+    near.current?.scale.setScalar(shownScale.current);
+    // Midiendo en pleno movimiento se lo subía de más.
+    const settled =
+      !follow ||
+      (Math.abs(current.yaw - defaults.yaw) < 0.3 &&
+        Math.abs(current.pitch - targetPitch) < 0.3 &&
+        Math.abs(shownScale.current - scale) < 0.005);
+
     updateLupa(lupa.current, held && !dragging && looksAtPanel(g, handle.current), held, dt);
     near.current?.position.set(0, 0, -PANEL_DISTANCE / lupa.current.zoom);
 
@@ -288,8 +321,9 @@ export function SidePanel({
       minBottomPitch !== undefined &&
       sinceMeasure.current >= MEASURE_EVERY &&
       !dragging &&
+      settled &&
       lupa.current.zoom < 1.01 &&
-      getPanelPlacement(id) === undefined &&
+      !custom &&
       near.current
     ) {
       sinceMeasure.current = 0;
@@ -306,7 +340,8 @@ export function SidePanel({
         g.parent.worldToLocal(measurePoint);
         const bottom = Math.atan2(measurePoint.y, Math.hypot(measurePoint.x, measurePoint.z)) / DEG;
         if (bottom < minBottomPitch - 0.5) {
-          current.pitch = clamp(current.pitch + (minBottomPitch - bottom), MIN_PITCH, MAX_PITCH);
+          if (follow) raise.current += minBottomPitch - bottom;
+          else current.pitch = clamp(current.pitch + (minBottomPitch - bottom), MIN_PITCH, MAX_PITCH);
         }
       }
     }
@@ -314,7 +349,7 @@ export function SidePanel({
 
   return (
     <group ref={group}>
-      <group ref={near} position={[0, 0, -PANEL_DISTANCE]} scale={PANEL_SCALE}>
+      <group ref={near} position={[0, 0, -PANEL_DISTANCE]} scale={scale}>
         <group rotation={[PANEL_TILT, 0, 0]}>
           {/* Zona invisible detrás del panel: para que la lupa sepa que se lo mira. */}
           <mesh ref={backing} position={[0, top - height / 2, -0.03]}>

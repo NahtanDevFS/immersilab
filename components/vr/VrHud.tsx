@@ -38,7 +38,7 @@ import { requestRecenter } from "@/lib/view/recenter";
 import { HeadAnchor } from "./Anchors";
 import { GazeButton } from "./GazeButton";
 import { estimateLines, VrCard } from "./VrCard";
-import { SidePanel, VrDashboard } from "./VrDashboard";
+import { PANEL_SCALE, SidePanel, VrDashboard } from "./VrDashboard";
 import { CHAT_WIDTH, ChatPanel3D } from "./ChatPanel3D";
 import { VrTabBar, type VrTab } from "./VrTabBar";
 import { VrText } from "./VrText";
@@ -66,6 +66,35 @@ const CENTER_WIDTH = 1.0;
 const OPEN_PANEL_PITCH = 14;
 /** El borde de abajo del panel abierto, nunca más bajo: deja libre la barra (−32°). */
 const PANEL_BOTTOM_LIMIT = -26;
+/** Paneles abiertos a la vez: más de tres ya no entran alrededor sin girar el cuerpo. */
+const MAX_OPEN_PANELS = 3;
+/** Con más de un panel abierto, un poco más chicos (el ancho de cada uno es ~50° si no). */
+const SHARED_PANEL_SCALE = 1.0;
+/** Hueco entre paneles vecinos, grados. */
+const PANEL_GAP = 3;
+const PANEL_DISTANCE_M = 1.3;
+
+/** El orden de la barra: los paneles abiertos quedan en el mismo orden, de izquierda a derecha. */
+const TAB_ORDER: VrTab[] = ["variables", "retos", "resultado", "tutor", "menu"];
+
+/**
+ * Dónde va cada panel abierto (dirección de su centro, grados, + a la
+ * izquierda): juntos y centrados al frente, en el orden de la barra. Así lo
+ * que está a la izquierda en la barra también está a la izquierda en el
+ * espacio.
+ */
+function layoutPanels(open: VrTab[], widthOf: (tab: VrTab) => number, scale: number): Map<VrTab, number> {
+  const ordered = TAB_ORDER.filter((t) => open.includes(t));
+  const angle = (tab: VrTab) => (2 * Math.atan((widthOf(tab) * scale) / 2 / PANEL_DISTANCE_M) * 180) / Math.PI;
+  const total = ordered.reduce((sum, t) => sum + angle(t), 0) + PANEL_GAP * Math.max(0, ordered.length - 1);
+  const yaws = new Map<VrTab, number>();
+  let edge = total / 2;
+  for (const tab of ordered) {
+    yaws.set(tab, edge - angle(tab) / 2);
+    edge -= angle(tab) + PANEL_GAP;
+  }
+  return yaws;
+}
 /** Ancho del panel de retos y acciones. */
 const CHALLENGES_WIDTH = 1.15;
 
@@ -95,8 +124,9 @@ interface Props {
  *
  * Un panel a la vez (VrTabBar): abajo al frente hay una barra de pestañas
  * — Variables, Retos, Resultado, Tutor y Menú — y la acción principal del
- * experimento. Mirar una pestaña y apretar A abre ese panel al frente; otra
- * vez, lo cierra. Antes estaban los cuatro paneles siempre alrededor (a 45°
+ * experimento. Mirar una pestaña y apretar A abre o cierra su panel, sin
+ * tocar los demás: hasta tres abiertos, uno al lado del otro y centrados al
+ * frente, un poco más chicos cuando hay más de uno. Antes estaban los cuatro paneles siempre alrededor (a 45°
  * a cada lado y el resultado 50° hacia abajo): había que girar la cabeza
  * para todo, competían entre sí y tapaban la escena.
  *
@@ -115,9 +145,28 @@ export function VrHud(props: Props) {
   useEffect(() => stop, [stop]);
 
   // El panel abierto (uno a la vez). Arranca cerrado: primero se ve la escena.
-  const [tab, setTab] = useState<VrTab | null>(null);
-  const chooseTab = (next: VrTab) => setTab((current) => (current === next ? null : next));
+  // Los paneles abiertos, en el orden en que se abrieron. Cada pestaña abre o
+  // cierra el suyo sin tocar los demás (antes abrir una cerraba la otra, y
+  // justo lo común es mirar dos a la vez: las variables y el resultado). Con
+  // más de tres, se cierra el que se abrió primero.
+  const [openTabs, setOpenTabs] = useState<VrTab[]>([]);
+  const chooseTab = (next: VrTab) =>
+    setOpenTabs((current) =>
+      current.includes(next) ? current.filter((t) => t !== next) : [...current, next].slice(-MAX_OPEN_PANELS),
+    );
+  const closeTab = (tab: VrTab) => setOpenTabs((current) => current.filter((t) => t !== tab));
   const primary = usePrimaryAction(props.engine, props.vrActions);
+
+  const widthOf = (tab: VrTab) =>
+    tab === "variables"
+      ? variablesPanelWidth(props.schema)
+      : tab === "retos"
+        ? CHALLENGES_WIDTH
+        : tab === "tutor"
+          ? CHAT_WIDTH
+          : CENTER_WIDTH;
+  const panelScale = openTabs.length > 1 ? SHARED_PANEL_SCALE : PANEL_SCALE;
+  const layout = layoutPanels(openTabs, widthOf, panelScale);
 
   const tourStop = props.tourIndex !== null ? TOUR[props.tourIndex] : undefined;
   const showTour = Boolean(tourStop) && tourCardOpen;
@@ -218,51 +267,57 @@ export function VrHud(props: Props) {
         hidden={card !== null || calibrating}
         intro="Abajo al frente están las pestañas: mira una y aprieta A para abrir ese panel"
       >
-        {tab === "variables" && (
-          <SidePanel key="variables" id="frente-variables" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={variablesPanelWidth(props.schema)}>
-            <VariablesPanel3D schema={props.schema} values={props.values} onChange={props.onChange} />
-          </SidePanel>
-        )}
-        {tab === "retos" && (
-          <SidePanel key="retos" id="frente-retos" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CHALLENGES_WIDTH} top={0.07}>
-            <ChallengesAndActions {...props} />
-          </SidePanel>
-        )}
-        {tab === "resultado" && (
-          <SidePanel key="resultado" id="frente-resultado" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CENTER_WIDTH} top={0.07}>
-            <CenterPanel
-              section="resultado"
-              engine={props.engine}
-              hasBriefing={Boolean(props.briefing)}
-              onShowBriefing={() => {
-                setTourCardOpen(false);
-                props.onBriefingOpenChange(true);
-              }}
-              onBackToLobby={props.onBackToLobby}
-            />
-          </SidePanel>
-        )}
-        {tab === "tutor" && (
-          <SidePanel key="tutor" id="frente-tutor" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CHAT_WIDTH} top={0.07}>
-            <ChatPanel3D />
-          </SidePanel>
-        )}
-        {tab === "menu" && (
-          <SidePanel key="menu" id="frente-menu" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CENTER_WIDTH} top={0.07}>
-            <CenterPanel
-              section="menu"
-              engine={props.engine}
-              hasBriefing={Boolean(props.briefing)}
-              onShowBriefing={() => {
-                setTourCardOpen(false);
-                setTab(null);
-                props.onBriefingOpenChange(true);
-              }}
-              onBackToLobby={props.onBackToLobby}
-            />
-          </SidePanel>
-        )}
-        <VrTabBar active={tab} onSelect={chooseTab} action={primary ?? undefined} />
+        {openTabs.map((tab) => {
+          const yaw = layout.get(tab) ?? 0;
+          const common = {
+            id: `frente-${tab}`,
+            side: "left" as const,
+            angle: 0,
+            yaw,
+            pitch: OPEN_PANEL_PITCH,
+            minBottomPitch: PANEL_BOTTOM_LIMIT,
+            scale: panelScale,
+            follow: true,
+            width: widthOf(tab),
+          };
+          if (tab === "variables") {
+            return (
+              <SidePanel key={tab} {...common}>
+                <VariablesPanel3D schema={props.schema} values={props.values} onChange={props.onChange} />
+              </SidePanel>
+            );
+          }
+          if (tab === "retos") {
+            return (
+              <SidePanel key={tab} {...common} top={0.07}>
+                <ChallengesAndActions {...props} />
+              </SidePanel>
+            );
+          }
+          if (tab === "tutor") {
+            return (
+              <SidePanel key={tab} {...common} top={0.07}>
+                <ChatPanel3D />
+              </SidePanel>
+            );
+          }
+          return (
+            <SidePanel key={tab} {...common} top={0.07}>
+              <CenterPanel
+                section={tab === "resultado" ? "resultado" : "menu"}
+                engine={props.engine}
+                hasBriefing={Boolean(props.briefing)}
+                onShowBriefing={() => {
+                  setTourCardOpen(false);
+                  closeTab("menu");
+                  props.onBriefingOpenChange(true);
+                }}
+                onBackToLobby={props.onBackToLobby}
+              />
+            </SidePanel>
+          );
+        })}
+        <VrTabBar active={openTabs} onSelect={chooseTab} action={primary ?? undefined} />
       </VrDashboard>
       {calibrating ? null : card}
       <VisorCalibration />

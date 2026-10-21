@@ -385,7 +385,9 @@ function GazeReticle() {
   });
 
   return (
-    <mesh ref={ref} renderOrder={999} frustumCulled={false}>
+    // La mira, encima de todo: también de la interfaz, que va encima de la
+    // escena (components/vr/Anchors.tsx).
+    <mesh ref={ref} renderOrder={1_000_000} frustumCulled={false}>
       <ringGeometry args={[0.012, 0.02, 32]} />
       <meshBasicMaterial
         color="#ffffff"
