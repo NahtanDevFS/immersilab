@@ -89,3 +89,8 @@ export function setPadHeldReader(reader: () => boolean) {
 export function isSelectHeld(): boolean {
   return screenHeld || padHeld();
 }
+
+/** Para el modo diagnóstico (lib/debug/deviceProbe.ts): de dónde viene "apretado". */
+export function selectHeldSources(): { screen: boolean; pad: boolean } {
+  return { screen: screenHeld, pad: padHeld() };
+}

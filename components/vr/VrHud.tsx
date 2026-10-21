@@ -38,8 +38,9 @@ import { requestRecenter } from "@/lib/view/recenter";
 import { HeadAnchor } from "./Anchors";
 import { GazeButton } from "./GazeButton";
 import { estimateLines, VrCard } from "./VrCard";
-import { panelAngle, SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
+import { SidePanel, VrDashboard } from "./VrDashboard";
 import { CHAT_WIDTH, ChatPanel3D } from "./ChatPanel3D";
+import { VrTabBar, type VrTab } from "./VrTabBar";
 import { VrText } from "./VrText";
 import { formulasOnOwnLines } from "@/lib/tutor/formula";
 
@@ -58,12 +59,13 @@ const ROWS_PER_COLUMN = 7;
 /** Ancho del panel del centro (resultados y botones generales). */
 const CENTER_WIDTH = 1.0;
 /**
- * El panel del resultado va adelante y abajo (grados bajo el horizonte de su
- * borde de arriba): el visor muestra unos ±37° (algo más con la corrección
- * de los lentes), así que mirando al frente no se ve, y bajando la vista queda de frente. A la derecha, después de los
- * retos, quedaba casi a la espalda con los paneles más grandes.
+ * Altura del borde de arriba del panel abierto, grados sobre el horizonte:
+ * así el panel queda centrado en la vista y la barra de pestañas (abajo, a
+ * −34°) queda libre debajo.
  */
-const RESULT_PITCH = -50;
+const OPEN_PANEL_PITCH = 14;
+/** El borde de abajo del panel abierto, nunca más bajo: deja libre la barra (−32°). */
+const PANEL_BOTTOM_LIMIT = -26;
 /** Ancho del panel de retos y acciones. */
 const CHALLENGES_WIDTH = 1.15;
 
@@ -91,12 +93,12 @@ interface Props {
  * La interfaz de un experimento en la vista VR, dentro de la escena: cada
  * ojo la ve en su imagen, que es lo que el HTML no puede hacer.
  *
- * Paneles a los costados, fuera de la vista al mirar al frente (VrDashboard):
- * - a la izquierda, las variables (− y +, < > en las listas, o el stick
- *   derecho mirando la fila);
- * - a la derecha, los retos y las acciones del experimento;
- * - más a la derecha, el resultado con su gráfica y los botones generales
- *   (explicación, tutor, centrar la vista, volver al lobby).
+ * Un panel a la vez (VrTabBar): abajo al frente hay una barra de pestañas
+ * — Variables, Retos, Resultado, Tutor y Menú — y la acción principal del
+ * experimento. Mirar una pestaña y apretar A abre ese panel al frente; otra
+ * vez, lo cierra. Antes estaban los cuatro paneles siempre alrededor (a 45°
+ * a cada lado y el resultado 50° hacia abajo): había que girar la cabeza
+ * para todo, competían entre sí y tapaban la escena.
  *
  * Adelante, a la altura de los ojos, las tarjetas de lectura (la explicación
  * del experimento y la parada del recorrido). Pegados a la vista: el aviso
@@ -111,6 +113,11 @@ export function VrHud(props: Props) {
   const [tourCardOpen, setTourCardOpen] = useState(true);
   const stop = narration.stop;
   useEffect(() => stop, [stop]);
+
+  // El panel abierto (uno a la vez). Arranca cerrado: primero se ve la escena.
+  const [tab, setTab] = useState<VrTab | null>(null);
+  const chooseTab = (next: VrTab) => setTab((current) => (current === next ? null : next));
+  const primary = usePrimaryAction(props.engine, props.vrActions);
 
   const tourStop = props.tourIndex !== null ? TOUR[props.tourIndex] : undefined;
   const showTour = Boolean(tourStop) && tourCardOpen;
@@ -209,31 +216,53 @@ export function VrHud(props: Props) {
     <Suspense fallback={null}>
       <VrDashboard
         hidden={card !== null || calibrating}
-        intro="A tu izquierda las variables y la conversación, a tu derecha los retos, y abajo el resultado. Mantén A sobre un panel para acercarlo"
+        intro="Abajo al frente están las pestañas: mira una y aprieta A para abrir ese panel"
       >
-        <SidePanel id="variables" side="left" angle={SIDE_START} width={variablesPanelWidth(props.schema)}>
-          <VariablesPanel3D schema={props.schema} values={props.values} onChange={props.onChange} />
-        </SidePanel>
-        {/* La conversación con el tutor, a la izquierda, más allá de las variables. */}
-        <SidePanel id="chat" side="left" {...chatPlacement(props.schema)} width={CHAT_WIDTH} top={0.07}>
-          <ChatPanel3D />
-        </SidePanel>
-        <SidePanel id="retos" side="right" angle={SIDE_START} width={CHALLENGES_WIDTH} top={0.07}>
-          <ChallengesAndActions {...props} />
-        </SidePanel>
-        {/* El resultado y los botones generales, adelante y abajo: se ven al
-            bajar la vista, como un tablero; mirando al frente no estorban. */}
-        <SidePanel id="resultado" side="right" angle={0} yaw={0} pitch={RESULT_PITCH} width={CENTER_WIDTH} top={0.07}>
-          <CenterPanel
-            engine={props.engine}
-            hasBriefing={Boolean(props.briefing)}
-            onShowBriefing={() => {
-              setTourCardOpen(false);
-              props.onBriefingOpenChange(true);
-            }}
-            onBackToLobby={props.onBackToLobby}
-          />
-        </SidePanel>
+        {tab === "variables" && (
+          <SidePanel key="variables" id="frente-variables" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={variablesPanelWidth(props.schema)}>
+            <VariablesPanel3D schema={props.schema} values={props.values} onChange={props.onChange} />
+          </SidePanel>
+        )}
+        {tab === "retos" && (
+          <SidePanel key="retos" id="frente-retos" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CHALLENGES_WIDTH} top={0.07}>
+            <ChallengesAndActions {...props} />
+          </SidePanel>
+        )}
+        {tab === "resultado" && (
+          <SidePanel key="resultado" id="frente-resultado" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CENTER_WIDTH} top={0.07}>
+            <CenterPanel
+              section="resultado"
+              engine={props.engine}
+              hasBriefing={Boolean(props.briefing)}
+              onShowBriefing={() => {
+                setTourCardOpen(false);
+                props.onBriefingOpenChange(true);
+              }}
+              onBackToLobby={props.onBackToLobby}
+            />
+          </SidePanel>
+        )}
+        {tab === "tutor" && (
+          <SidePanel key="tutor" id="frente-tutor" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CHAT_WIDTH} top={0.07}>
+            <ChatPanel3D />
+          </SidePanel>
+        )}
+        {tab === "menu" && (
+          <SidePanel key="menu" id="frente-menu" side="left" angle={0} yaw={0} pitch={OPEN_PANEL_PITCH} minBottomPitch={PANEL_BOTTOM_LIMIT} width={CENTER_WIDTH} top={0.07}>
+            <CenterPanel
+              section="menu"
+              engine={props.engine}
+              hasBriefing={Boolean(props.briefing)}
+              onShowBriefing={() => {
+                setTourCardOpen(false);
+                setTab(null);
+                props.onBriefingOpenChange(true);
+              }}
+              onBackToLobby={props.onBackToLobby}
+            />
+          </SidePanel>
+        )}
+        <VrTabBar active={tab} onSelect={chooseTab} action={primary ?? undefined} />
       </VrDashboard>
       {calibrating ? null : card}
       <VisorCalibration />
@@ -242,6 +271,41 @@ export function VrHud(props: Props) {
         <TutorSubtitles />
       </HeadAnchor>
     </Suspense>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* La acción principal, para la barra de pestañas                             */
+/* ------------------------------------------------------------------------ */
+
+/**
+ * La acción principal del experimento (la marcada `primary`: Lanzar, Soltar,
+ * Probar…), leída unas veces por segundo como el panel de retos. Va en la
+ * barra para usarla sin abrir los retos. Solo se re-dibuja si cambia.
+ */
+function usePrimaryAction(
+  engine: ExperimentEngine,
+  vrActions?: (engine: ExperimentEngine) => VrAction[],
+): { label: string; onSelect: () => void; disabled?: boolean } | null {
+  const [shown, setShown] = useState<{ label: string; disabled?: boolean } | null>(null);
+  const select = useRef<() => void>(() => {});
+  useEffect(() => {
+    const read = () => {
+      const action = vrActions?.(engine).find((a) => a.primary && !a.info && a.onSelect);
+      select.current = action?.onSelect ?? (() => {});
+      setShown((current) => {
+        const next = action ? { label: action.label, disabled: action.disabled } : null;
+        if (current?.label === next?.label && current?.disabled === next?.disabled) return current;
+        return next;
+      });
+    };
+    read();
+    const id = window.setInterval(read, 200);
+    return () => window.clearInterval(id);
+  }, [engine, vrActions]);
+  return useMemo(
+    () => (shown ? { label: shown.label, disabled: shown.disabled, onSelect: () => select.current() } : null),
+    [shown],
   );
 }
 
@@ -279,11 +343,14 @@ function sparkPoints(series: Array<{ x: number; y: number }>): Array<[number, nu
  * que valen en cualquier experimento.
  */
 function CenterPanel({
+  section,
   engine,
   hasBriefing,
   onShowBriefing,
   onBackToLobby,
 }: {
+  /** "resultado": los datos y la gráfica. "menu": los botones generales. */
+  section: "resultado" | "menu";
   engine: ExperimentEngine;
   hasBriefing: boolean;
   onShowBriefing: () => void;
@@ -313,7 +380,16 @@ function CenterPanel({
   let y = 0;
   const items: ReactNode[] = [];
 
-  if (snapshot.result.length > 0) {
+  if (section === "resultado" && snapshot.result.length === 0) {
+    items.push(
+      <VrText key="vacio" position={[0, y, 0]} anchorX="center" anchorY="top" fontSize={0.034} maxWidth={width - 0.1} textAlign="center" color="#93a1be">
+        Todavía no hay resultados: usa el experimento y aparecen aquí.
+      </VrText>,
+    );
+    y -= 0.12;
+  }
+
+  if (section === "resultado" && snapshot.result.length > 0) {
     items.push(
       <VrText key="titulo" position={[left, y, 0]} fontSize={0.045} color="#93a1be">
         RESULTADO
@@ -354,7 +430,8 @@ function CenterPanel({
     y -= 0.03;
   }
 
-  // Botones generales, uno debajo del otro (el panel es angosto).
+  // Botones generales, uno debajo del otro (el panel es angosto). Solo en
+  // la pestaña "Menú".
   const general: Array<{ id: string; label: string; onSelect: () => void; primary?: boolean }> = [];
   if (hasBriefing) general.push({ id: "explicacion", label: "Ver la explicación", onSelect: onShowBriefing });
   // El tutor, según en qué esté: lo mismo que se puede hacer con el botón
@@ -380,6 +457,7 @@ function CenterPanel({
   general.push({ id: "salir-visor", label: "Salir del visor", onSelect: () => void exitVr() });
   general.push({ id: "lobby", label: "Volver al lobby", onSelect: onBackToLobby });
 
+  if (section === "resultado") general.length = 0;
   y -= 0.02;
   general.forEach((button) => {
     items.push(
@@ -408,7 +486,7 @@ function CenterPanel({
         : tutor.status === "speaking"
           ? "El tutor está respondiendo (subtítulos abajo, al frente)."
           : null;
-  if (tutorLine) {
+  if (tutorLine && section === "menu") {
     items.push(
       <VrText
         key="tutor-estado"
@@ -425,7 +503,7 @@ function CenterPanel({
     y -= 0.07;
   }
 
-  items.push(
+  if (section === "menu") items.push(
     <VrText
       key="control"
       position={[0, y + 0.01, 0]}
@@ -475,18 +553,6 @@ function increment(def: VariableDefinition): number {
   const step = def.step ?? 0.1;
   const range = (def.max ?? 100) - (def.min ?? 0);
   return Math.max(step, Math.round(range / 40 / step) * step);
-}
-
-/**
- * Dónde va la conversación: a la izquierda, después de las variables. Si las
- * variables ocupan dos columnas, eso quedaría casi a la espalda: entonces va
- * encima de las variables.
- */
-function chatPlacement(schema: VariablesSchema): { angle: number; pitch?: number } {
-  const variables = panelAngle(variablesPanelWidth(schema));
-  const after = SIDE_START + variables + 4;
-  if (after + panelAngle(CHAT_WIDTH) <= 150) return { angle: after };
-  return { angle: SIDE_START + variables / 2 - panelAngle(CHAT_WIDTH) / 2, pitch: 32 };
 }
 
 /** Las filas del panel de variables (con los títulos de grupo) en columnas. */

@@ -29,6 +29,7 @@ import { OrientationGate } from "./OrientationGate";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { useVariables } from "@/lib/modules/useVariables";
 import { staleSelections, visibleSchema } from "@/lib/modules/visibility";
+import { probeReport, useDeviceProbe } from "@/lib/debug/deviceProbe";
 import { VirtualCursor } from "./VirtualCursor";
 import { TouchJoystick } from "./TouchJoystick";
 import { useVirtualCursor } from "./useVirtualCursor";
@@ -80,6 +81,11 @@ export function ExperimentShell({
   // Vista VR: pantalla partida para el visor (ver lib/view/viewMode.ts).
   const view = useViewMode();
   const vr = view === "vr";
+  // Modo diagnóstico (?diagnostico=1): manda lo que lee el celular al servidor.
+  useDeviceProbe();
+  useEffect(() => {
+    probeReport({ pantalla: "experimento", experimento: experiment.slug, vista: view, giroscopio: permission });
+  }, [experiment.slug, view, permission]);
   // hoveredKey: qué slider está bajo el cursor ahora mismo (stick derecho
   // del control, con el celular en la mano) — se usa para resaltarlo.
   // En la vista VR no hay cursor: se apunta con la mira (lib/view/gaze.ts).

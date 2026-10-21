@@ -32,7 +32,9 @@
  *       ejes -32767..32767 y una cruceta. En la compu llega SIN mapeo
  *       estándar (clics en buttons[13] y [14]); en Android, el sistema lo
  *       traduce a un mando estándar (mapping "standard", sticks en
- *       axes[0..3], clics en buttons[10] y [11]).
+ *       axes[0..3], clics en buttons[10] y [11]). Algunos Android lo dejan
+ *       sin mapeo estándar pero con solo 4 ejes: los sticks también van en
+ *       axes[0..3] (medido con el modo diagnóstico, 2026-10-20).
  * `readEsp32` devuelve siempre los botones en el mismo orden (principal,
  * secundario, clic izq, clic der), así el resto de la app no distingue.
  *
@@ -57,6 +59,13 @@
  *                              Chrome no muestra el nombre "ImmersiLab")
  */
 
+/**
+ * Versión de cómo se lee el control. El modo diagnóstico la manda con cada
+ * lectura: así se ve si el celular ya tiene el último arreglo o sigue con la
+ * página vieja en memoria. Subirla cada vez que cambia la lectura de ejes.
+ */
+export const PAD_READER_VERSION = "4 ejes + stick der. invertido (2026-10-21)";
+
 const DEADZONE = 0.15;
 
 // Control ESP32: zona muerta un poco más grande, porque los potenciómetros
@@ -67,8 +76,12 @@ const ESP32_AXES = { lx: 0, ly: 1, rx: 2, ry: 5 };
 /**
  * Si al probar el ESP32 un stick va al revés (empujas hacia adelante y
  * retrocede), pon en true el eje que corresponda.
+ *
+ * Los dos sticks están montados igual en la placa, así que se invierten los
+ * dos igual. El derecho estaba sin invertir: en el visor, el stick a la
+ * derecha bajaba el valor de la variable y a la izquierda lo subía.
  */
-const ESP32_INVERT = { lx: true, ly: true, rx: false, ry: false };
+const ESP32_INVERT = { lx: true, ly: true, rx: true, ry: true };
 
 export interface PadAxes {
   x: number;
@@ -280,7 +293,10 @@ const ESP32_STANDARD_AXES = { lx: 0, ly: 1, rx: 2, ry: 3 };
 
 function readEsp32(pad: Gamepad): PadState {
   const standard = pad.mapping === "standard";
-  const axes = standard ? ESP32_STANDARD_AXES : ESP32_AXES;
+  // Con 4 ejes no hay Rz (axes[5]): el stick derecho va en axes[2] y [3]. Sin
+  // esto, en esos celulares su eje vertical valía siempre 0 y el stick
+  // derecho no subía ni bajaba la cámara.
+  const axes = standard || pad.axes.length < 6 ? ESP32_STANDARD_AXES : ESP32_AXES;
   const range = esp32Range(pad, axes);
 
   const axis = (index: number, invert: boolean) => {

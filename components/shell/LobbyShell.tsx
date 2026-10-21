@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState, useSyncExternalStore } from "react";
+import { Suspense, useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { tourHref } from "@/lib/tour";
 import { Canvas } from "@react-three/fiber";
@@ -8,6 +8,7 @@ import { Header } from "./Header";
 import { GyroCamera } from "./GyroCamera";
 import { MovementController } from "./MovementController";
 import { TouchJoystick } from "./TouchJoystick";
+import { probeReport, useDeviceProbe } from "@/lib/debug/deviceProbe";
 import { DragLookControls } from "./DragLookControls";
 import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
@@ -47,6 +48,10 @@ export function LobbyShell() {
   const gyroActive = permission === "granted";
   const view = useViewMode();
   const vr = view === "vr";
+  useDeviceProbe();
+  useEffect(() => {
+    probeReport({ pantalla: "lobby", vista: view, giroscopio: permission });
+  }, [view, permission]);
   const quality = useQualityTier();
 
   // Tutorial de entrada: la primera vez en este dispositivo, o al pedirlo.

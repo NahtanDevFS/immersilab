@@ -117,8 +117,12 @@ Pistas de los experimentos nuevos:
   38 espiras y 10 000 µF.
 - **Compuertas:** alarma AND; portón OR, NOT, AND; jueces tres AND y dos OR.
 
-*Visor:* el panel de variables aparece dentro de la escena; el cursor se
-mueve con el stick derecho y A toca; B mantenido habla con el tutor.
+*Visor:* abajo al frente, la barra de pestañas (Variables · Retos ·
+Resultado · Tutor · Menú) y la acción principal debajo. Mirar una pestaña y
+apretar A abre ese panel al frente; otra vez, lo cierra. El panel abierto no
+tapa la barra (si es alto, sube solo). El stick derecho a la derecha sube el
+valor de la variable que se mira; arriba y abajo sube y baja la cámara. B
+mantenido habla con el tutor.
 
 ## 3. Tutor por voz
 

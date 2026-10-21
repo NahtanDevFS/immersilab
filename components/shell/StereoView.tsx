@@ -306,19 +306,40 @@ function GazeReticle() {
   const padWasPressed = useRef(true); // si ya venía apretado al entrar, no cuenta
 
   useEffect(() => {
-    let down: { x: number; y: number; t: number } | null = null;
+    // Cada dedo apoyado, por su identificador: "la pantalla está tocada"
+    // mientras quede alguno. Antes era un solo sí/no que se apagaba solo con
+    // pointerup, y en Android un toque que el sistema convierte en gesto
+    // termina en pointercancel: quedaba "tocada" para siempre, y para la app
+    // A estaba siempre apretado (el pizarrón escribía solo, los paneles se
+    // acercaban con solo mirarlos y no se podían arrastrar).
+    const fingers = new Map<number, { x: number; y: number; t: number }>();
+    const update = () => setScreenHeld(fingers.size > 0);
     const onDown = (e: PointerEvent) => {
-      down = { x: e.clientX, y: e.clientY, t: performance.now() };
-      setScreenHeld(true);
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
+      update();
     };
     const onUp = (e: PointerEvent) => {
-      setScreenHeld(false);
+      const down = fingers.get(e.pointerId);
+      fingers.delete(e.pointerId);
+      update();
       if (!down) return;
       const tap =
         performance.now() - down.t < TAP_MAX_MS &&
         Math.hypot(e.clientX - down.x, e.clientY - down.y) < TAP_MAX_PX;
-      down = null;
       if (tap) selectGazed();
+    };
+    const onCancel = (e: PointerEvent) => {
+      fingers.delete(e.pointerId);
+      update();
+    };
+    // Si la página pierde el foco o sale de pantalla completa con un dedo
+    // apoyado, ese soltar no llega nunca: se dan todos por levantados.
+    const releaseAll = () => {
+      fingers.clear();
+      update();
+    };
+    const onVisibility = () => {
+      if (document.hidden) releaseAll();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") selectGazed();
@@ -326,12 +347,20 @@ function GazeReticle() {
     canvas.addEventListener("pointerdown", onDown);
     // En window: si el dedo se suelta fuera del canvas, igual cuenta.
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("blur", releaseAll);
+    document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("fullscreenchange", releaseAll);
     window.addEventListener("keydown", onKey);
     setPadHeldReader(() => readPad()?.action ?? false);
     return () => {
       setScreenHeld(false);
       canvas.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("blur", releaseAll);
+      document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("fullscreenchange", releaseAll);
       window.removeEventListener("keydown", onKey);
     };
   }, [canvas]);

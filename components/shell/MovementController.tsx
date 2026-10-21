@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { readPad } from "./gamepad";
 import { attachKeyboard, readKeyboard } from "./keyboard";
 import { readJoystick } from "@/lib/input/touchJoystick";
+import { probeReport } from "@/lib/debug/deviceProbe";
 import { resolveCollisions } from "@/lib/collision/colliders";
 
 /*
@@ -102,6 +103,7 @@ export function MovementController({
   useFrame((_, delta) => {
     const pad = readPad();
     const keys = readKeyboard();
+    probeReport({ camaraY: Math.round(camera.position.y * 100) / 100, subirBajar: lift });
 
     if (lift) {
       // Stick derecho hacia arriba (y negativo) sube. Solo si se empuja más

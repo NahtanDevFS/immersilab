@@ -154,6 +154,11 @@ const HANDLE_GAZED = new THREE.Color("#3b4f74");
 const HANDLE_DRAG = new THREE.Color("#f2a65a");
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+/** Cada cuánto se mide el alto del panel para no pisar la barra, s. */
+const MEASURE_EVERY = 0.25;
+const measureBox = new THREE.Box3();
+const measurePoint = new THREE.Vector3();
 const wrap = (deg: number) => ((((deg + 180) % 360) + 360) % 360) - 180;
 
 /**
@@ -178,6 +183,7 @@ export function SidePanel({
   pitch,
   yaw,
   height = 1.2,
+  minBottomPitch,
   children,
 }: {
   id: string;
@@ -192,6 +198,13 @@ export function SidePanel({
   yaw?: number;
   /** Alto aproximado (unidades de panel), para la zona que activa la lupa. */
   height?: number;
+  /**
+   * El borde de abajo del panel nunca más bajo que esto (grados sobre el
+   * horizonte): si el contenido es alto, el panel sube lo justo. Es para que
+   * un panel abierto no tape la barra de pestañas. No se aplica si el
+   * jugador lo llevó a otro lugar.
+   */
+  minBottomPitch?: number;
   children: ReactNode;
 }) {
   const s = side === "left" ? 1 : -1;
@@ -212,6 +225,7 @@ export function SidePanel({
   const near = useRef<THREE.Group>(null);
   const backing = useRef<THREE.Mesh>(null);
   const lupa = useRef({ held: 0, on: false, zoom: 1 });
+  const sinceMeasure = useRef(MEASURE_EVERY);
 
   // La barra se puede mirar (no hace nada al tocarla: hay que mantener). El
   // fondo también, para que la lupa sepa que se está mirando este panel.
@@ -266,6 +280,36 @@ export function SidePanel({
 
     g.rotation.set(current.pitch * DEG, current.yaw * DEG, 0, "YXZ");
     handleMaterial.current?.color.copy(dragging ? HANDLE_DRAG : gazed ? HANDLE_GAZED : HANDLE_IDLE);
+
+    // ¿El borde de abajo pisa la barra? Se mide el contenido real (el texto
+    // 3D se arma de a poco, así que se vuelve a medir cada tanto).
+    sinceMeasure.current += dt;
+    if (
+      minBottomPitch !== undefined &&
+      sinceMeasure.current >= MEASURE_EVERY &&
+      !dragging &&
+      lupa.current.zoom < 1.01 &&
+      getPanelPlacement(id) === undefined &&
+      near.current
+    ) {
+      sinceMeasure.current = 0;
+      g.updateWorldMatrix(true, true);
+      // El contenido, sin la zona invisible de la lupa (tiene un alto fijo).
+      measureBox.makeEmpty();
+      const tilt = near.current.children[0];
+      for (const child of tilt?.children ?? []) {
+        if (child !== backing.current) measureBox.expandByObject(child);
+      }
+      if (!measureBox.isEmpty()) {
+        measureBox.getCenter(measurePoint);
+        measurePoint.y = measureBox.min.y;
+        g.parent.worldToLocal(measurePoint);
+        const bottom = Math.atan2(measurePoint.y, Math.hypot(measurePoint.x, measurePoint.z)) / DEG;
+        if (bottom < minBottomPitch - 0.5) {
+          current.pitch = clamp(current.pitch + (minBottomPitch - bottom), MIN_PITCH, MAX_PITCH);
+        }
+      }
+    }
   });
 
   return (

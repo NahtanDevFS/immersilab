@@ -7,6 +7,7 @@ import type { VariablesSchema, VariablesState, WhiteboardSpec, WhiteboardTerm } 
 import { matchesShowWhen } from "@/lib/modules/visibility";
 import { GazeButton } from "@/components/vr/GazeButton";
 import { getGazed, getGazeUv, isSelectHeld, registerGazeTarget } from "@/lib/view/gaze";
+import { probeReport } from "@/lib/debug/deviceProbe";
 import { setDrawing } from "@/lib/view/drawing";
 import { useViewMode } from "@/lib/view/viewMode";
 
@@ -168,27 +169,102 @@ function wrapText(
   return y + lineHeight;
 }
 
-function stroke(ctx: CanvasRenderingContext2D, from: THREE.Vector2, to: THREE.Vector2, color: string) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 7;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  ctx.moveTo(from.x * TEX_W, (1 - from.y) * TEX_H);
-  ctx.lineTo(to.x * TEX_W, (1 - to.y) * TEX_H);
-  ctx.stroke();
-}
-
 function refresh(texture: THREE.Texture) {
   texture.needsUpdate = true;
 }
 
-/**
- * Cada cuánto se sube la textura mientras se dibuja, s. Subirla entera
- * (1600×1000) en cada cuadro bajaba los cuadros por segundo del celular
- * justo mientras se dibujaba, y con menos cuadros el giroscopio iba a saltos.
+/*
+ * La tinta (lo que escribe el estudiante) NO va en la textura: es una cinta
+ * de triángulos apoyada sobre el pizarrón. Antes cada trazo se pintaba en el
+ * canvas de 1600×1000 y había que volver a subirlo entero a la tarjeta
+ * gráfica: en el celular, escribiendo, bajaba de ~58 a 23–32 cuadros por
+ * segundo (medido con el modo diagnóstico), aun subiéndolo 30 veces por
+ * segundo. Agregar un tramo a la cinta sube solo esos seis vértices.
  */
-const UPLOAD_EVERY = 1 / 30;
+const MAX_SEGMENTS = 8000;
+const FLOATS_PER_SEGMENT = 6 * 3; // dos triángulos, x, y, z por vértice
+/** Medio ancho del trazo, en fracción del ancho del pizarrón (~7 px de 1600). */
+const INK_HALF_WIDTH = 3.5 / TEX_W;
+
+interface Ink {
+  mesh: THREE.Mesh;
+  positions: THREE.BufferAttribute;
+  colors: THREE.BufferAttribute;
+  count: number;
+}
+
+function createInk(): Ink {
+  const geometry = new THREE.BufferGeometry();
+  const positions = new THREE.BufferAttribute(new Float32Array(MAX_SEGMENTS * FLOATS_PER_SEGMENT), 3);
+  const colors = new THREE.BufferAttribute(new Float32Array(MAX_SEGMENTS * FLOATS_PER_SEGMENT), 3);
+  positions.setUsage(THREE.DynamicDrawUsage);
+  colors.setUsage(THREE.DynamicDrawUsage);
+  geometry.setAttribute("position", positions);
+  geometry.setAttribute("color", colors);
+  geometry.setDrawRange(0, 0);
+  const material = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false, side: THREE.DoubleSide });
+  const mesh = new THREE.Mesh(geometry, material);
+  // Sus límites cambian con cada trazo: que no la descarte por un cálculo viejo.
+  mesh.frustumCulled = false;
+  mesh.position.z = 0.003; // apenas delante del pizarrón
+  return { mesh, positions, colors, count: 0 };
+}
+
+const inkColor = new THREE.Color();
+
+/**
+ * Un tramo de tinta entre dos puntos del pizarrón (coordenadas de textura,
+ * 0..1). Se alarga medio ancho de cada lado para que los tramos se pisen y
+ * el trazo no quede cortado en las curvas.
+ */
+function addInk(ink: Ink, from: THREE.Vector2, to: THREE.Vector2, color: string, width: number, height: number) {
+  if (ink.count >= MAX_SEGMENTS) return;
+  const ax = (from.x - 0.5) * width;
+  const ay = (from.y - 0.5) * height;
+  const bx = (to.x - 0.5) * width;
+  const by = (to.y - 0.5) * height;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const length = Math.hypot(dx, dy);
+  if (length < 1e-6) return;
+  const half = INK_HALF_WIDTH * width;
+  const ux = (dx / length) * half;
+  const uy = (dy / length) * half;
+  // Normal al trazo, en el plano del pizarrón.
+  const nx = -uy;
+  const ny = ux;
+  const x0 = ax - ux;
+  const y0 = ay - uy;
+  const x1 = bx + ux;
+  const y1 = by + uy;
+  const quad = [
+    x0 + nx, y0 + ny, x0 - nx, y0 - ny, x1 + nx, y1 + ny,
+    x1 + nx, y1 + ny, x0 - nx, y0 - ny, x1 - nx, y1 - ny,
+  ];
+  inkColor.set(color).convertSRGBToLinear();
+  const offset = ink.count * FLOATS_PER_SEGMENT;
+  const pos = ink.positions.array as Float32Array;
+  const col = ink.colors.array as Float32Array;
+  for (let v = 0; v < 6; v++) {
+    pos[offset + v * 3] = quad[v * 2];
+    pos[offset + v * 3 + 1] = quad[v * 2 + 1];
+    pos[offset + v * 3 + 2] = 0;
+    col[offset + v * 3] = inkColor.r;
+    col[offset + v * 3 + 1] = inkColor.g;
+    col[offset + v * 3 + 2] = inkColor.b;
+  }
+  ink.positions.addUpdateRange(offset, FLOATS_PER_SEGMENT);
+  ink.colors.addUpdateRange(offset, FLOATS_PER_SEGMENT);
+  ink.positions.needsUpdate = true;
+  ink.colors.needsUpdate = true;
+  ink.count++;
+  ink.mesh.geometry.setDrawRange(0, ink.count * 6);
+}
+
+function clearInk(ink: Ink) {
+  ink.count = 0;
+  ink.mesh.geometry.setDrawRange(0, 0);
+}
 
 /*
  * Estabilizador de la tiza en el visor (como el "lazy brush" de los programas
@@ -197,6 +273,9 @@ const UPLOAD_EVERY = 1 / 30;
  * mueven la tiza; fuera de él, la tiza sigue a la mira de forma suave.
  */
 const LAZY_PX = 9;
+/** Desde más lejos que esto no se dibuja, m: desde el otro lado de la escena era un accidente. */
+const MAX_DRAW_DISTANCE = 3.5;
+const boardWorld = new THREE.Vector3();
 const FOLLOW = 14; // 1/s: qué tan rápido alcanza la tiza a la mira
 
 /**
@@ -306,9 +385,7 @@ export function Whiteboard({
   const last = useRef<THREE.Vector2 | null>(null);
   /** La punta de la tiza en el visor (estabilizada), en px de la textura. */
   const chalk = useRef<THREE.Vector2 | null>(null);
-  /** Hay trazos nuevos sin subir a la textura, y cuándo se subió la última vez. */
-  const dirty = useRef(false);
-  const lastUpload = useRef(0);
+  const ink = useMemo(() => createInk(), []);
 
   // El pizarrón se registra en la mira para poder dibujar en el visor.
   useEffect(() => {
@@ -341,8 +418,7 @@ export function Whiteboard({
       if (!last.current) return;
       const uv = boardUvAt(event, element, camera, boardRef.current);
       if (!uv) return; // fuera del pizarrón: se retoma al volver
-      stroke(surface.ctx, last.current, uv, penRef.current);
-      dirty.current = true;
+      addInk(ink, last.current, uv, penRef.current, width, height);
       last.current = uv;
     };
     const onUp = () => {
@@ -358,13 +434,17 @@ export function Whiteboard({
       window.removeEventListener("pointerup", onUp);
       setDrawing(false);
     };
-  }, [element, camera, surface, vr]);
+  }, [element, camera, ink, width, height, vr]);
 
   // Vista VR: mirando el pizarrón con A apretado (o el dedo apoyado en la
   // pantalla), se dibuja donde cae la mira, con la tiza estabilizada.
   useFrame((state, delta) => {
-    const pressed = vr && isSelectHeld();
-    const uv = getGazed() === boardRef.current ? getGazeUv() : null;
+    const board = boardRef.current;
+    const near = board ? state.camera.position.distanceTo(board.getWorldPosition(boardWorld)) <= MAX_DRAW_DISTANCE : false;
+    const pressed = vr && near && isSelectHeld();
+    const uv = getGazed() === board ? getGazeUv() : null;
+    // Para el modo diagnóstico: si se está escribiendo y cuánta tinta hay.
+    probeReport({ pizarron: { escribiendo: Boolean(pressed && uv), cerca: near, trazos: ink.count } });
     if (pressed && uv) {
       const target = new THREE.Vector2(uv.x * TEX_W, (1 - uv.y) * TEX_H);
       if (!chalk.current) {
@@ -377,32 +457,22 @@ export function Whiteboard({
           // Hasta el borde del hilo, de forma suave.
           const goal = from.clone().addScaledVector(offset, (distance - LAZY_PX) / distance);
           chalk.current.lerp(goal, 1 - Math.exp(-FOLLOW * delta));
-          stroke(
-            surface.ctx,
+          addInk(
+            ink,
             new THREE.Vector2(from.x / TEX_W, 1 - from.y / TEX_H),
             new THREE.Vector2(chalk.current.x / TEX_W, 1 - chalk.current.y / TEX_H),
             penRef.current,
+            width,
+            height,
           );
-          dirty.current = true;
         }
       }
     } else {
       chalk.current = null;
     }
-
-    // Los trazos se juntan y la textura se sube como mucho 30 veces por segundo.
-    const now = state.clock.elapsedTime;
-    if (dirty.current && now - lastUpload.current >= UPLOAD_EVERY) {
-      dirty.current = false;
-      lastUpload.current = now;
-      refresh(surface.texture);
-    }
   });
 
-  const clear = () => {
-    drawBase(surface.ctx, contentRef.current);
-    refresh(surface.texture);
-  };
+  const clear = () => clearInk(ink);
 
   return (
     <group position={spec.position} rotation={[0, spec.rotationY ?? 0, 0]}>
@@ -433,6 +503,8 @@ export function Whiteboard({
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial map={surface.texture} toneMapped={false} />
       </mesh>
+      {/* Lo que escribe el estudiante (ver createInk). */}
+      <primitive object={ink.mesh} />
 
       {/* Plumones y borrador, en la repisa de abajo. */}
       <Suspense fallback={null}>

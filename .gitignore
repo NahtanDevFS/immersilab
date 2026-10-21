@@ -41,3 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# modo diagnóstico (app/api/diagnostico): lo que manda el celular
+/.debug/
