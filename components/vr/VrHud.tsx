@@ -337,7 +337,20 @@ export function VrHud(props: Props) {
  * La acción principal del experimento (la marcada `primary`: Lanzar, Soltar,
  * Probar…), leída unas veces por segundo como el panel de retos. Va en la
  * barra para usarla sin abrir los retos. Solo se re-dibuja si cambia.
+ *
+ * Solo si hay UNA: hay experimentos que marcan `primary` cada opción de un
+ * juego (los protocolos del OSI, los saltos del enrutamiento), y la barra
+ * mostraba la primera como si fuera "la" acción ("+ SOCKS"). Si hay varias
+ * pero una sola activa (STP en la tormenta: el broadcast queda desactivado y
+ * "Apagar los switches" no), va esa.
  */
+function pickPrimary(actions: VrAction[]): VrAction | undefined {
+  const primaries = actions.filter((a) => a.primary && !a.info && a.onSelect);
+  if (primaries.length === 1) return primaries[0];
+  const enabled = primaries.filter((a) => !a.disabled);
+  return enabled.length === 1 ? enabled[0] : undefined;
+}
+
 function usePrimaryAction(
   engine: ExperimentEngine,
   vrActions?: (engine: ExperimentEngine) => VrAction[],
@@ -346,7 +359,7 @@ function usePrimaryAction(
   const select = useRef<() => void>(() => {});
   useEffect(() => {
     const read = () => {
-      const action = vrActions?.(engine).find((a) => a.primary && !a.info && a.onSelect);
+      const action = pickPrimary(vrActions?.(engine) ?? []);
       select.current = action?.onSelect ?? (() => {});
       setShown((current) => {
         const next = action ? { label: action.label, disabled: action.disabled } : null;

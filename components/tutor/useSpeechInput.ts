@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { TUTOR_LIMITS } from "@/lib/tutor/protocol";
 
 /**
  * Entrada de voz (STT) sobre la Web Speech API — PLAN_DESARROLLO.md §4.2.
@@ -47,6 +48,53 @@ function getRecognitionCtor(): RecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+/**
+ * Arma el texto de todos los resultados, desde cero en cada evento.
+ *
+ * Chrome en Android, en modo continuo, no entrega pedazos nuevos sino el
+ * texto ACUMULADO: "hola", "hola cómo", "hola cómo estás", cada uno como un
+ * resultado final aparte. Sumándolos (como hace Chrome de escritorio, donde
+ * cada resultado sí es un pedazo nuevo) cada palabra salía repetida muchas
+ * veces, y la pregunta se inflaba hasta que el servidor la rechazaba.
+ *
+ * Aquí, si un resultado arranca casi igual que el anterior (Android corrige
+ * palabras al ir acumulando: "ola" y después "hola cómo"), es la misma frase
+ * creciendo y se queda la versión más larga. Si arranca distinto, es una
+ * frase nueva y se suma: sirve igual en los dos navegadores.
+ */
+function joinResults(results: SpeechRecognitionResultList): { final: string; all: string } {
+  const parts: Array<{ text: string; final: boolean }> = [];
+  for (let i = 0; i < results.length; i++) {
+    const text = results[i][0].transcript.trim();
+    if (!text) continue;
+    const last = parts[parts.length - 1];
+    if (last && sameSentence(last.text, text)) {
+      const longer = text.length >= last.text.length ? text : last.text;
+      parts[parts.length - 1] = { text: longer, final: last.final || results[i].isFinal };
+    } else {
+      parts.push({ text, final: results[i].isFinal });
+    }
+  }
+  const clamp = (t: string) => t.slice(0, TUTOR_LIMITS.transcriptChars).trim();
+  return {
+    final: clamp(parts.filter((p) => p.final).map((p) => p.text).join(" ")),
+    all: clamp(parts.map((p) => p.text).join(" ")),
+  };
+}
+
+/** ¿`b` es la misma frase que `a`, más larga o corregida? Comparten casi
+ *  todo el comienzo del más corto. */
+function sameSentence(a: string, b: string): boolean {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  const shorter = Math.min(x.length, y.length);
+  let common = 0;
+  while (common < shorter && x[common] === y[common]) common++;
+  // Una corrección en la primera letra ("ola" → "hola") corre todo un lugar.
+  if (common === 0 && (x.slice(1) === y.slice(0, x.length - 1) || y.slice(1, x.length + 1) === x)) return true;
+  return common >= Math.max(3, shorter * 0.6);
+}
+
 function subscribeNever() {
   return () => {};
 }
@@ -70,6 +118,8 @@ export function useSpeechInput(onFinal: (text: string) => void) {
   const stopPending = useRef(false);
   const maxTimer = useRef<number | null>(null);
   const finalText = useRef("");
+  /** Todo lo reconocido, también lo que todavía no es final. */
+  const allText = useRef("");
   const onFinalRef = useRef(onFinal);
   useEffect(() => {
     onFinalRef.current = onFinal;
@@ -88,17 +138,15 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     rec.interimResults = true;
 
     finalText.current = "";
+    allText.current = "";
     setTranscript("");
     setError(null);
 
     rec.onresult = (event) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) finalText.current += result[0].transcript;
-        else interim += result[0].transcript;
-      }
-      setTranscript((finalText.current + interim).trim());
+      const { final, all } = joinResults(event.results);
+      finalText.current = final;
+      allText.current = all;
+      setTranscript(all);
     };
     rec.onerror = (event) => {
       // "no-speech" y "aborted" son normales (soltó sin hablar, barge-in).
@@ -125,7 +173,9 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       if (maxTimer.current !== null) window.clearTimeout(maxTimer.current);
       maxTimer.current = null;
       setListening(false);
-      onFinalRef.current(finalText.current.trim());
+      // Android a veces cierra sin marcar como final lo último que oyó: en
+      // ese caso vale lo que se mostró en pantalla.
+      onFinalRef.current(finalText.current || allText.current);
     };
 
     recognition.current = rec;
@@ -157,6 +207,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     started.current = false;
     stopPending.current = false;
     finalText.current = "";
+    allText.current = "";
     setTranscript("");
     setListening(false);
     if (!rec) return;

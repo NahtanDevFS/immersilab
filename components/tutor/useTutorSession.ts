@@ -10,6 +10,12 @@ import { formatUserTurn, type TutorTurn } from "@/lib/tutor/protocol";
 const OFFLINE_LINE =
   "No me puedo conectar en este momento. Revisa la conexión a internet y vuelve a preguntarme.";
 
+/** El servidor rechazó la pregunta (400): no es la red, es lo que se mandó. */
+const REJECTED_LINE = "No te entendí bien. ¿Me lo preguntas de nuevo, un poco más corto?";
+
+/** El servidor respondió con un error suyo (5xx): hay internet, pero el tutor no está. */
+const UNAVAILABLE_LINE = "El tutor no está disponible en este momento. Prueba de nuevo en un rato.";
+
 /** Respuesta 429 del endpoint: no es un fallo de red, así que no hay que decir que revise el internet. */
 const RATE_LIMITED_LINE =
   "Me hiciste muchas preguntas seguidas. Espera un momento y vuelve a preguntarme.";
@@ -178,10 +184,18 @@ export function useTutorSession(options: {
         setFailed(true);
         // Si alcanzó a decir algo, se deja; si no, el mensaje sin conexión.
         if (!text.trim()) {
+          // Solo se habla de la conexión cuando de verdad no llegó respuesta:
+          // antes cualquier error decía "revisa tu internet", y con internet
+          // funcionando eso confunde.
+          const status = error instanceof TutorHttpError ? error.status : null;
           const line =
-            error instanceof TutorHttpError && error.status === 429
+            status === 429
               ? RATE_LIMITED_LINE
-              : OFFLINE_LINE;
+              : status !== null && status >= 400 && status < 500
+                ? REJECTED_LINE
+                : status !== null
+                  ? UNAVAILABLE_LINE
+                  : OFFLINE_LINE;
           setReply(line);
           onSentence(line);
           updateReply({ text: line, state: "error" });
