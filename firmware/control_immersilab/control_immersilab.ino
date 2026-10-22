@@ -76,6 +76,13 @@ bool secundarioTrabado = false;
 bool estabaConectado = false;
 unsigned long conectadoDesde = 0;
 
+// ---- Vigilancia del cifrado (ver vigilarConexion) ----
+const unsigned long PEDIR_CIFRADO_MS = 1000; // sin cifrar a este punto: lo pide el control
+const unsigned long PLAZO_CIFRADO_MS = 6000; // sin cifrar a este punto: se corta
+uint16_t conexionVigilada = BLE_HS_CONN_HANDLE_NONE;
+unsigned long vigiladaDesde = 0;
+bool cifradoPedido = false;
+
 struct Eje {
   int pin;
   int centro;       // valor del ADC con el stick en reposo (se calibra al encender)
@@ -140,6 +147,42 @@ void actualizarBoton(int pin, uint8_t boton) {
   }
 }
 
+// La librería solo manda datos cuando la conexión se cifra, y tiene dos
+// fallas al reconectar: no pide el cifrado (espera a que el celular lo
+// haga, y algunos no lo hacen) y si el cifrado falla igual se cree
+// conectada. En los dos casos el celular quedaba "conectado" sin recibir
+// nada hasta reiniciar el ESP32. Aquí el control pide el cifrado él mismo y,
+// si no se logra a tiempo, corta la conexión: vuelve a anunciarse solo y el
+// celular reintenta sin reiniciar nada.
+void vigilarConexion() {
+  NimBLEServer *servidor = NimBLEDevice::getServer();
+  if (servidor == nullptr || servidor->getConnectedCount() == 0) {
+    conexionVigilada = BLE_HS_CONN_HANDLE_NONE;
+    return;
+  }
+
+  NimBLEConnInfo info = servidor->getPeerInfo(0);
+  if (info.getConnHandle() == BLE_HS_CONN_HANDLE_NONE) return;
+  if (info.getConnHandle() != conexionVigilada) {
+    conexionVigilada = info.getConnHandle();
+    vigiladaDesde = millis();
+    cifradoPedido = false;
+  }
+  if (info.isEncrypted()) return;
+
+  const unsigned long transcurrido = millis() - vigiladaDesde;
+  if (transcurrido >= PLAZO_CIFRADO_MS) {
+    Serial.println("La conexion no se pudo cifrar: se corta para que el celular reintente. "
+                   "Si se repite, olvida el control en el celular y emparejalo de nuevo.");
+    servidor->disconnect(conexionVigilada);
+    conexionVigilada = BLE_HS_CONN_HANDLE_NONE;
+  } else if (!cifradoPedido && transcurrido >= PEDIR_CIFRADO_MS) {
+    Serial.println("El celular no cifro la conexion: el control se lo pide.");
+    NimBLEDevice::startSecurity(conexionVigilada);
+    cifradoPedido = true;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -199,15 +242,19 @@ void setup() {
 
   bleGamepad.begin(&config);
 
-  // Truco de emparejamiento. La librería arranca el Bluetooth en segundo
-  // plano: se espera a que esté listo antes de borrar (si no, se cuelga).
+  // La librería arranca el Bluetooth en segundo plano: antes de tocar los
+  // emparejamientos (borrarlos o contarlos) hay que esperar a que esté
+  // listo, si no el ESP32 se cuelga y se reinicia en bucle.
+  unsigned long inicio = millis();
+  while (!NimBLEDevice::isInitialized() && millis() - inicio < 5000) {
+    delay(50);
+  }
+  delay(200);
+  const bool bluetoothListo = NimBLEDevice::isInitialized();
+
+  // Truco de emparejamiento.
   if (borrarEmparejamientos) {
-    unsigned long inicio = millis();
-    while (!NimBLEDevice::isInitialized() && millis() - inicio < 5000) {
-      delay(50);
-    }
-    delay(200);
-    if (NimBLEDevice::isInitialized()) {
+    if (bluetoothListo) {
       NimBLEDevice::deleteAllBonds();
       Serial.println("Emparejamientos borrados. Olvida el control en el celular y vuelve a emparejarlo.");
     } else {
@@ -215,18 +262,27 @@ void setup() {
     }
   }
 
-  Serial.printf("Emparejamientos guardados en el control: %d\n", NimBLEDevice::getNumBonds());
+  if (bluetoothListo) {
+    Serial.printf("Emparejamientos guardados en el control: %d\n", NimBLEDevice::getNumBonds());
+  } else {
+    Serial.println("AVISO: el Bluetooth no arranco en 5 s.");
+  }
   Serial.println("Control listo (v2): emparejalo desde Bluetooth como 'ImmersiLab Control'");
 }
 
 void loop() {
+  vigilarConexion();
+
   // Diagnóstico: cada conexión y desconexión, con cuánto duró. Si la compu
   // se conecta y se desconecta en bucle, esto muestra cada cuánto.
   const bool conectado = bleGamepad.isConnected();
   if (conectado != estabaConectado) {
     if (conectado) {
       conectadoDesde = millis();
-      Serial.println("Conectado.");
+      NimBLEServer *servidor = NimBLEDevice::getServer();
+      const bool cifrado = servidor != nullptr && servidor->getConnectedCount() > 0 &&
+                           servidor->getPeerInfo(0).isEncrypted();
+      Serial.printf("Conectado (cifrado: %s).\n", cifrado ? "si" : "NO, el celular no recibira datos");
     } else {
       Serial.printf("Desconectado (duro %lu ms conectado).\n", millis() - conectadoDesde);
     }

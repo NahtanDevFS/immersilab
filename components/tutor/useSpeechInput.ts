@@ -90,6 +90,11 @@ function sameSentence(a: string, b: string): boolean {
   const shorter = Math.min(x.length, y.length);
   let common = 0;
   while (common < shorter && x[common] === y[common]) common++;
+  // Uno es el comienzo exacto del otro: la misma frase creciendo, aunque sea
+  // de una letra. Android arranca así las frases que empiezan con una
+  // palabra corta ("y" → "y las" → "y las fórmulas"); con el mínimo de 3
+  // letras de abajo, cada paso se sumaba como frase nueva y salía "y y y".
+  if (common === shorter) return true;
   // Una corrección en la primera letra ("ola" → "hola") corre todo un lugar.
   if (common === 0 && (x.slice(1) === y.slice(0, x.length - 1) || y.slice(1, x.length + 1) === x)) return true;
   return common >= Math.max(3, shorter * 0.6);
@@ -112,45 +117,63 @@ export function useSpeechInput(onFinal: (text: string) => void) {
   const [error, setError] = useState<SpeechInputError>(null);
 
   const recognition = useRef<RecognitionLike | null>(null);
-  /** Ya arrancó de verdad (llegó `onstart`). */
+  /** Hay una grabación en curso (puede abarcar varios reconocedores). */
+  const active = useRef(false);
+  /** Ya arrancó de verdad el reconocedor actual (llegó `onstart`). */
   const started = useRef(false);
-  /** Se pidió parar antes de que arrancara: se para apenas arranque. */
-  const stopPending = useRef(false);
+  /** Se soltó el botón (o venció el tope): al cerrar, se manda. */
+  const wantStop = useRef(false);
   const maxTimer = useRef<number | null>(null);
+  /** Lo dicho en los reconocedores anteriores de esta misma grabación. */
+  const committed = useRef("");
   const finalText = useRef("");
   /** Todo lo reconocido, también lo que todavía no es final. */
   const allText = useRef("");
+  /** Reinicios seguidos sin oír nada: corta un bucle si el motor falla. */
+  const emptyRestarts = useRef(0);
   const onFinalRef = useRef(onFinal);
   useEffect(() => {
     onFinalRef.current = onFinal;
   }, [onFinal]);
 
-  const start = useCallback(() => {
-    const Ctor = getRecognitionCtor();
-    if (!Ctor || recognition.current) return;
+  /** El reconocedor que sigue, para abrirlo desde el `onend` del anterior. */
+  const spawnNext = useRef<() => boolean>(() => false);
 
+  const join = (a: string, b: string) => `${a} ${b}`.trim().slice(0, TUTOR_LIMITS.transcriptChars);
+
+  /**
+   * Un reconocedor. Puede haber varios en una misma grabación: Chrome en
+   * Android ignora `continuous` y se cierra solo con la primera pausa, aunque
+   * el botón siga apretado — y eso mandaba la pregunta a medias mientras el
+   * estudiante pensaba. Si se cierra sin que se haya soltado el botón, se
+   * abre otro al instante y lo dicho se va sumando; la pregunta sale recién
+   * al soltar (o al vencer el tope).
+   */
+  const spawn = useCallback(() => {
+    const Ctor = getRecognitionCtor();
+    if (!Ctor) return false;
     const rec = new Ctor();
     // es-GT existe en Chrome; si el motor no lo tiene, cae a español genérico.
     rec.lang = "es-GT";
-    // Continuo: mientras B esté apretado, una pausa para pensar no
-    // corta la grabación.
+    // Continuo: en escritorio, una pausa para pensar no corta la grabación.
     rec.continuous = true;
     rec.interimResults = true;
-
     finalText.current = "";
     allText.current = "";
-    setTranscript("");
-    setError(null);
 
     rec.onresult = (event) => {
       const { final, all } = joinResults(event.results);
       finalText.current = final;
       allText.current = all;
-      setTranscript(all);
+      emptyRestarts.current = 0;
+      setTranscript(join(committed.current, all));
     };
     rec.onerror = (event) => {
-      // "no-speech" y "aborted" son normales (soltó sin hablar, barge-in).
+      // "no-speech" y "aborted" son normales (una pausa, soltó sin hablar,
+      // barge-in): no cortan la grabación.
       if (event.error === "no-speech" || event.error === "aborted") return;
+      // Los demás sí: reintentar no los arregla.
+      wantStop.current = true;
       setError(
         event.error === "not-allowed" || event.error === "service-not-allowed"
           ? "not-allowed"
@@ -164,39 +187,67 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       // Chrome ignora stop() si llega antes de este evento: un clic corto, o
       // el cartel de permiso del micrófono tapando el "soltar". Sin esto la
       // grabación seguía sola y el botón no la podía apagar.
-      if (stopPending.current) rec.stop();
+      if (wantStop.current) rec.stop();
     };
     rec.onend = () => {
       recognition.current = null;
       started.current = false;
-      stopPending.current = false;
+      // Android a veces cierra sin marcar como final lo último que oyó: en
+      // ese caso vale lo que se mostró en pantalla.
+      committed.current = join(committed.current, finalText.current || allText.current);
+      finalText.current = "";
+      allText.current = "";
+      if (!active.current) return;
+      if (!wantStop.current && emptyRestarts.current < 20) {
+        emptyRestarts.current++;
+        if (spawnNext.current()) return;
+      }
+      active.current = false;
       if (maxTimer.current !== null) window.clearTimeout(maxTimer.current);
       maxTimer.current = null;
       setListening(false);
-      // Android a veces cierra sin marcar como final lo último que oyó: en
-      // ese caso vale lo que se mostró en pantalla.
-      onFinalRef.current(finalText.current || allText.current);
+      onFinalRef.current(committed.current);
     };
 
     recognition.current = rec;
     started.current = false;
-    stopPending.current = false;
     try {
       rec.start();
-      setListening(true);
-      maxTimer.current = window.setTimeout(() => recognition.current?.stop(), MAX_LISTEN_MS);
+      return true;
     } catch {
       // start() tira si ya hay otro reconocimiento en curso.
       recognition.current = null;
+      return false;
     }
   }, []);
 
+  useEffect(() => {
+    spawnNext.current = spawn;
+  }, [spawn]);
+
   const stop = useCallback(() => {
+    if (!active.current) return;
+    wantStop.current = true;
     const rec = recognition.current;
-    if (!rec) return;
-    if (started.current) rec.stop();
-    else stopPending.current = true;
+    // Si todavía no arrancó, lo para `onstart`.
+    if (rec && started.current) rec.stop();
   }, []);
+
+  const start = useCallback(() => {
+    if (!getRecognitionCtor() || active.current) return;
+    active.current = true;
+    wantStop.current = false;
+    committed.current = "";
+    emptyRestarts.current = 0;
+    setTranscript("");
+    setError(null);
+    if (!spawn()) {
+      active.current = false;
+      return;
+    }
+    setListening(true);
+    maxTimer.current = window.setTimeout(stop, MAX_LISTEN_MS);
+  }, [spawn, stop]);
 
   /** Deja de escuchar SIN enviar lo dicho (el "Cancelar" de la vista VR). */
   const cancel = useCallback(() => {
@@ -204,8 +255,10 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     maxTimer.current = null;
     const rec = recognition.current;
     recognition.current = null;
+    active.current = false;
     started.current = false;
-    stopPending.current = false;
+    wantStop.current = true;
+    committed.current = "";
     finalText.current = "";
     allText.current = "";
     setTranscript("");
