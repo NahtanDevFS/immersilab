@@ -210,7 +210,7 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
         {!collapsed && guest && (
           <p className={styles.guest}>
             Sin cuenta, tu progreso se guarda solo en este dispositivo y se
-            puede perder. <Link href="/cuenta">Ingresar</Link>
+            puede perder. <Link href="/progreso?ingresar=1">Ingresar</Link>
           </p>
         )}
       </section>

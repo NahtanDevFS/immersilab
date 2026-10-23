@@ -1,23 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { DISCIPLINES, EXPERIMENTS, MODULES } from "@/lib/catalog";
 import { EXPERIMENT_DEFINITIONS, challengesOf } from "@/components/modules/registry";
 import { GUEST, completionKey } from "@/lib/progress/store";
 import { deleteProgress } from "@/lib/progress/sync";
 import { displayName, useProgress, useSession } from "@/lib/progress/useSession";
+import { AccountSection } from "@/components/progress/AccountSection";
 import styles from "@/components/progress/Page.module.css";
 
 const dateFormat = new Intl.DateTimeFormat("es", { day: "numeric", month: "short" });
 
 /**
- * Pantalla de progreso del alumno: cuántos retos lleva de cada experimento,
- * cuáles y cuándo los logró. Funciona igual con cuenta o como invitado; a
- * los invitados les recuerda que el progreso solo vive en este dispositivo.
+ * Cuenta y progreso del alumno, en una sola página. Arriba, la cuenta
+ * (AccountSection): quién ingresó y "Cerrar sesión", o el aviso de invitado
+ * con el formulario para ingresar. Abajo, cuántos retos lleva de cada
+ * experimento, cuáles y cuándo los logró.
+ *
+ * Antes la cuenta era otra página (/cuenta, que ahora redirige aquí): las
+ * dos se mandaban de una a la otra y repetían avisos.
  */
 export default function ProgresoPage() {
-  const { user, loading } = useSession();
+  const { user } = useSession();
   const progress = useProgress();
 
   // Los retos de cada experimento salen de su motor (lógica pura, sin escena).
@@ -77,6 +82,11 @@ export default function ProgresoPage() {
           </Link>
         </div>
 
+        {/* useSearchParams (para ?ingresar=1) necesita su <Suspense>. */}
+        <Suspense fallback={null}>
+          <AccountSection />
+        </Suspense>
+
         <section className={styles.card}>
           <div className={styles.summary}>
             <span className={styles.big}>
@@ -89,13 +99,6 @@ export default function ProgresoPage() {
           </div>
         </section>
 
-        {!loading && guest && (
-          <p className={styles.note}>
-            Estás como invitado: este progreso vive solo en este dispositivo y se puede perder
-            si borras los datos del navegador o cambias de celular.{" "}
-            <Link href="/cuenta">Ingresa o crea una cuenta</Link> y se guarda en tu cuenta.
-          </p>
-        )}
         {!guest && progress.pending > 0 && (
           <p className={styles.note}>
             {progress.pending} logro{progress.pending > 1 ? "s" : ""} todavía no se subió a tu

@@ -167,10 +167,18 @@ bucle, durante la tormenta, aparece "Apagar los switches".
 
 ## 4. Progreso y cuentas
 
-- [ ] Como invitado, lograr un reto. En `/progreso` aparece con fecha y el
-      aviso de que vive solo en este dispositivo.
-- [ ] Crear una cuenta en `/cuenta`. El reto del invitado pasa a la cuenta.
-- [ ] Cerrar sesión: el progreso de la cuenta deja de verse.
+- [ ] En el encabezado del lobby hay un solo botón: "Invitado · Ingresar"
+      o "Tu nombre · Mi progreso". Los dos llevan a `/progreso`.
+- [ ] Como invitado, lograr un reto. En `/progreso` aparece con fecha y,
+      arriba, el aviso de que vive solo en este dispositivo con el botón
+      "Ingresar o crear cuenta" (plegado). Al tocarlo se despliega el
+      formulario.
+- [ ] El "Ingresar" del aviso de los retos y la dirección vieja `/cuenta`
+      abren `/progreso` con el formulario ya desplegado.
+- [ ] Crear una cuenta desde `/progreso`. El reto del invitado pasa a la
+      cuenta y arriba aparece "Ingresaste como…" con "Cerrar sesión".
+- [ ] Cerrar sesión desde `/progreso`: el progreso de la cuenta deja de
+      verse y vuelve el aviso de invitado.
 - [ ] Ingresar desde otro navegador o dispositivo: el progreso aparece.
 - [ ] Lograr un reto sin conexión con sesión iniciada: al volver la conexión,
       se sube solo (en `/progreso` deja de decir "pendiente").
@@ -218,8 +226,8 @@ bucle, durante la tormenta, aparece "Apagar los switches".
       "Acomodar los paneles" los devuelve a su lugar.
 - [ ] Enrutamiento en el visor: mirar un enlace y presionar A lo corta o
       lo repara.
-- [ ] Lobby en el visor: Mi progreso / Mi cuenta salen del visor y abren
-      la página.
+- [ ] Lobby en el visor: "Mi cuenta y progreso" (como invitado, "Ingresar y
+      ver mi progreso") sale del visor y abre la página.
 - [ ] "Volver al lobby" regresa al pasillo sin salir del visor. En el
       lobby, a la derecha, el panel "Cómo moverte" y "Empezar el recorrido
       guiado".
@@ -241,8 +249,8 @@ bucle, durante la tormenta, aparece "Apagar los switches".
       un poco vuelve a caminar.
 - [ ] En el visor, stick derecho arriba o abajo sube o baja la cámara.
       "Centrar la vista" vuelve a la altura de los ojos.
-- [ ] En el lobby, Mi progreso / Mi cuenta preguntan antes de salir del
-      visor; "Quedarme en el visor" cancela.
+- [ ] En el lobby, ese botón pregunta antes de salir del visor; "Quedarme
+      en el visor" cancela.
 - [ ] Mantener A (o el dedo) mirando un panel: a los ~0.3 s se acerca y se
       agranda; al soltar vuelve a su lugar. Sobre un botón no pasa (el
       botón se toca normal).

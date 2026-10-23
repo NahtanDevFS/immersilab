@@ -84,9 +84,11 @@ export function LobbyVrHud({
 
   // La cuenta, como en el encabezado de la PC. Son páginas HTML: se abren
   // saliendo del visor.
+  // Cuenta y progreso son una sola página.
   const accountButtons = [
-    { href: "/progreso", label: "Mi progreso" },
-    { href: "/cuenta", label: user ? "Mi cuenta" : "Ingresar" },
+    user
+      ? { href: "/progreso", label: "Mi cuenta y progreso" }
+      : { href: "/progreso?ingresar=1", label: "Ingresar y ver mi progreso" },
   ];
   const actionsX = PANEL_WIDTH / 2 - ACTIONS_WIDTH / 2;
   const buttonWidth = ACTIONS_WIDTH - 0.1;

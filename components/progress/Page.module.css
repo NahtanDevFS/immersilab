@@ -169,6 +169,20 @@
   gap: 0.6rem;
 }
 
+/* La cuenta, arriba del progreso: el texto y su botón en la misma fila
+   (abajo en pantallas angostas). */
+.account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.account > .lead {
+  flex: 1 1 18rem;
+}
+
 /* --- Progreso --------------------------------------------------------------- */
 
 .summary {

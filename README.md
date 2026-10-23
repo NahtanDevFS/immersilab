@@ -36,9 +36,12 @@ Gemini) que responde con los valores actuales del experimento.
   corta solo el reconocimiento). El servidor descarta las respuestas en las
   que el modelo escribe su razonamiento en vez de la respuesta, y manda solo
   oraciones completas.
-- **Progreso:** sin cuenta se guarda en el dispositivo; con cuenta se guarda
-  en Supabase y se ve desde cualquier lado (`/progreso`). Lo logrado como
-  invitado pasa a la cuenta al ingresar.
+- **Cuenta y progreso** en una sola página (`/progreso`): arriba la cuenta
+  (quién ingresó y "Cerrar sesión", o el formulario para ingresar o crear
+  una cuenta) y abajo los retos de cada experimento. Sin cuenta el progreso
+  se guarda en el dispositivo; con cuenta se guarda en Supabase y se ve desde
+  cualquier lado. Lo logrado como invitado pasa a la cuenta al ingresar.
+  `/cuenta` redirige ahí con el formulario abierto.
 - **Tutorial de entrada** de 30 segundos y **recorrido guiado** de nueve
   paradas por las cuatro áreas, para mostrar el laboratorio en clase.
 
@@ -141,12 +144,12 @@ npx tsc --noEmit -p .   # revisión de tipos
 ## Estructura
 
 ```
-app/                      rutas: lobby, experimentos, cuenta, progreso, API del tutor
+app/                      rutas: lobby, experimentos, cuenta y progreso, API del tutor
 components/shell/         lo común a todos los experimentos: escena, paneles, controles, retos
 components/lobby/         el pasillo con las puertas
 components/modules/       un directorio por experimento: index.ts, engine.ts y la escena
 components/tutor/         tutor por voz (micrófono, voz, sesión con el servidor)
-components/progress/      chip de cuenta, sincronización del progreso
+components/progress/      botón de cuenta, sección de la cuenta, sincronización del progreso
 lib/                      catálogo, progreso, Supabase, recorrido, vista y tutor
 types/module.ts           el contrato que implementa cada experimento
 supabase/migrations/      esquema de la base
