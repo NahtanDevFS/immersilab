@@ -91,6 +91,42 @@ export interface CounterEngine extends ExperimentEngine {
 
 const valueOf = (q: boolean[]) => q.reduce((sum, bit, i) => sum + (bit ? 1 << i : 0), 0);
 
+/**
+ * Qué número sale de `value` con un pulso de reloj, con el mismo rizado que
+ * el motor (cada flip-flop cambia y, según tome el reloj de Q o de Q̄,
+ * dispara al siguiente). Sin la carga de la NAND.
+ */
+export function nextCount(value: number, fromQbar: CounterConfig["fromQbar"]): number {
+  const q = Array.from({ length: BITS }, (_, i) => Boolean((value >> i) & 1));
+  for (let i = 0; i < BITS; i++) {
+    const before = q[i];
+    q[i] = !before;
+    if (i + 1 >= BITS) break;
+    const falls = fromQbar[i] ? !before && q[i] : before && !q[i];
+    if (!falls) break;
+  }
+  return valueOf(q);
+}
+
+/** ¿Con esas salidas en 1 se activa la NAND de reinicio? */
+export function nandFires(value: number, resetInputs: CounterConfig["resetInputs"]): boolean {
+  return resetInputs.some(Boolean) && resetInputs.every((sel, i) => !sel || Boolean((value >> i) & 1));
+}
+
+/**
+ * Estado de bloqueo: si el número que sale del valor cargado con un pulso
+ * vuelve a activar la NAND, en cada pulso se carga otra vez lo mismo y el
+ * contador no sale nunca de ahí. Pasa en un contador real (es un error de
+ * diseño clásico), así que el motor lo hace igual; esto solo lo detecta,
+ * para avisarlo. Ejemplo: NAND con Q3 y carga 14 → 14 pasa a 15, Q3 sigue en
+ * 1 y vuelve a cargar 14. Con carga 15 no: 15 pasa a 0 y Q3 se suelta.
+ * Devuelve el número que lo traba, o null si no hay bloqueo.
+ */
+export function lockUp(config: CounterConfig): number | null {
+  const next = nextCount(config.load, config.fromQbar);
+  return nandFires(next, config.resetInputs) ? next : null;
+}
+
 /** ¿La secuencia de valores termina en `pattern`? */
 function endsWith(history: number[], pattern: number[]) {
   if (history.length < pattern.length) return false;
@@ -158,6 +194,18 @@ export function createCounterEngine(): CounterEngine {
     const period = q3Rises[q3Rises.length - 1] - q3Rises[q3Rises.length - 2];
     if (period <= 0) return;
     runtime.measuredQ3 = 1 / period;
+    checkPrediction();
+  }
+
+  /**
+   * Compara la predicción con la última frecuencia medida de Q3. Se llama al
+   * medir Q3 y también apenas cambia la predicción: antes solo se comparaba
+   * cuando Q3 volvía a subir, y Q3 es la salida más lenta (con el reloj a
+   * 1 Hz sube cada 16 s), así que el "bien" o "no" tardaba eso en enterarse
+   * de la predicción nueva.
+   */
+  function checkPrediction() {
+    if (runtime.measuredQ3 === null) return;
     const predicted = Number(lastVariables.pred_frecuencia_q3 ?? 0);
     const ok = Math.abs(predicted - runtime.measuredQ3) <= 0.05 * runtime.measuredQ3;
     runtime.lastCheck = { predicted, measured: runtime.measuredQ3, ok };
@@ -214,9 +262,11 @@ export function createCounterEngine(): CounterEngine {
     if (key === lastKey) return;
     lastKey = key;
     runtime.config = config;
-    // Con otra configuración, la medición de Q3 vale de nuevo desde cero.
+    // Con otra configuración, la medición de Q3 vale de nuevo desde cero, y
+    // también la comparación: la vieja era de otro circuito.
     q3Rises = [];
     runtime.measuredQ3 = null;
+    runtime.lastCheck = null;
   }
 
   return {
@@ -228,6 +278,9 @@ export function createCounterEngine(): CounterEngine {
     update(dt, variables) {
       lastVariables = variables;
       applyConfig(variables);
+      if (runtime.lastCheck && Number(variables.pred_frecuencia_q3 ?? 0) !== runtime.lastCheck.predicted) {
+        checkPrediction();
+      }
       runtime.time += dt;
 
       if (flashLeft > 0) {
@@ -335,6 +388,11 @@ export function createCounterEngine(): CounterEngine {
           reinicio: resetBits.length
             ? `NAND con ${resetBits.join(" y ")}, carga ${config.load}`
             : "sin reinicio",
+          ...(lockUp(config) !== null
+            ? {
+                bloqueo: `estado de bloqueo: al cargar ${config.load}, el siguiente pulso da ${lockUp(config)}, que vuelve a activar la NAND y carga ${config.load} otra vez; el contador no sale nunca`,
+              }
+            : {}),
           cuenta_binaria: [3, 2, 1, 0].map((i) => (q[i] ? 1 : 0)).join(""),
           cuenta_decimal: runtime.value,
           display: HEX[runtime.value],

@@ -204,6 +204,23 @@ export interface SupplyRuntime {
   capacitor: number;
 }
 
+/**
+ * Lo que de verdad le llega al celular: la corriente que pide si está
+ * cargando, y nada si no (le llega muy poco, la salida baja demasiado entre
+ * picos o hay sobrevoltaje): como un cargador de verdad, que corta. La
+ * potencia es el voltaje promedio de la salida por esa corriente.
+ */
+export function delivered(runtime: SupplyRuntime): { mA: number; watts: number } {
+  const mA = runtime.phone === "carga" ? runtime.load : 0;
+  return { mA, watts: (runtime.result.outAvg * mA) / 1000 };
+}
+
+/** "250 mA · 1.25 W", para los carteles. */
+export function deliveredLabel(runtime: SupplyRuntime): string {
+  const { mA, watts } = delivered(runtime);
+  return `Le llegan ${mA} mA · ${watts.toFixed(2)} W`;
+}
+
 export interface SupplyEngine extends ExperimentEngine {
   getRuntime: () => SupplyRuntime;
 }
@@ -335,6 +352,8 @@ export function createSupplyEngine(): SupplyEngine {
           salida_promedio_V: Number(r.outAvg.toFixed(2)),
           salida_minima_V: Number(r.outMin.toFixed(2)),
           salida_maxima_V: Number(r.outMax.toFixed(2)),
+          corriente_al_celular_mA: delivered(runtime).mA,
+          potencia_al_celular_W: Number(delivered(runtime).watts.toFixed(2)),
           rizado_V: Number(r.ripple.toFixed(3)),
           rizado_pct: Number(r.ripplePct.toFixed(1)),
           celular:

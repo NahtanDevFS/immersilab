@@ -1,6 +1,6 @@
 import type { ExperimentDefinition, ExperimentEngine, VariablesSchema, VrAction } from "@/types/module";
 import { actionControls } from "@/components/modules/shared/ActionList";
-import { HEX, createCounterEngine, type CounterEngine } from "./engine";
+import { HEX, createCounterEngine, type CounterEngine, lockUp } from "./engine";
 import { CounterScene } from "./CounterScene";
 
 const sourceOptions = [
@@ -44,6 +44,15 @@ function actions(engine: ExperimentEngine): VrAction[] {
       info: true,
     },
   ];
+  const lock = lockUp(r.config);
+  if (lock !== null) {
+    const bits = r.config.resetInputs.map((s, i) => (s ? `Q${i}` : "")).filter(Boolean).join(" y ");
+    list.push({
+      id: "bloqueo",
+      label: `Bloqueado: al cargar ${r.config.load}, el siguiente pulso da ${lock} y la NAND (${bits}) vuelve a cargar ${r.config.load}. Elige otro valor de carga u otras salidas para la NAND.`,
+      info: true,
+    });
+  }
   if (r.lastCheck) {
     list.push({
       id: "q3",

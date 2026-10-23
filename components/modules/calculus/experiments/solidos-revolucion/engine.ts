@@ -12,7 +12,6 @@ import {
   volumeOfRevolution,
 } from "@/components/modules/calculus/shared/profiles";
 
-export type LatheMethod = "discos" | "capas";
 
 export interface LatheRuntime {
   /** Los cinco radios que el jugador está torneando. */

@@ -20,7 +20,16 @@ useGLTF.preload("/models/trees.glb");
  * Pipeline que se le aplicó al original (33 MB .obj, 247k triángulos):
  *   obj → glb (script propio; obj2gltf se colgaba con este archivo)
  *   → gltf-transform simplify --ratio 0.35 → meshopt
- *   = 1.46 MB y ~86k triángulos.
+ *   = 1.46 MB y ~90k triángulos.
+ *
+ * Segunda pasada (2026-10-23), porque los árboles eran casi toda la
+ * geometría de cada experimento (~1 millón de vértices por cuadro, el doble
+ * en el visor):
+ *   gltf-transform weld → simplify --ratio 0.33 --error 0.008
+ *   --lock-border true → meshopt
+ *   = 1.09 MB y ~65k triángulos (28 % menos), sin cambio visible.
+ * Más agresivo no sirve: sin --lock-border borra hojas enteras (cada hoja
+ * es un rectángulo suelto) y con más error se deshacen los troncos.
  *
  * La compresión es **meshopt y no Draco** a propósito: el decodificador de
  * meshopt viene empaquetado con three, mientras que drei carga el de Draco

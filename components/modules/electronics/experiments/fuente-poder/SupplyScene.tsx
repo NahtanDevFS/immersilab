@@ -5,7 +5,7 @@ import * as THREE from "three";
 import type { ExperimentEngine, VariablesState } from "@/types/module";
 import { useFixedTimestep } from "@/lib/physics-engine/useFixedTimestep";
 import { VrText } from "@/components/vr/VrText";
-import { PRIMARY_TURNS, STAGES, type Stage, type SupplyEngine, type SupplyRuntime } from "./engine";
+import { deliveredLabel, PRIMARY_TURNS, STAGES, type Stage, type SupplyEngine, type SupplyRuntime } from "./engine";
 
 /** Altura de la mesa: la de un escritorio. */
 const TABLE_Y = 0.72;
@@ -107,8 +107,12 @@ export function SupplyScene({ engine, variables }: Props) {
         <VrText position={[X.capacitor, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
           {capacitor > 0 ? `${capacitor.toLocaleString("es")} µF` : "Sin capacitor"}
         </VrText>
-        <VrText position={[X.celular, TABLE_Y + 0.62, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
-          {`Celular · ${Number(variables.carga ?? 250)} mA`}
+        <VrText position={[X.celular, TABLE_Y + 0.7, 0]} anchorX="center" fontSize={0.06} color="#ffffff" outlineWidth={0.006} outlineColor="#0b1220">
+          {`Celular · pide ${Number(variables.carga ?? 250)} mA`}
+        </VrText>
+        {/* Lo que de verdad le llega, en vivo: 0 mA si no carga. */}
+        <VrText position={[X.celular, TABLE_Y + 0.61, 0]} anchorX="center" fontSize={0.05} color={runtime.phone === "carga" ? "#34d399" : "#fca5a5"} outlineWidth={0.006} outlineColor="#0b1220">
+          {deliveredLabel(runtime)}
         </VrText>
       </Suspense>
     </group>

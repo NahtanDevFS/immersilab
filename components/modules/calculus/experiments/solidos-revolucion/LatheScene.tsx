@@ -11,24 +11,21 @@ import {
   getTargetPiece,
   radiusAt,
 } from "@/components/modules/calculus/shared/profiles";
-import type { LatheEngine, LatheMethod } from "./engine";
+import type { LatheEngine } from "./engine";
 
 /** Dónde se apoya la pieza torneada y dónde el fantasma de la objetivo. */
 const PIECE_X = 0;
 const GHOST_X = 3.2;
 const BASE_Y = 0.35;
 
-/** Cuántas rebanadas se dibujan al ver el método de discos. */
-const SLICES = 14;
 /**
- * En capas se dibujan MENOS y más transparentes. No es capricho: los
- * cascarones son concéntricos, así que al mirar la pieza la vista atraviesa
- * todos a la vez y sus opacidades se suman — con los mismos catorce del modo
- * discos, la pieza desaparecía detrás de un bloque naranja macizo.
+ * Cuántas rebanadas (discos) se dibujan alrededor de la pieza. Antes había un
+ * selector para verla también en capas (cascarones): no cambiaba el volumen
+ * ni los retos, solo el dibujo, y se quitó para no sumar una variable que no
+ * hace nada. El tutor igual sabe explicar el método de capas.
  */
-const SHELLS = 6;
+const SLICES = 14;
 const DISC_OPACITY = 0.3;
-const SHELL_OPACITY = 0.12;
 
 const PROFILE_COLOR = new THREE.Color(0.4, 2.6, 2.2);
 
@@ -85,7 +82,6 @@ export function LatheScene({ engine, variables }: Props) {
 
   useFrame(() => {
     const runtime = lathe.getRuntime();
-    const method = String(variables.metodo ?? "discos") as LatheMethod;
     const piece = getTargetPiece(variables.pieza ?? "copa");
 
     // La geometría se rehace SOLO cuando cambian los radios: crear un
@@ -129,45 +125,18 @@ export function LatheScene({ engine, variables }: Props) {
       attr.needsUpdate = true;
     }
 
-    // Las rebanadas: es lo único que cambia al elegir un método u otro, y es
-    // exactamente lo que distingue a los dos. En DISCOS se corta la pieza en
-    // tajadas horizontales (cada una un cilindro de radio r(h)); en CAPAS, en
-    // tubos concéntricos, como los anillos de un tronco. El volumen que sale
-    // es el mismo — que es la moraleja.
+    // Las rebanadas: la pieza cortada en tajadas horizontales, cada una un
+    // cilindro de radio r(h). Son los discos que suma la integral.
     if (slicesRef.current) {
-      const maxRadius = Math.max(...runtime.radii);
       slicesRef.current.children.forEach((child, i) => {
         const mesh = child as THREE.Mesh;
         const material = mesh.material as THREE.MeshStandardMaterial;
-
-        if (method === "capas" && i >= SHELLS) {
-          mesh.visible = false;
-          return;
-        }
-
-        const t =
-          method === "discos" ? (i + 0.5) / SLICES : (i + 1) / (SHELLS + 1);
-        material.opacity = method === "discos" ? DISC_OPACITY : SHELL_OPACITY;
-
-        if (method === "discos") {
-          const r = radiusAt(runtime.radii, t);
-          mesh.position.set(0, BASE_Y + t * PIECE_HEIGHT, 0);
-          mesh.scale.set(r, (PIECE_HEIGHT / SLICES) * 0.82, r);
-          mesh.visible = true;
-        } else {
-          // Capas: un tubo por cada radio, cuya altura es hasta dónde llega
-          // la pieza a ese radio. Se recorre el perfil buscando la altura
-          // máxima con radio ≥ este: eso es, literalmente, el alto del tubo.
-          const r = maxRadius * t;
-          let top = 0;
-          for (let s = 0; s <= PROFILE_SAMPLES; s += 1) {
-            const h = s / PROFILE_SAMPLES;
-            if (radiusAt(runtime.radii, h) >= r) top = h * PIECE_HEIGHT;
-          }
-          mesh.position.set(0, BASE_Y + top / 2, 0);
-          mesh.scale.set(r, Math.max(top, 0.01), r);
-          mesh.visible = top > 0.02;
-        }
+        const t = (i + 0.5) / SLICES;
+        material.opacity = DISC_OPACITY;
+        const r = radiusAt(runtime.radii, t);
+        mesh.position.set(0, BASE_Y + t * PIECE_HEIGHT, 0);
+        mesh.scale.set(r, (PIECE_HEIGHT / SLICES) * 0.82, r);
+        mesh.visible = true;
       });
     }
   });
@@ -187,7 +156,7 @@ export function LatheScene({ engine, variables }: Props) {
           />
         </mesh>
 
-        {/* Rebanadas del método elegido, por fuera de la pieza y traslúcidas:
+        {/* Las rebanadas, por fuera de la pieza y traslúcidas:
             se ven como cortes marcados sobre el sólido y no lo tapan. */}
         <group ref={slicesRef}>
           {Array.from({ length: SLICES }).map((_, i) => (

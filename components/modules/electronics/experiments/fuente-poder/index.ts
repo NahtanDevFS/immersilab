@@ -1,12 +1,5 @@
 import type { ExperimentDefinition, VariablesSchema, VrAction } from "@/types/module";
-import {
-  CAPACITORS,
-  createSupplyEngine,
-  LOADS,
-  PRIMARY_TURNS,
-  STAGES,
-  type SupplyEngine,
-} from "./engine";
+import { CAPACITORS, createSupplyEngine, LOADS, PRIMARY_TURNS, STAGES, type SupplyEngine, deliveredLabel } from "./engine";
 import { SupplyScene } from "./SupplyScene";
 import { SupplyControls } from "./SupplyControls";
 
@@ -113,6 +106,7 @@ export const fuentePoderExperiment: ExperimentDefinition = {
     const actions: VrAction[] = [
       { id: "salida", label: `Salida: ${r.result.outAvg.toFixed(2)} V · rizado ${r.result.ripplePct.toFixed(1)} %`, info: true },
       { id: "celular", label: phone, info: true },
+      { id: "corriente", label: deliveredLabel(r), info: true },
     ];
     return actions;
   },

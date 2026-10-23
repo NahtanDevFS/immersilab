@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ExperimentEngine } from "@/types/module";
-import type { SupplyEngine, SupplyRuntime } from "./engine";
+import { deliveredLabel, type SupplyEngine, type SupplyRuntime } from "./engine";
 import styles from "@/components/modules/shared/ExperimentActions.module.css";
 
 interface Props {
@@ -41,6 +41,9 @@ export function SupplyControls({ engine }: Props) {
       <div className={styles.buttons}>
         <span className={styles.note} data-inline>
           {r.outAvg.toFixed(2)} V · rizado {r.ripplePct.toFixed(1)} %
+        </span>
+        <span className={styles.note} data-inline>
+          {deliveredLabel(runtime)}
         </span>
       </div>
     </div>

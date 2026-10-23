@@ -118,7 +118,10 @@ Pistas del catálogo v2 (comprobadas en Node con el motor de cada uno):
   administrador); ronda 3 reenviar 443 al servidor web.
 - **El contador:** década con NAND en Q3 y Q1 y carga 0; módulo 6 con Q2 y
   Q1; de 9 a 0 descendente con las cuatro salidas y carga 9; con reloj de
-  8 Hz, Q3 va a 0.5 Hz.
+  8 Hz, Q3 va a 0.5 Hz. Estado de bloqueo: ascendente, NAND solo con Q3 y
+  carga 14, se queda en 14 para siempre (14 pasa a 15, Q3 sigue en 1 y vuelve
+  a cargar 14), y en las acciones aparece "Bloqueado: …". Con carga 15 no se
+  bloquea (15 pasa a 0) y el aviso no aparece.
 
 Pistas de los experimentos nuevos:
 - **Grúa:** la lata con separación de 1 cm; el carro con hierro dulce, 1000
@@ -127,7 +130,12 @@ Pistas de los experimentos nuevos:
 - **Protoboard:** LED rojo con 470 Ω (15 mA); divisor con 4.7 kΩ y 2.7 kΩ
   (3.28 V); Kirchhoff con R2 y R3 distintas, midiendo las tres corrientes.
 - **Fuente:** con 250 mA, media onda con 34 espiras y 22 000 µF; puente con
-  38 espiras y 10 000 µF.
+  38 espiras y 10 000 µF. Sobre el celular y en los resultados se ve en vivo
+  cuánto le llega ("Le llegan 250 mA · 1.25 W" mientras carga; 0 mA si no
+  carga o hay sobrevoltaje).
+- **Tornea la pieza:** ya no hay selector de discos o capas; la pieza se ve
+  rebanada en discos. Preguntarle al tutor por el método de capas: lo explica
+  igual.
 - **Compuertas:** alarma AND; portón OR, NOT, AND; jueces tres AND y dos OR.
 
 *Visor:* abajo al frente, la barra de pestañas (Variables · Retos ·
