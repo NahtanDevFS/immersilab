@@ -87,6 +87,17 @@ Para que cada alumno pueda borrar su progreso desde la página de progreso,
 corre también `20261021120000_borrar_progreso.sql` (agrega la regla de RLS
 que permite borrar los retos propios).
 
+Para recuperar la contraseña ("¿Olvidaste tu contraseña?" en `/progreso`),
+Supabase manda un correo con un enlace que vuelve a `/progreso?nueva=1`.
+Supabase solo acepta volver a direcciones autorizadas: en el panel,
+**Authentication → URL Configuration**, pon la dirección del sitio desplegado
+en **Site URL** y agrega en **Redirect URLs** esa dirección seguida de
+`/progreso` y también `http://localhost:3000/progreso` (para desarrollo).
+Sin eso, el enlace lleva a la dirección por defecto y no se puede cambiar la
+contraseña. El servicio de correo gratis de Supabase manda pocos correos por
+hora: para muchos alumnos conviene configurar un SMTP propio en
+**Authentication → Emails**.
+
 Si cambia el catálogo de experimentos, la migración se regenera con:
 
 ```bash

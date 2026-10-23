@@ -179,6 +179,15 @@ bucle, durante la tormenta, aparece "Apagar los switches".
       cuenta y arriba aparece "Ingresaste como…" con "Cerrar sesión".
 - [ ] Cerrar sesión desde `/progreso`: el progreso de la cuenta deja de
       verse y vuelve el aviso de invitado.
+- [ ] En los campos de contraseña, "Ver" la muestra y "Ocultar" la vuelve a
+      tapar.
+- [ ] "¿Olvidaste tu contraseña?": pide solo el correo y "Mandarme el
+      enlace" avisa que llega un correo. Abrir el enlace en el mismo
+      navegador: aparece "Crea una contraseña nueva", se guarda y después se
+      ingresa con la nueva. (Requiere las Redirect URLs de Supabase, ver
+      README.)
+- [ ] Abrir ese enlace en otro navegador (o uno vencido): avisa que no
+      sirvió y ofrece "Pedir otro enlace".
 - [ ] Ingresar desde otro navegador o dispositivo: el progreso aparece.
 - [ ] Lograr un reto sin conexión con sesión iniciada: al volver la conexión,
       se sube solo (en `/progreso` deja de decir "pendiente").

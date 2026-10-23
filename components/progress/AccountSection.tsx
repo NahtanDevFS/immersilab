@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { displayName, useProgress, useSession } from "@/lib/progress/useSession";
 import { GUEST } from "@/lib/progress/store";
 import styles from "./Page.module.css";
 
-type Mode = "ingresar" | "registrar";
+type Mode = "ingresar" | "registrar" | "recuperar";
 
 /** Mensajes de Supabase Auth, en castellano y con qué hacer. */
 function friendlyError(message: string): string {
@@ -23,8 +23,55 @@ function friendlyError(message: string): string {
     return "Ese correo no parece válido.";
   if (m.includes("rate limit") || m.includes("too many"))
     return "Demasiados intentos seguidos. Espera un momento y vuelve a probar.";
+  if (m.includes("security purposes"))
+    return "Por seguridad hay que esperar un minuto antes de pedir otro enlace.";
+  if (m.includes("should be different"))
+    return "La contraseña nueva tiene que ser distinta de la anterior.";
   if (m.includes("fetch")) return "No hay conexión con el servidor. Revisa tu internet.";
   return message;
+}
+
+/**
+ * Campo de contraseña con un botón para verla: en el celular es fácil
+ * equivocarse una letra sin darse cuenta.
+ */
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <label className={styles.field}>
+      {label}
+      <span className={styles.passwordWrap}>
+        <input
+          className={styles.input}
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          minLength={6}
+          required
+        />
+        <button
+          type="button"
+          className={styles.reveal}
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Ocultar la contraseña" : "Mostrar la contraseña"}
+          aria-pressed={visible}
+        >
+          {visible ? "Ocultar" : "Ver"}
+        </button>
+      </span>
+    </label>
+  );
 }
 
 /**
@@ -36,11 +83,21 @@ function friendlyError(message: string): string {
  * de una a la otra. El formulario arranca plegado, para no empujar el
  * progreso hacia abajo; `?ingresar=1` en la dirección lo abre (lo usan los
  * enlaces de "Ingresar").
+ *
+ * Recuperar la contraseña: "¿Olvidaste tu contraseña?" pide el correo y
+ * Supabase manda un enlace que vuelve aquí con `?nueva=1`. El cliente de
+ * Supabase canjea solo el código del enlace por una sesión de recuperación;
+ * con esa sesión y `?nueva=1`, en vez de la cuenta se muestra el formulario
+ * de la contraseña nueva. Para que el enlace funcione, la dirección del
+ * sitio tiene que estar en Supabase, en Authentication → URL Configuration →
+ * Redirect URLs (ver README).
  */
 export function AccountSection() {
   const { user, loading } = useSession();
   const progress = useProgress();
   const params = useSearchParams();
+  const router = useRouter();
+  const recovering = params.get("nueva") === "1";
   const [open, setOpen] = useState(() => params.get("ingresar") === "1");
   const [mode, setMode] = useState<Mode>("ingresar");
   const [name, setName] = useState("");
@@ -60,7 +117,17 @@ export function AccountSection() {
     setInfo(null);
     const supabase = createClient();
     try {
-      if (mode === "ingresar") {
+      if (mode === "recuperar") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/progreso?nueva=1`,
+        });
+        if (error) throw error;
+        // Supabase no dice si el correo existe (para no revelar cuentas):
+        // el mensaje tampoco.
+        setInfo(
+          "Si hay una cuenta con ese correo, te llegó un enlace para crear una contraseña nueva. Ábrelo en este mismo navegador. Revisa también la carpeta de spam.",
+        );
+      } else if (mode === "ingresar") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
@@ -91,7 +158,71 @@ export function AccountSection() {
     setBusy(false);
   }
 
+  async function savePassword(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const { error } = await createClient().auth.updateUser({ password });
+      if (error) throw error;
+      setPassword("");
+      setInfo("Listo: tu contraseña cambió. La próxima vez ingresa con la nueva.");
+      // Fuera de la dirección del enlace: recargar no vuelve a pedirla.
+      router.replace("/progreso");
+    } catch (e) {
+      setError(friendlyError(e instanceof Error ? e.message : String(e)));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) return null;
+
+  // Volvió del enlace del correo: la sesión de recuperación ya está abierta.
+  if (user && recovering) {
+    return (
+      <section className={styles.card}>
+        <p className={styles.lead}>
+          Crea una contraseña nueva para <strong>{user.email}</strong>.
+        </p>
+        <form className={styles.form} onSubmit={savePassword} style={{ marginTop: "0.9rem" }}>
+          <PasswordField
+            label="Contraseña nueva"
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+          />
+          <button className={styles.primary} type="submit" disabled={busy}>
+            {busy ? "Un momento…" : "Guardar la contraseña"}
+          </button>
+        </form>
+        {error && <p className={`${styles.note} ${styles.error}`}>{error}</p>}
+      </section>
+    );
+  }
+
+  // Abrió el enlace en otro navegador (o venció): no hay sesión para cambiarla.
+  if (!user && recovering && !open) {
+    return (
+      <section className={styles.card}>
+        <p className={`${styles.note} ${styles.error}`}>
+          El enlace no sirvió: puede que haya vencido o que lo hayas abierto en otro navegador.
+          Pide uno nuevo desde el mismo navegador donde lo vas a abrir.
+        </p>
+        <div className={styles.row} style={{ marginTop: "0.8rem" }}>
+          <button
+            className={styles.primary}
+            onClick={() => {
+              setOpen(true);
+              setMode("recuperar");
+            }}
+          >
+            Pedir otro enlace
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   if (user) {
     return (
@@ -99,6 +230,12 @@ export function AccountSection() {
         <p className={styles.lead}>
           Ingresaste como <strong>{displayName(user)}</strong> ({user.email}). Tus retos se
           guardan en tu cuenta y los ves desde cualquier dispositivo.
+          {info && (
+            <>
+              <br />
+              <span className={styles.okText}>{info}</span>
+            </>
+          )}
         </p>
         <button className={styles.secondary} onClick={signOut} disabled={busy}>
           {busy ? "Un momento…" : "Cerrar sesión"}
@@ -136,7 +273,7 @@ export function AccountSection() {
             <button
               className={styles.tab}
               role="tab"
-              aria-selected={mode === "ingresar"}
+              aria-selected={mode !== "registrar"}
               onClick={() => setMode("ingresar")}
             >
               Ingresar
@@ -175,21 +312,38 @@ export function AccountSection() {
                 required
               />
             </label>
-            <label className={styles.field}>
-              Contraseña
-              <input
-                className={styles.input}
-                type="password"
+            {mode === "recuperar" ? (
+              <p className={styles.lead}>
+                Escribe el correo de tu cuenta y te mandamos un enlace para crear una
+                contraseña nueva.
+              </p>
+            ) : (
+              <PasswordField
+                label="Contraseña"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={setPassword}
                 autoComplete={mode === "ingresar" ? "current-password" : "new-password"}
-                minLength={6}
-                required
               />
-            </label>
+            )}
             <button className={styles.primary} type="submit" disabled={busy}>
-              {busy ? "Un momento…" : mode === "ingresar" ? "Ingresar" : "Crear cuenta"}
+              {busy
+                ? "Un momento…"
+                : mode === "ingresar"
+                  ? "Ingresar"
+                  : mode === "registrar"
+                    ? "Crear cuenta"
+                    : "Mandarme el enlace"}
             </button>
+            {mode === "ingresar" && (
+              <button type="button" className={styles.linkButton} onClick={() => setMode("recuperar")}>
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
+            {mode === "recuperar" && (
+              <button type="button" className={styles.linkButton} onClick={() => setMode("ingresar")}>
+                ← Volver a ingresar
+              </button>
+            )}
           </form>
 
           {error && <p className={`${styles.note} ${styles.error}`}>{error}</p>}
