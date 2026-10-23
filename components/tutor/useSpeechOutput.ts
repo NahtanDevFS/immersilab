@@ -2,6 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chooseVoice } from "@/lib/narration/useNarration";
+import { probeReport } from "@/lib/debug/deviceProbe";
+
+/** Para el modo diagnóstico: qué pasó con la última frase del tutor. */
+function reportVoice(estado: string, extra: Record<string, unknown> = {}) {
+  probeReport({
+    vozTutor: {
+      estado,
+      voces: window.speechSynthesis.getVoices().length,
+      hablando: window.speechSynthesis.speaking,
+      ...extra,
+    },
+  });
+}
 
 /**
  * Salida de voz del tutor (TTS) con cola por oración — PLAN_DESARROLLO.md §4.4.
@@ -83,9 +96,11 @@ function playNext(player: Player) {
   utterance.rate = 1.02;
   utterance.pitch = 1.05;
 
+  reportVoice("pedida", { voz: voice?.name ?? "(la del sistema)", lang: utterance.lang });
   let started = false;
   utterance.onstart = () => {
     started = true;
+    reportVoice("sonando", { voz: voice?.name ?? "(la del sistema)" });
     if (mine !== player.generation) window.speechSynthesis.cancel();
   };
   let done = false;
@@ -94,8 +109,14 @@ function playNext(player: Player) {
     done = true;
     if (mine === player.generation) playNext(player);
   };
-  utterance.onend = next;
-  utterance.onerror = next;
+  utterance.onend = () => {
+    reportVoice("terminó");
+    next();
+  };
+  utterance.onerror = (event) => {
+    reportVoice("error", { error: event.error });
+    next();
+  };
 
   player.current = utterance;
   window.speechSynthesis.speak(utterance);
@@ -145,6 +166,7 @@ function installSpeechUnlock() {
     const silent = new SpeechSynthesisUtterance(" ");
     silent.volume = 0;
     window.speechSynthesis.speak(silent);
+    reportVoice("desbloqueada con un toque");
   };
   events.forEach((name) => window.addEventListener(name, unlock, { capture: true, passive: true }));
 }

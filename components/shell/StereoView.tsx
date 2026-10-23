@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { readPad } from "./gamepad";
 import { selectGazed, setPadHeldReader, setScreenHeld, updateGaze } from "@/lib/view/gaze";
 import { getVisorSettings, useCalibrating } from "@/lib/view/visorSettings";
+import { probeReport } from "@/lib/debug/deviceProbe";
 
 /** Separación entre los ojos, en metros (la escena está en metros). */
 const EYE_SEPARATION = 0.064;
@@ -137,6 +138,20 @@ function prepareEyes(
   gl.getDrawingBufferSize(parts.buffer);
   const eyeWidth = Math.max(1, Math.floor(parts.buffer.x / 2));
   const eyeHeight = Math.max(1, Math.floor(parts.buffer.y));
+  if (parts.left.width !== eyeWidth || parts.left.height !== eyeHeight) {
+    // Para el modo diagnóstico: con qué resolución se dibuja cada ojo (el
+    // texto borroso en algunos celulares).
+    const { distortion, zoom } = getVisorSettings();
+    probeReport({
+      resolucionVR: {
+        pixelesPorPunto: gl.getPixelRatio(),
+        pantalla: `${parts.buffer.x}x${parts.buffer.y}`,
+        ojo: `${eyeWidth}x${eyeHeight}`,
+        curvatura: distortion,
+        zoom,
+      },
+    });
+  }
   sizeTarget(parts.left, eyeWidth, eyeHeight);
   sizeTarget(parts.right, eyeWidth, eyeHeight);
 }

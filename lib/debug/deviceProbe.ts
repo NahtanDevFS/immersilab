@@ -22,13 +22,28 @@ const EVERY_MS = 500;
  * con cada arreglo que haya que probar en el aparato: si el log llega con una
  * marca vieja, el celular sigue con la página de antes (hay que recargarla).
  */
-export const CODE_STAMP = "2026-10-21 · luces falsas en el lobby";
+export const CODE_STAMP = "2026-10-23 · diagnóstico de voz y resolución";
 
 /** Lo que cada pantalla informa de sí misma (vista, giroscopio, cámara). */
 const report: Record<string, unknown> = {};
 
 export function probeReport(values: Record<string, unknown>) {
   Object.assign(report, values);
+}
+
+/**
+ * Qué aparato es, en pocas palabras: el modelo no lo da ningún navegador,
+ * pero sí si es iPhone, Android o computadora, y la densidad de la
+ * pantalla. Sirve para separar en el registro las pruebas de cada uno.
+ */
+if (typeof window !== "undefined") {
+  const ua = navigator.userAgent;
+  report.aparato = {
+    sistema: /iPhone|iPad|iPod/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Mac OS X/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "otro",
+    navegador: /CriOS|Chrome\//.test(ua) ? "Chrome" : /FxiOS|Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "otro",
+    dpr: window.devicePixelRatio,
+    nucleos: navigator.hardwareConcurrency,
+  };
 }
 
 export function probeEnabled(): boolean {

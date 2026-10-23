@@ -333,6 +333,9 @@ bucle, durante la tormenta, aparece "Apagar los switches".
 - [ ] *iPhone:* tocar la pantalla una vez y después preguntarle al tutor:
       su voz se escucha (antes no se escuchaba). Revisar también que el
       volumen del celular esté arriba.
+- [ ] *Control ImmersiLab en el teléfono (Android):* el clic del stick
+      izquierdo centra la vista y el del derecho oculta y muestra los paneles
+      en el visor (fuera del visor, entra al visor).
 - [ ] *Mando Pro de Switch (o de Xbox / PlayStation):* A elige, B mantenido
       habla con el tutor (ZR también), X y el clic del stick izquierdo
       centran la vista, Y y el clic del stick derecho ocultan y muestran los

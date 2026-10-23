@@ -64,7 +64,7 @@
  * lectura: así se ve si el celular ya tiene el último arreglo o sigue con la
  * página vieja en memoria. Subirla cada vez que cambia la lectura de ejes.
  */
-export const PAD_READER_VERSION = "ESP32 reconocido en la compu por e502/bbab (2026-10-22)";
+export const PAD_READER_VERSION = "clics de los sticks en el 10 y el 11 en Android (2026-10-23)";
 
 const DEADZONE = 0.15;
 
@@ -334,7 +334,11 @@ function readEsp32(pad: Gamepad): PadState {
 
   // Botones en orden fijo: principal, secundario, clic izq, clic der.
   const pressed = (i: number) => pad.buttons[i]?.pressed ?? false;
-  const [clickLeft, clickRight] = standard
+  // En Android con 4 ejes (sin mapeo estándar, 17 botones) los clics llegan
+  // donde los pone un mando estándar: el registro del modo diagnóstico solo
+  // muestra el 11 al apretar un stick (2026-10-23). Se leían en 13 y 14,
+  // como en la compu, y los clics no hacían nada en el teléfono.
+  const [clickLeft, clickRight] = standard || pad.axes.length < 6
     ? [pressed(10), pressed(11)] // v2 en Android
     : pad.buttons.length >= 15
       ? [pressed(13), pressed(14)] // v2 en la compu
