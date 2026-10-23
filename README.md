@@ -118,7 +118,7 @@ Controles:
 
 | | Visor + control | Computadora |
 |---|---|---|
-| Mirar | Girar la cabeza | Arrastrar con el mouse |
+| Mirar | Girar la cabeza | Arrastrar con el mouse, o el stick derecho a los lados si hay un control |
 | Caminar | Stick izquierdo | W A S D o flechas (Shift corre) |
 | Caminar en el celular sin control | — | El joystick de la pantalla, abajo a la izquierda |
 | Bajar y subir la vista | Stick derecho arriba o abajo (centrar la vista vuelve a la altura de los ojos) | Q / E, la rueda del mouse o el stick derecho del control |

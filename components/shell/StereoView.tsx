@@ -19,12 +19,24 @@ const EYE_SEPARATION = 0.064;
 const VR_FOV = 75;
 
 /**
- * Resolución en la vista VR: la del celular, hasta 3 píxeles por punto.
- * Fuera del visor se limita a 1.5–2 para ahorrar batería, pero en el visor
- * cada ojo tiene media pantalla y el lente la agranda: con 1.5 las letras
- * quedaban con tan pocos píxeles que costaba distinguirlas.
+ * Resolución en la vista VR, píxeles por punto: la misma en todos los
+ * celulares (o la de la pantalla, si es menor). Fuera del visor depende del
+ * nivel de calidad (1.5 o 2) para ahorrar batería, pero en el visor cada ojo
+ * tiene media pantalla y el lente la agranda: con 1.5 el texto se veía
+ * borroso. Pasaba en un iPhone 16 Plus: Safari no informa memoria ni núcleos
+ * reales, el teléfono quedaba en calidad baja y el visor dibujaba a 1.5 en
+ * una pantalla de 3, mientras un Poco X7 Pro (calidad alta) dibujaba a 2.
+ *
+ * Lo aplican los shells en el `dpr` del <Canvas>: antes se pedía desde aquí
+ * con setDpr (hasta 3), pero el <Canvas> vuelve a aplicar su propio `dpr` en
+ * cada render y lo pisaba sin avisar. Se fue subiendo de a poco, probando
+ * en un Poco X7 Pro: con 2 (60–90 fps en el lobby del visor) faltaba
+ * nitidez, con 2.25 seguía fluido pero el texto chico no se veía del todo
+ * nítido. Se probó 2.4 y quedó en 2.35 con los textos más chicos del visor
+ * agrandados (eso ayudaba más que seguir subiendo). 2.35 son 1.38 veces los
+ * píxeles de 2; 3 serían 2.25 veces.
  */
-const VR_MAX_DPR = 3;
+export const VR_DPR = 2.35;
 
 /**
  * Cambia el campo visual y devuelve el que tenía. Fuera del componente a
@@ -172,14 +184,8 @@ export function StereoView() {
   const gl = useThree((state) => state.gl);
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
-  const setDpr = useThree((state) => state.setDpr);
   const calibrating = useCalibrating();
 
-  useEffect(() => {
-    const previous = gl.getPixelRatio();
-    setDpr(Math.min(window.devicePixelRatio || 1, VR_MAX_DPR));
-    return () => setDpr(previous);
-  }, [gl, setDpr]);
 
   const parts = useMemo(() => {
     const stereo = new THREE.StereoCamera();

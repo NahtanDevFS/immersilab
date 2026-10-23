@@ -14,7 +14,7 @@ import { GamepadStatus } from "./GamepadStatus";
 import { OrientationGate } from "./OrientationGate";
 import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
-import { StereoView } from "./StereoView";
+import { StereoView, VR_DPR } from "./StereoView";
 import { VrButton, VrExit } from "./VrControls";
 import { exitVr, useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -51,10 +51,10 @@ export function LobbyShell() {
   const view = useViewMode();
   const vr = view === "vr";
   useDeviceProbe();
-  useEffect(() => {
-    probeReport({ pantalla: "lobby", vista: view, giroscopio: permission });
-  }, [view, permission]);
   const quality = useQualityTier();
+  useEffect(() => {
+    probeReport({ pantalla: "lobby", vista: view, giroscopio: permission, calidad: quality });
+  }, [view, permission, quality]);
 
   // Tutorial de entrada: la primera vez en este dispositivo, o al pedirlo.
   const tutorialSeen = useSyncExternalStore(
@@ -153,11 +153,15 @@ export function LobbyShell() {
           style={{ zIndex: 0 }}
           /* "soft" = PCFSoftShadowMap: bordes de sombra suaves. En gama baja
              se cae a PCF normal, que es más barato y más duro. */
-          shadows={quality === "high" ? "soft" : true}
+          /* Sin sombras: en el pasillo el efecto de sombra ya lo dan las
+             luces horneadas (LobbyScene), y el mapa de sombras era de lo más
+             caro de la pantalla más pesada del visor (~26 fps en un Poco
+             X7 Pro, contra 58–63 en los experimentos). */
+          shadows={false}
           /* Sin este tope, una pantalla de celular con DPR 3 renderiza 9x
              los píxeles de uno con DPR 1 — es la causa número uno de que
              una escena 3D se arrastre en móvil. */
-          dpr={[1, quality === "high" ? 2 : 1.5]}
+          dpr={[1, vr ? VR_DPR : quality === "high" ? 2 : 1.5]}
           camera={{
             position: [0, 1.6, startZ],
             fov: 55,

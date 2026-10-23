@@ -121,7 +121,7 @@ export function ChatPanel3D() {
       visible.forEach((m) => {
         if (m.speaker) {
           items.push(
-            <VrText key={`s-${m.key}`} position={[left, y, 0]} anchorY="top" fontSize={0.024} color={m.color}>
+            <VrText key={`s-${m.key}`} position={[left, y, 0]} anchorY="top" fontSize={0.028} color={m.color}>
               {m.speaker}
             </VrText>,
           );

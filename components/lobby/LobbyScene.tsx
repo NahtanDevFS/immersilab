@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { useTiledPbrTexture } from "../shell/useTiledPbrTexture";
 import { useBounds } from "@/lib/collision/useCollider";
 import { Door } from "./Door";
+import { useViewMode } from "@/lib/view/viewMode";
 import { lobbyDoors } from "./catalog";
 import {
   CORRIDOR_BACK_Z,
@@ -141,7 +142,6 @@ export function LobbyScene() {
         <mesh
           key={side}
           position={[side * (CORRIDOR_HALF_W - 0.03), 0.06, MID_Z]}
-          castShadow
         >
           <boxGeometry args={[0.06, 0.12, LENGTH]} />
           <meshStandardMaterial
@@ -189,21 +189,23 @@ export function LobbyScene() {
  * - LightPools: un charco de luz pintado en el piso bajo cada luminaria. No
  *   calcula nada, solo se suma al color del piso; desde lejos el pasillo se
  *   ve iluminado igual que antes.
- * - NearbyLampLights: solo 4 luces reales, que se ubican en las luminarias
- *   más cercanas al jugador. Son las que iluminan de verdad lo que está al
- *   lado (puertas, objetos, las paredes cercanas).
+ * - NearbyLampLights: UNA sola luz real, en la luminaria más cercana al
+ *   jugador: es la que ilumina de verdad lo que está al lado (la puerta, el
+ *   piso a los pies). Eran 4; se bajó a 1 para el visor, donde el pasillo es
+ *   la pantalla más pesada.
  */
 
 /** Cuántas luces reales hay en total, vayan donde vayan. */
-const REAL_LIGHTS = 4;
+const REAL_LIGHTS = 1;
 /**
- * Las luces reales se apagan suave con la distancia al jugador: enteras
- * hasta FADE_START y en cero a FADE_END. Con luminarias cada 4 m, la quinta
- * más cercana siempre está a 8 m o más, así que al cambiar una luz de
- * luminaria nunca se ve un salto: la que se va ya estaba apagada.
+ * La luz se apaga suave al alejarse de su luminaria: entera hasta
+ * FADE_START y en cero a mitad de camino hasta la siguiente (FADE_END). Ahí
+ * es donde la más cercana pasa a ser la otra, así que al cambiar de
+ * luminaria la luz ya está apagada y no se ve un salto. Caminando, se nota
+ * como pasar bajo una lámpara: un poco más de luz debajo de cada una.
  */
-const FADE_START = 5;
-const FADE_END = LAMP_SPACING * 2;
+const FADE_START = 0.6;
+const FADE_END = LAMP_SPACING / 2;
 /** Lo que antes daban las dos luces de cada luminaria, juntas en una. */
 const LAMP_INTENSITY = 3;
 /**
@@ -231,12 +233,12 @@ function NearbyLampLights() {
         continue;
       }
       light.position.z = lamp.z;
-      const fade = THREE.MathUtils.clamp((FADE_END - lamp.d) / (FADE_END - FADE_START), 0, 1);
+      const fade = 1 - THREE.MathUtils.smoothstep(lamp.d, FADE_START, FADE_END);
       light.intensity = LAMP_INTENSITY * fade;
     }
   });
 
-  // Siempre las mismas 4: cambiar cuántas luces hay obliga a three.js a
+  // Siempre las mismas: cambiar cuántas luces hay obliga a three.js a
   // recompilar todos los materiales, que es un tirón de medio segundo.
   return (
     <>
@@ -341,13 +343,12 @@ function LightPools() {
  *  las paredes, porque un piso que refleja igual que la pared no se lee como
  *  piso. */
 function Floor() {
-  const tex = useTiledPbrTexture("/textures/lab-wall/fabric_081c", 2, 10, true);
+  const tex = useLobbySurface(useTiledPbrTexture("/textures/lab-wall/fabric_081c", 2, 10, true));
 
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, 0, MID_Z]}
-      receiveShadow
     >
       <planeGeometry args={[CORRIDOR_WIDTH, LENGTH]} />
       <meshStandardMaterial
@@ -371,7 +372,7 @@ function Walls() {
   // ángulo rasante, que es como se ve una pared de pasillo casi todo el
   // tiempo. El `ao` va cargado porque en una superficie mate es lo único que
   // le da relieve al tejido.
-  const tex = useTiledPbrTexture("/textures/lab-wall/fabric_081c", 8, 2, true);
+  const tex = useLobbySurface(useTiledPbrTexture("/textures/lab-wall/fabric_081c", 8, 2, true));
 
   return (
     <>
@@ -385,6 +386,18 @@ function Walls() {
 
 type PbrTex = ReturnType<typeof useTiledPbrTexture>;
 
+/**
+ * En la vista VR, las superficies del pasillo van sin mapa de relieve. Son
+ * casi toda la pantalla, y el relieve es la textura más cara por píxel; con
+ * la escena dibujada dos veces (un ojo cada vez) el pasillo era lo más pesado
+ * del visor. A través de los lentes la tela de cerca se ve apenas más plana.
+ * Fuera del visor queda igual que siempre.
+ */
+function useLobbySurface(tex: PbrTex): PbrTex {
+  const vr = useViewMode() === "vr";
+  return vr ? { ...tex, normalMap: null as unknown as PbrTex["normalMap"] } : tex;
+}
+
 function SideWall({ side, tex }: { side: number; tex: PbrTex }) {
   const x = side * CORRIDOR_HALF_W;
 
@@ -392,7 +405,6 @@ function SideWall({ side, tex }: { side: number; tex: PbrTex }) {
     <mesh
       position={[x, CORRIDOR_HEIGHT / 2, MID_Z]}
       rotation={[0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
-      receiveShadow
     >
       <planeGeometry args={[LENGTH, CORRIDOR_HEIGHT]} />
       <meshStandardMaterial
@@ -412,7 +424,7 @@ function EndWalls({ tex }: { tex: PbrTex }) {
   return (
     <>
       {[END_Z, CORRIDOR_BACK_Z].map((z) => (
-        <mesh key={z} position={[0, CORRIDOR_HEIGHT / 2, z]} receiveShadow>
+        <mesh key={z} position={[0, CORRIDOR_HEIGHT / 2, z]}>
           <planeGeometry args={[CORRIDOR_WIDTH, CORRIDOR_HEIGHT]} />
           <meshStandardMaterial
             {...tex}

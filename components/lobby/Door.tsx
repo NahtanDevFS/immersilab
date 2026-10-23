@@ -1,12 +1,11 @@
 "use client";
 
-import { Suspense, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Billboard } from "@react-three/drei";
+import { Billboard, useTexture } from "@react-three/drei";
 import { VrText } from "@/components/vr/VrText";
 import * as THREE from "three";
-import { useTiledPbrTexture } from "../shell/useTiledPbrTexture";
 import { DOOR_HEIGHT, DOOR_WIDTH } from "./corridor";
 import { saveReturnDoor } from "./returnSpot";
 
@@ -72,6 +71,33 @@ interface Props {
  * se lee como cartón; lo que la hace parecer madera pintada es justamente
  * que la rugosidad siga siendo la de la madera.
  */
+/**
+ * La madera de la hoja, liviana: solo el color y la rugosidad (que da los
+ * reflejos de las vetas). Antes también cargaba el mapa de relieve (1.4 MB,
+ * el más pesado de los tres) con anisotropía 8; sobre una hoja casi negra
+ * casi no se notaba, y el pasillo es la pantalla más pesada del visor.
+ * Las 20 puertas comparten las mismas texturas (useTexture las cachea).
+ */
+function useDoorTexture() {
+  const [map, roughnessMap] = useTexture([
+    "/textures/door/wood_028_diff.jpg",
+    "/textures/door/wood_028_rough.jpg",
+  ]);
+  useEffect(() => {
+    for (const tex of [map, roughnessMap]) {
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(1, 2);
+      tex.anisotropy = 2;
+      tex.needsUpdate = true;
+    }
+    /* eslint-disable react-hooks/immutability */
+    map.colorSpace = THREE.SRGBColorSpace;
+    roughnessMap.colorSpace = THREE.NoColorSpace;
+    /* eslint-enable react-hooks/immutability */
+  }, [map, roughnessMap]);
+  return { map, roughnessMap };
+}
+
 export function Door({
   href,
   name,
@@ -85,7 +111,7 @@ export function Door({
 
   // 1 repetición: la hoja mide ~1×2.25 m y la textura ~1 m — tilearla más
   // haría un patrón visible de tablas chicas que no existe en una puerta.
-  const wood = useTiledPbrTexture("/textures/door/wood_028", 1, 2);
+  const wood = useDoorTexture();
 
   const frameRef = useRef<THREE.MeshStandardMaterial>(null);
   const triggered = useRef(false);
@@ -154,7 +180,6 @@ export function Door({
         <mesh
           key={side}
           position={[(side * (frameW - 0.045)) / 2, frameH / 2, 0.02]}
-          castShadow
         >
           <boxGeometry args={[0.045, frameH, FRAME_DEPTH]} />
           <meshStandardMaterial
@@ -166,7 +191,7 @@ export function Door({
           />
         </mesh>
       ))}
-      <mesh position={[0, frameH - 0.02, 0.02]} castShadow>
+      <mesh position={[0, frameH - 0.02, 0.02]}>
         <boxGeometry args={[frameW, 0.045, FRAME_DEPTH]} />
         <meshStandardMaterial
           color="#20242c"
@@ -177,7 +202,7 @@ export function Door({
       </mesh>
 
       {/* La hoja. */}
-      <mesh position={[0, DOOR_HEIGHT / 2, 0]} castShadow receiveShadow>
+      <mesh position={[0, DOOR_HEIGHT / 2, 0]}>
         <boxGeometry args={[DOOR_WIDTH, DOOR_HEIGHT, LEAF_THICKNESS]} />
         <meshStandardMaterial
           {...wood}
@@ -196,7 +221,6 @@ export function Door({
       <mesh
         position={[DOOR_WIDTH / 2 - 0.14, 1.05, LEAF_THICKNESS / 2 + 0.03]}
         rotation={[Math.PI / 2, 0, 0]}
-        castShadow
       >
         <cylinderGeometry args={[0.02, 0.02, 0.13, 10]} />
         <meshStandardMaterial color="#b9c0cc" metalness={0.95} roughness={0.2} />

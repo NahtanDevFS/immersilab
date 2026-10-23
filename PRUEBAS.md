@@ -314,6 +314,10 @@ bucle, durante la tormenta, aparece "Apagar los switches".
       Windows lo muestre como "Unknown Gamepad").
 - [ ] Stick izquierdo arriba camina hacia adelante, y a los lados va hacia
       los lados (no al revés).
+- [ ] Stick derecho a los lados gira la vista (lento con poco empuje, rápido
+      a fondo), y el mouse sigue funcionando: cada uno sigue donde lo dejó
+      el otro. En el visor y en el celular con giroscopio el stick a los
+      lados NO gira (ahí cambia variables o mueve el cursor, como antes).
 - [ ] Stick derecho arriba o abajo sube y baja la cámara (en el lobby, sin
       pasar el techo).
 - [ ] A toca lo que está bajo el cursor, B mantenido habla con el tutor y el

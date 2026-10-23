@@ -272,7 +272,9 @@ export function VrHud(props: Props) {
         ]}
         footer={
           narration.voiceName ? (
-            <VrText anchorX="center" fontSize={0.026} color="#93a1be" maxWidth={1.2} textAlign="center">
+            // Más grande y más claro que antes (0.026 gris): era de lo que
+            // costaba leer en el visor.
+            <VrText anchorX="center" fontSize={0.034} color="#c4cde0" maxWidth={1.2} textAlign="center">
               {`Voz: ${narration.voiceName}`}
             </VrText>
           ) : undefined
@@ -992,9 +994,9 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
       <VrText
         key="invitado"
         position={[left, y + 0.02, 0]}
-        fontSize={0.026}
+        fontSize={0.029}
         maxWidth={column - 0.1}
-        color="#93a1be"
+        color="#a9b5cc"
       >
         Sin cuenta, tu progreso se guarda solo en este dispositivo. Para ingresar, sal del visor.
       </VrText>,

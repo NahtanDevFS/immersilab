@@ -8,7 +8,7 @@ import { Header } from "./Header";
 import { LabBackground } from "./LabBackground";
 import { LabLighting } from "./LabLighting";
 import { PostFX } from "./PostFX";
-import { StereoView } from "./StereoView";
+import { StereoView, VR_DPR } from "./StereoView";
 import { VrButton, VrExit } from "./VrControls";
 import { exitVr, useViewMode } from "@/lib/view/viewMode";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -84,8 +84,8 @@ export function ExperimentShell({
   // Modo diagnóstico (?diagnostico=1): manda lo que lee el celular al servidor.
   useDeviceProbe();
   useEffect(() => {
-    probeReport({ pantalla: "experimento", experimento: experiment.slug, vista: view, giroscopio: permission });
-  }, [experiment.slug, view, permission]);
+    probeReport({ pantalla: "experimento", experimento: experiment.slug, vista: view, giroscopio: permission, calidad: quality });
+  }, [experiment.slug, view, permission, quality]);
   // hoveredKey: qué slider está bajo el cursor ahora mismo (stick derecho
   // del control, con el celular en la mano) — se usa para resaltarlo.
   // En la vista VR no hay cursor: se apunta con la mira (lib/view/gaze.ts).
@@ -254,7 +254,7 @@ export function ExperimentShell({
              debajo, sin tocar cada etiqueta. */
           style={{ zIndex: 0 }}
           shadows={quality === "high" ? "soft" : true}
-          dpr={[1, quality === "high" ? 2 : 1.5]}
+          dpr={[1, vr ? VR_DPR : quality === "high" ? 2 : 1.5]}
           camera={{
             position: experiment.cameraView?.position ?? [8, 5, 10],
             fov: 50,

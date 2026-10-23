@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
-import { useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { isDrawing } from "@/lib/view/drawing";
+import { useViewMode } from "@/lib/view/viewMode";
+import { readPad } from "./gamepad";
 
 /** Radianes por píxel arrastrado. */
 const SENSITIVITY = 0.004;
 /** Tope para mirar arriba/abajo: pasar de la vertical da vuelta la cámara. */
 const MAX_PITCH = (85 * Math.PI) / 180;
+/** Giro con el stick derecho a fondo, radianes por segundo (~115°/s). */
+const STICK_TURN_SPEED = 2;
 
 interface Props {
   /** Punto al que mira la cámara al arrancar. */
@@ -30,19 +34,35 @@ interface Props {
  * La vista sigue al mouse: arrastrar a la derecha mira a la derecha y
  * arrastrar hacia arriba mira hacia arriba, como girar la cabeza. (Se probó
  * al revés, "agarrando el mundo" como Street View, y se sentía invertido.)
+ *
+ * Con un control, el stick derecho a los lados también gira, como en
+ * cualquier juego con mando: antes en la compu se caminaba con el control
+ * pero para girar había que ir al mouse. Arriba y abajo queda para subir y
+ * bajar la cámara (MovementController); gana el eje que más se empuja, así
+ * un movimiento no arrastra al otro. Solo fuera de la vista VR: ahí el stick
+ * a los lados cambia la variable que se mira, y se gira con la cabeza.
+ *
+ * Este componente solo se monta SIN giroscopio (la compu, o un celular que
+ * no lo entrega): con el celular en la mano o en el visor no existe, y nada
+ * de esto lo toca.
  */
 export function DragLookControls({ target }: Props) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
+  const vr = useViewMode() === "vr";
   const [tx, ty, tz] = target;
+  // Lo comparten el arrastre (eventos) y el stick (cada cuadro): así uno
+  // sigue donde lo dejó el otro.
+  const look = useRef({ yaw: 0, pitch: 0, euler: new THREE.Euler(0, 0, 0, "YXZ") });
 
   useEffect(() => {
     camera.lookAt(tx, ty, tz);
     // YXZ: primero el giro horizontal (yaw), después el vertical (pitch),
     // sin inclinación lateral. Es el orden de una cabeza humana.
-    const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, "YXZ");
-    let yaw = euler.y;
-    let pitch = euler.x;
+    const state = look.current;
+    const euler = state.euler.setFromQuaternion(camera.quaternion, "YXZ");
+    state.yaw = euler.y;
+    state.pitch = euler.x;
 
     let dragging: number | null = null;
     let lastX = 0;
@@ -73,13 +93,13 @@ export function DragLookControls({ target }: Props) {
       // En three, yaw positivo gira a la izquierda y pitch positivo mira
       // arriba; en pantalla, x crece a la derecha e y crece hacia abajo.
       // Por eso los dos se restan.
-      yaw -= (event.clientX - lastX) * SENSITIVITY;
-      pitch -= (event.clientY - lastY) * SENSITIVITY;
-      pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch));
+      state.yaw -= (event.clientX - lastX) * SENSITIVITY;
+      state.pitch -= (event.clientY - lastY) * SENSITIVITY;
+      state.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, state.pitch));
       lastX = event.clientX;
       lastY = event.clientY;
 
-      euler.set(pitch, yaw, 0, "YXZ");
+      euler.set(state.pitch, state.yaw, 0, "YXZ");
       camera.quaternion.setFromEuler(euler);
     };
 
@@ -103,6 +123,20 @@ export function DragLookControls({ target }: Props) {
       canvas.style.removeProperty("cursor");
     };
   }, [camera, canvas, tx, ty, tz]);
+
+  useFrame((_, delta) => {
+    if (vr) return;
+    const pad = readPad();
+    if (!pad) return;
+    const { x, y } = pad.right;
+    // Solo si se empuja más hacia los lados que hacia arriba o abajo (eso
+    // sube y baja la cámara). Al cuadrado: con poco empuje gira lento.
+    if (x === 0 || Math.abs(x) <= Math.abs(y)) return;
+    const state = look.current;
+    state.yaw -= x * Math.abs(x) * STICK_TURN_SPEED * delta;
+    state.euler.set(state.pitch, state.yaw, 0, "YXZ");
+    camera.quaternion.setFromEuler(state.euler);
+  });
 
   return null;
 }

@@ -360,13 +360,15 @@ export function SidePanel({
             <planeGeometry args={[width, HANDLE_HEIGHT]} />
             <meshBasicMaterial ref={handleMaterial} color={HANDLE_IDLE} toneMapped={false} />
           </mesh>
+          {/* Más corto que antes, para que entre con letra más grande en el
+              panel más angosto (1 m). */}
           <VrText
             position={[0, top + HANDLE_HEIGHT / 2 + 0.008, 0]}
             anchorX="center"
-            fontSize={0.026}
-            color="#93a1be"
+            fontSize={0.03}
+            color="#a9b5cc"
           >
-            Mover: mantén A en esta barra · Acercar: mantén A sobre el panel
+            Mantén A aquí para mover · sobre el panel, para acercar
           </VrText>
           {children}
         </group>

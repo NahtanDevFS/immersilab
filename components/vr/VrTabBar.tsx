@@ -176,11 +176,11 @@ export function VrTabBar({
         <group position={[0, 0, -BAR_DISTANCE]} scale={PANEL_SCALE}>
           {/* La franja para arrastrar la barra, detrás del texto de ayuda. */}
           <mesh ref={handle} position={[0, 0, -0.005]}>
-            <planeGeometry args={[0.95, 0.045]} />
+            <planeGeometry args={[1.1, 0.05]} />
             <meshBasicMaterial ref={handleMaterial} color={HANDLE_IDLE} transparent opacity={0.85} toneMapped={false} />
           </mesh>
-          <VrText anchorX="center" fontSize={0.022} color="#93a1be">
-            Mira una pestaña y aprieta A · mantén A aquí para subir o bajar la barra
+          <VrText anchorX="center" fontSize={0.027} color="#a9b5cc">
+            Mira una pestaña y aprieta A · mantén A aquí para mover la barra
           </VrText>
         </group>
       </group>
