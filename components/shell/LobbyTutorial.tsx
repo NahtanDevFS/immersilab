@@ -157,8 +157,8 @@ export function LobbyTutorial({ gyroActive, looked, walked, onClose }: Props) {
     talk: {
       title: "Pregúntale al tutor",
       body: pad
-        ? "Dentro de cada experimento, mantén presionado B, pregunta en voz alta y suéltalo: el tutor te responde. Para cancelar la pregunta, aprieta A sin soltar B. Mientras habla, B lo calla."
-        : "Dentro de cada experimento, mantén presionado el botón del micrófono, pregunta en voz alta y suéltalo: el tutor te responde. El botón de al lado cancela la pregunta o lo calla.",
+        ? "Aquí en el pasillo o dentro de un experimento, mantén presionado B, pregunta en voz alta y suéltalo: el tutor te responde. Para cancelar la pregunta, aprieta A sin soltar B. Mientras habla, B lo calla."
+        : "Aquí en el pasillo o dentro de un experimento, mantén presionado el botón del micrófono, pregunta en voz alta y suéltalo: el tutor te responde. El botón de al lado cancela la pregunta o lo calla.",
     },
     doors: {
       title: "Entra a un experimento",

@@ -320,6 +320,24 @@ bucle, durante la tormenta, aparece "Apagar los switches".
       clic del stick izquierdo centra la vista.
 - [ ] Después, en el celular, todo sigue funcionando igual que antes.
 
+## 8. Tutor en el lobby y mandos de consola
+
+- [ ] En el lobby (después del tutorial de entrada) aparece el botón del
+      tutor. Preguntarle por los controles ("¿cómo subo la cámara?") y qué
+      experimento elegir ("quiero practicar derivadas"): responde con los
+      controles y los experimentos reales.
+- [ ] Mientras está el tutorial de entrada, B lo salta y el tutor NO se pone
+      a escuchar.
+- [ ] En el lobby del visor, a la izquierda, el panel de la conversación con
+      el tutor; mantener B le pregunta.
+- [ ] *iPhone:* tocar la pantalla una vez y después preguntarle al tutor:
+      su voz se escucha (antes no se escuchaba). Revisar también que el
+      volumen del celular esté arriba.
+- [ ] *Mando Pro de Switch (o de Xbox / PlayStation):* A elige, B mantenido
+      habla con el tutor (ZR también), X y el clic del stick izquierdo
+      centran la vista, Y y el clic del stick derecho ocultan y muestran los
+      paneles en el visor.
+
 ## Anotar lo que falle
 
 Para cada falla: qué aparato, qué experimento, qué se hizo y qué pasó. Con

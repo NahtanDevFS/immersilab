@@ -41,7 +41,9 @@ export const TUTOR_LIMITS = {
    * anterior se cortaban y el tutor perdía justo el final, que suele traer
    * las confusiones típicas y qué no debe dar resuelto.
    */
-  hintsChars: 3500,
+  // Las del lobby (controles y el catálogo de los 20 experimentos) rondan
+  // los 4100. Van en el system prompt, que Gemini reutiliza entre preguntas.
+  hintsChars: 4500,
   /** Estado del experimento + panel. El más grande (Ondas) ronda 1500. */
   contextChars: 6000,
   historyTurns: 20,

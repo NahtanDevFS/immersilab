@@ -32,6 +32,7 @@ import { useQualityTier } from "./useQualityTier";
 import { useDeviceOrientation } from "./useDeviceOrientation";
 import { LobbyScene } from "@/components/lobby/LobbyScene";
 import { LobbyVrHud } from "@/components/vr/LobbyVrHud";
+import { LobbyTutor } from "@/components/tutor/LobbyTutor";
 import { readReturnZ } from "@/components/lobby/returnSpot";
 import styles from "./ExperimentShell.module.css";
 
@@ -199,6 +200,11 @@ export function LobbyShell() {
         <TouchJoystick enabled={!vr} />
 
         {vr && <VrExit />}
+
+        {/* El tutor también en el pasillo: controles, qué experimento elegir.
+            No mientras está el tutorial de entrada (fuera del visor), porque
+            ahí B salta el tutorial y además se pondría a escuchar. */}
+        {(tutorialSeen || vr) && <LobbyTutor vr={vr} />}
 
         <LoadingOverlay label="ImmersiLab" />
       </div>

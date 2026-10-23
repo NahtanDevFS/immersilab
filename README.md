@@ -29,8 +29,10 @@ Gemini) que responde con los valores actuales del experimento.
   en la entrada. Las luminarias usan iluminación "horneada" (charcos de luz
   pintados y solo cuatro luces reales que siguen al jugador), para que el
   pasillo vaya fluido en un celular de gama media.
-- **Tutor por voz:** se mantiene presionado el botón del micrófono (o el
-  botón B del control), se pregunta en voz alta y responde hablando.
+- **Tutor por voz**, en cada experimento y también en el lobby (ahí
+  responde sobre los controles, qué experimento elegir y cómo funciona el
+  laboratorio): se mantiene presionado el botón del micrófono (o el botón B
+  del control), se pregunta en voz alta y responde hablando.
   Comenta solo cuando se logra un reto. Mientras se mantiene el botón, una
   pausa para pensar no corta la pregunta (también en Android, donde Chrome
   corta solo el reconocimiento). El servidor descarta las respuestas en las
@@ -121,8 +123,17 @@ Controles:
 | Caminar en el celular sin control | — | El joystick de la pantalla, abajo a la izquierda |
 | Bajar y subir la vista | Stick derecho arriba o abajo (centrar la vista vuelve a la altura de los ojos) | Q / E, la rueda del mouse o el stick derecho del control |
 | Cursor | Stick derecho; A (✕ en PlayStation) para tocar | Mouse |
-| Tutor | Mantener B | Mantener el botón del micrófono |
+| Tutor | Mantener B (en un mando de Xbox, PlayStation o Switch, también el gatillo derecho) | Mantener el botón del micrófono |
+| Centrar la vista | Clic del stick izquierdo (o X en un mando de consola) | El botón "Centrar la vista" |
+| Mostrar u ocultar paneles (visor) | Clic del stick derecho (o Y en un mando de consola) | — |
 | Cancelar al tutor | Mantener B y apretar A | La ✕ junto al micrófono o Esc |
+
+En iPhone el control ImmersiLab no funciona: iOS solo acepta los mandos de
+su lista (Xbox, PlayStation, Switch, MFi) y no le pasa los genéricos a
+ninguna app. Con un mando Pro de Switch sí funciona, con las mismas letras de
+la ayuda. La voz del tutor en iPhone se habilita con el primer toque en la
+pantalla (es una regla de Safari): con el visor y el control, tocar la
+pantalla al menos una vez, por ejemplo al entrar al visor.
 
 El control ImmersiLab (ESP32) se reconoce solo en el celular y en la
 computadora. En Windows, Chrome no muestra su nombre (aparece como

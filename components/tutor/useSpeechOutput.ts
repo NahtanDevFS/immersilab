@@ -121,8 +121,37 @@ function playNext(player: Player) {
   player.watchdog = window.setTimeout(check, 1000);
 }
 
+let unlockInstalled = false;
+
+/**
+ * iPhone (Safari, y todos los navegadores de iOS): la voz solo suena si la
+ * PRIMERA frase se pide dentro de un toque. La explicación arranca con un
+ * toque ("Escuchar") y sonaba; el tutor habla cuando llega la respuesta del
+ * servidor, segundos después, y iOS la silenciaba sin avisar. Apretar un
+ * botón del control no cuenta como toque.
+ *
+ * Por eso, en el primer toque, clic o tecla de la página se dice una frase
+ * vacía y muda: con eso la voz queda habilitada para el resto de la visita.
+ * En los demás navegadores no cambia nada.
+ */
+function installSpeechUnlock() {
+  if (unlockInstalled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  unlockInstalled = true;
+  const events = ["pointerdown", "touchend", "keydown"] as const;
+  const unlock = () => {
+    events.forEach((name) => window.removeEventListener(name, unlock, true));
+    // Si ya hay algo sonando, la voz ya está habilitada: no interrumpirla.
+    if (window.speechSynthesis.speaking) return;
+    const silent = new SpeechSynthesisUtterance(" ");
+    silent.volume = 0;
+    window.speechSynthesis.speak(silent);
+  };
+  events.forEach((name) => window.addEventListener(name, unlock, { capture: true, passive: true }));
+}
+
 export function useSpeechOutput() {
   const [speaking, setSpeaking] = useState(false);
+  useEffect(installSpeechUnlock, []);
   const player = useRef<Player>({
     queue: [],
     playing: false,

@@ -10,6 +10,7 @@ import { VisorCalibration } from "./VisorCalibration";
 import { displayName, useSession } from "@/lib/progress/useSession";
 import { GazeButton } from "./GazeButton";
 import { SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
+import { CHAT_WIDTH, ChatPanel3D } from "./ChatPanel3D";
 import { VrText } from "./VrText";
 import { VrCard } from "./VrCard";
 
@@ -75,7 +76,7 @@ export function LobbyVrHud({
     ],
     ["Elegir", pad ? "mira un botón y presiona A." : "mira un botón y toca la pantalla."],
     ["Entrar", "camina hasta una puerta y quédate mirándola un momento: cada una es un experimento."],
-    ["Tutor", "adentro, mantén B mientras preguntas. A sin soltar B cancela; B lo calla mientras habla."],
+    ["Tutor", "mantén B mientras preguntas, aquí o adentro. A sin soltar B cancela; B lo calla mientras habla."],
     ["Paneles", "adentro, las pestañas de abajo los abren. Y (clic del stick derecho) los oculta; A sobre su barra de arriba los mueve."],
     ["Acercar", "mantén A (o el dedo) mirando un panel y se agranda para leerlo."],
     ["Altura", "stick derecho arriba o abajo te sube o te baja; centrar la vista vuelve a la altura de los ojos."],
@@ -117,7 +118,7 @@ export function LobbyVrHud({
 
   return (
     <Suspense fallback={null}>
-      <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado" hidden={calibrating || pending !== null}>
+      <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado. A tu izquierda, el tutor: mantén B para preguntarle" hidden={calibrating || pending !== null}>
         <SidePanel id="lobby" side="right" angle={SIDE_START} width={PANEL_WIDTH} top={0.07}>
           <mesh position={[0, -height / 2 + 0.07, -0.01]}>
             <planeGeometry args={[PANEL_WIDTH, height]} />
@@ -178,6 +179,11 @@ export function LobbyVrHud({
               fontSize={0.032}
             />
           ))}
+        </SidePanel>
+        {/* La conversación con el tutor, a la izquierda (la ayuda está a la
+            derecha). Se le habla manteniendo B, como en los experimentos. */}
+        <SidePanel id="lobby-tutor" side="left" angle={SIDE_START} width={CHAT_WIDTH} top={0.07}>
+          <ChatPanel3D />
         </SidePanel>
       </VrDashboard>
       <VisorCalibration />

@@ -203,11 +203,29 @@ function readStandard(pad: Gamepad): PadState {
       y: deadzone(pad.axes[ry] ?? 0),
     },
     action: pad.buttons[0]?.pressed ?? false,
-    talk: pad.buttons[7]?.pressed ?? false,
+    // B mantenido (como en el control ImmersiLab, que es lo que dice la
+    // ayuda) o el gatillo derecho (R2 / RT / ZR).
+    talk: (pad.buttons[1]?.pressed ?? false) || (pad.buttons[7]?.pressed ?? false),
     cancelTalk: false,
     rawAxes: pad.axes,
-    rawButtons: pad.buttons.map((b) => b.pressed),
+    rawButtons: standardButtons(pad),
   };
+}
+
+/**
+ * Los botones de un mando estándar, con los clics de los sticks sumados a
+ * los botones que hacen lo mismo en el control ImmersiLab: el clic del
+ * izquierdo (10) también centra la vista (X, índice 2) y el del derecho (11)
+ * también muestra u oculta los paneles (Y, índice 3). Así la ayuda en
+ * pantalla vale para cualquier mando. Probado con un mando Pro de Switch en
+ * iPhone (iOS respeta las letras de Nintendo: A=0, B=1, X=2, Y=3).
+ */
+function standardButtons(pad: Gamepad): boolean[] {
+  const buttons = pad.buttons.map((b) => b.pressed);
+  if (pad.mapping !== "standard") return buttons;
+  buttons[2] = buttons[2] || (buttons[10] ?? false);
+  buttons[3] = buttons[3] || (buttons[11] ?? false);
+  return buttons;
 }
 
 function deadzone(value: number) {
