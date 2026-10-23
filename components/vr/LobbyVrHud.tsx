@@ -13,7 +13,15 @@ import { SIDE_START, SidePanel, VrDashboard } from "./VrDashboard";
 import { VrText } from "./VrText";
 import { VrCard } from "./VrCard";
 
+/**
+ * Dos columnas: la ayuda a la izquierda (WIDTH) y los botones y la cuenta a
+ * la derecha (ACTIONS_WIDTH). Antes iba todo en una sola, una debajo de la
+ * otra, y la ventana quedaba tan alta que para leer el final había que bajar
+ * mucho la cabeza.
+ */
 const WIDTH = 1.25;
+const ACTIONS_WIDTH = 0.78;
+const PANEL_WIDTH = WIDTH + ACTIONS_WIDTH;
 const LINE = 0.075;
 /**
  * Cuántos caracteres entran por renglón en la columna del texto (a 0.033 de
@@ -80,9 +88,11 @@ export function LobbyVrHud({
     { href: "/progreso", label: "Mi progreso" },
     { href: "/cuenta", label: user ? "Mi cuenta" : "Ingresar" },
   ];
-  const accountWidth = (WIDTH - 0.1 - 0.03 * (accountButtons.length - 1)) / accountButtons.length;
+  const actionsX = PANEL_WIDTH / 2 - ACTIONS_WIDTH / 2;
+  const buttonWidth = ACTIONS_WIDTH - 0.1;
+  const accountWidth = (buttonWidth - 0.03 * (accountButtons.length - 1)) / accountButtons.length;
 
-  const left = -WIDTH / 2 + 0.05;
+  const left = -PANEL_WIDTH / 2 + 0.05;
   const lineY: number[] = [];
   let linesEnd = -0.1;
   for (const [, text] of lines) {
@@ -96,20 +106,31 @@ export function LobbyVrHud({
     { id: "visor", label: "Ajustar el visor", onSelect: () => setCalibrating(true) },
     { id: "salir-visor", label: "Salir del visor", onSelect: () => void exitVr() },
   ];
-  const accountTitleY = linesEnd - 0.03 - buttons.length * BUTTON;
-  const accountY = accountTitleY - 0.08;
-  const height = -accountY + 0.15;
+  // Columna derecha: arranca a la altura de la primera fila de ayuda.
+  const buttonsTop = -0.1;
+  const accountTitleY = buttonsTop - buttons.length * BUTTON + 0.02;
+  // El texto de la cuenta ocupa dos renglones en la columna angosta.
+  const accountY = accountTitleY - 0.13;
+  const height = Math.max(-linesEnd + 0.03, -accountY + 0.1) + 0.07;
 
   return (
     <Suspense fallback={null}>
       <VrDashboard intro="A tu derecha: cómo moverte y el recorrido guiado" hidden={calibrating || pending !== null}>
-        <SidePanel id="lobby" side="right" angle={SIDE_START} width={WIDTH} top={0.07}>
+        <SidePanel id="lobby" side="right" angle={SIDE_START} width={PANEL_WIDTH} top={0.07}>
           <mesh position={[0, -height / 2 + 0.07, -0.01]}>
-            <planeGeometry args={[WIDTH, height]} />
+            <planeGeometry args={[PANEL_WIDTH, height]} />
             <meshBasicMaterial color="#131b2e" transparent opacity={0.95} toneMapped={false} />
+          </mesh>
+          {/* Separador entre las dos columnas. */}
+          <mesh position={[PANEL_WIDTH / 2 - ACTIONS_WIDTH, -height / 2 + 0.05, -0.008]}>
+            <planeGeometry args={[0.004, height - 0.08]} />
+            <meshBasicMaterial color="#2a3550" toneMapped={false} />
           </mesh>
           <VrText position={[left, 0, 0]} fontSize={0.045} color="#93a1be">
             CÓMO MOVERTE
+          </VrText>
+          <VrText position={[actionsX - buttonWidth / 2, 0, 0]} fontSize={0.045} color="#93a1be">
+            OPCIONES
           </VrText>
           {lines.map(([label, text], i) => (
             <group key={label} position={[0, lineY[i], 0]}>
@@ -126,14 +147,20 @@ export function LobbyVrHud({
               key={button.id}
               label={button.label}
               onSelect={button.onSelect}
-              position={[0, linesEnd - 0.03 - i * BUTTON, 0]}
-              width={WIDTH - 0.1}
+              position={[actionsX, buttonsTop - i * BUTTON, 0]}
+              width={buttonWidth}
               height={0.09}
-              fontSize={0.036}
+              fontSize={0.032}
               primary={button.primary}
             />
           ))}
-          <VrText position={[left, accountTitleY, 0]} fontSize={0.03} color="#93a1be">
+          <VrText
+            position={[actionsX - buttonWidth / 2, accountTitleY, 0]}
+            anchorY="top"
+            fontSize={0.03}
+            maxWidth={buttonWidth}
+            color="#93a1be"
+          >
             {user
               ? `Cuenta: ${displayName(user)} (se abre fuera del visor)`
               : "Invitado (la cuenta se abre fuera del visor)"}
@@ -143,7 +170,7 @@ export function LobbyVrHud({
               key={button.href}
               label={button.label}
               onSelect={() => setPending(button)}
-              position={[-WIDTH / 2 + 0.05 + accountWidth / 2 + i * (accountWidth + 0.03), accountY, 0]}
+              position={[actionsX - buttonWidth / 2 + accountWidth / 2 + i * (accountWidth + 0.03), accountY, 0]}
               width={accountWidth}
               height={0.085}
               fontSize={0.032}

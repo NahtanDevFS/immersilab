@@ -17,8 +17,11 @@ limpio, en la consola del navegador: `localStorage.clear()`.
       60°, pasa solo a "Camina".
 - [ ] **Caminar:** al caminar unos 2 m con WASD (o el stick), pasa a
       "Pregúntale al tutor".
-- [ ] Los textos coinciden con el aparato: mouse/teclado en la compu; cabeza,
-      stick y botón B en el visor con control.
+- [ ] Los textos coinciden con el aparato: mouse/teclado en la compu (con
+      Q y E o la rueda para subir y bajar la cámara), y cabeza, stick y botón
+      B en el visor con control. El paso del tutor dice cómo cancelar la
+      pregunta (A sin soltar B) y el de las puertas, que hay que quedarse
+      mirándola un momento.
 - [ ] *Celular sin control:* en "Camina" pide arrastrar el joystick de abajo
       a la izquierda, y el paso se completa caminando. Al apretar un botón
       del control, el joystick desaparece y el texto cambia al del stick.
@@ -37,6 +40,16 @@ limpio, en la consola del navegador: `localStorage.clear()`.
       principio.
 - [ ] Caminar hacia una puerta y mirarla de frente: brilla y entra al
       experimento.
+- [ ] Volver al lobby desde un experimento: se aparece en el centro del
+      pasillo, frente a la puerta de ese experimento, mirando hacia el fondo
+      (sin volver a entrar solo). Al abrir la app de nuevo se empieza en la
+      entrada.
+- [ ] Los carteles de las puertas quedan siempre sobre su puerta (también al
+      aparecer frente a una puerta), giran hacia el jugador y no se meten en
+      la pared.
+- [ ] El pasillo se ve iluminado parejo hasta el fondo: todas las luminarias
+      encendidas igual y un halo de luz en el techo y en el piso bajo cada
+      una.
 - [ ] No se atraviesan las paredes.
 
 ## 2. En cada experimento (los 20)
@@ -125,7 +138,11 @@ Los paneles abiertos no tapan la barra (si uno es alto, sube solo). La
 barra se sube o se baja manteniendo A sobre la franja del texto de ayuda y
 queda guardada; "Acomodar los paneles" la devuelve a su lugar. El stick derecho a la derecha sube el
 valor de la variable que se mira; arriba y abajo sube y baja la cámara. B
-mantenido habla con el tutor.
+mantenido habla con el tutor. La acción principal de debajo de la barra solo
+aparece cuando el experimento tiene una sola. En OSI, mientras se eligen los
+protocolos, y en Enrutamiento, mientras se elige el camino, no aparece
+ninguna ("Otro mensaje" y "Otro paquete" salen al terminar). En Rompe el
+bucle, durante la tormenta, aparece "Apagar los switches".
 
 ## 3. Tutor por voz
 
@@ -133,6 +150,18 @@ mantenido habla con el tutor.
       entendió y la respuesta se va diciendo por oraciones.
 - [ ] Apretar mientras habla lo corta (y empieza a escuchar).
 - [ ] Sin internet: avisa que no se puede conectar, no se queda colgado.
+- [ ] Con internet, si algo falla, NO dice "revisa la conexión": una pregunta
+      rechazada pide repetirla más corta y un error del servidor dice que el
+      tutor no está disponible.
+- [ ] *Celular (Chrome en Android):* mantener B, decir parte de la pregunta,
+      hacer una pausa de unos segundos y seguir. La pregunta llega completa
+      recién al soltar.
+- [ ] *Celular:* lo que entendió no repite palabras ("Hola Hola cómo…") ni
+      palabras cortas ("y y y"). Probar una pregunta con "y" y "en" en medio.
+- [ ] Preguntas de cálculo (por ejemplo, en Llena el tanque: "con 10 litros
+      por segundo, ¿qué tan rápido sube a 1.5 metros?"): responde en español,
+      con el número correcto (0.57 cm/s), sin texto en inglés ni repasos de
+      reglas, y sin quedar a media oración.
 - [ ] Al lograr un reto sin internet: dice "¡Reto logrado!" y se calla, sin
       mensaje de error.
 
@@ -171,10 +200,9 @@ mantenido habla con el tutor.
       (Cobertura, Espectro, Tiro parabólico). Si va lento, probar `?q=low`.
 - [ ] Los textos se leen bien a través de los lentes.
 - [ ] Vista VR: mirando al frente no se ve ningún panel, solo la escena
-      (y al empezar, un aviso de dónde está cada cosa). Girando la cabeza a
-      la izquierda, las variables; a la derecha, retos y acciones, y más a
-      la derecha el resultado y los botones generales. Al girar para mirar
-      un panel, el panel no se aleja.
+      (y al empezar, un aviso de dónde está cada cosa). Bajando un poco la
+      vista, la barra de pestañas. Cada pestaña abre su panel al frente (ver
+      la sección 2). Al girar para mirar un panel, el panel no se aleja.
 - [ ] Al entrar a un experimento aparece la explicación adelante;
       "Entendido" la cierra y "Ver la explicación" (a la derecha) la reabre.
 - [ ] "Preguntar al tutor": tocarlo, hablar, tocarlo de nuevo; responde.
@@ -211,17 +239,17 @@ mantenido habla con el tutor.
       completa del celular).
 - [ ] Con el control: el stick izquierdo a fondo un momento corre; soltarlo
       un poco vuelve a caminar.
-- [ ] En el visor, stick derecho arriba o abajo sube o baja los paneles y
-      las tarjetas; "Centrar la vista" los devuelve.
+- [ ] En el visor, stick derecho arriba o abajo sube o baja la cámara.
+      "Centrar la vista" vuelve a la altura de los ojos.
 - [ ] En el lobby, Mi progreso / Mi cuenta preguntan antes de salir del
       visor; "Quedarme en el visor" cancela.
 - [ ] Mantener A (o el dedo) mirando un panel: a los ~0.3 s se acerca y se
       agranda; al soltar vuelve a su lugar. Sobre un botón no pasa (el
       botón se toca normal).
-- [ ] Al bajar la vista aparece el panel del resultado con los botones
-      generales, entre ellos "Salir del visor", que vuelve a la vista
-      normal. En el celular ya no aparece la ✕ de arriba.
-- [ ] "Ajustar el visor" (panel del resultado o panel del lobby) muestra una
+- [ ] La pestaña "Menú" tiene los botones generales, entre ellos "Salir del
+      visor", que vuelve a la vista normal. En el celular ya no aparece la ✕
+      de arriba.
+- [ ] "Ajustar el visor" (pestaña Menú o panel del lobby) muestra una
       cuadrícula. Con "Separación de los lentes" se logra verla una sola y
       nítida (sin visión doble); con "Corrección de la curvatura", sus líneas
       se ven rectas hasta los bordes. Con "Corrección de color" (en un sentido
@@ -240,6 +268,40 @@ mantenido habla con el tutor.
       continua (lento con poco empuje, rápido a fondo). En las listas pasa
       de una opción a otra; en Sí/No, derecha = Sí, izquierda = No.
 - [ ] Latencia del tutor: cuánto tarda en empezar a responder.
+- [ ] Fluidez del lobby en el visor: con `?diagnostico=1`, caminar el pasillo
+      completo y revisar los fps en `.debug/device.log` (antes de las luces
+      horneadas, la mediana era de unos 20 fps).
+- [ ] En el lobby del visor, el panel "Cómo moverte": ninguna fila se encima
+      con la siguiente (algunas ocupan dos o tres renglones). Va en dos
+      columnas (la ayuda a la izquierda, "Opciones" y la cuenta a la
+      derecha) y se lee entero sin bajar mucho la cabeza.
+- [ ] Pestaña Retos en el visor: los retos a la izquierda y las acciones a
+      la derecha, en columnas. Con Variables y Retos abiertas a la vez, los
+      paneles no se enciman.
+- [ ] Panel de variables en el visor: un título de grupo nunca queda solo
+      al final de una columna (en Ley de la fuerza, "TU PREDICCIÓN" va arriba
+      de la segunda columna junto con sus dos variables).
+- [ ] Cualquier botón, en el visor o en la pantalla, responde al apretarlo:
+      en el visor se hunde y destella un instante; en la pantalla se achica y
+      se aclara mientras se aprieta. Probar "Soltar" en Ley de la fuerza con
+      la caja que no se mueve (madera a 20°): igual se nota que se apretó.
+- [ ] Botones − y + de las variables: cada toque mueve el paso mínimo de la
+      variable (en la aceleración predicha, 0.01). El stick derecho sigue
+      sirviendo para los cambios grandes.
+
+## 7. Control en la computadora
+
+*Solo en la PC, con el control ImmersiLab emparejado por Bluetooth.*
+
+- [ ] El indicador de arriba lo reconoce como el control ImmersiLab (aunque
+      Windows lo muestre como "Unknown Gamepad").
+- [ ] Stick izquierdo arriba camina hacia adelante, y a los lados va hacia
+      los lados (no al revés).
+- [ ] Stick derecho arriba o abajo sube y baja la cámara (en el lobby, sin
+      pasar el techo).
+- [ ] A toca lo que está bajo el cursor, B mantenido habla con el tutor y el
+      clic del stick izquierdo centra la vista.
+- [ ] Después, en el celular, todo sigue funcionando igual que antes.
 
 ## Anotar lo que falle
 

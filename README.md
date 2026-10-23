@@ -24,10 +24,18 @@ Gemini) que responde con los valores actuales del experimento.
   - **Electrónica:** protoboard con multímetro (Ohm y Kirchhoff), fuente de
     poder con osciloscopio (de alterna a continua), compuertas lógicas, el
     contador (flip-flops y contadores de módulo N).
-- **Lobby** en 3D con una puerta por experimento: se entra caminando.
+- **Lobby** en 3D con una puerta por experimento: se entra caminando. Al
+  volver de un experimento se aparece en el pasillo frente a su puerta, no
+  en la entrada. Las luminarias usan iluminación "horneada" (charcos de luz
+  pintados y solo cuatro luces reales que siguen al jugador), para que el
+  pasillo vaya fluido en un celular de gama media.
 - **Tutor por voz:** se mantiene presionado el botón del micrófono (o el
   botón B del control), se pregunta en voz alta y responde hablando.
-  Comenta solo cuando se logra un reto.
+  Comenta solo cuando se logra un reto. Mientras se mantiene el botón, una
+  pausa para pensar no corta la pregunta (también en Android, donde Chrome
+  corta solo el reconocimiento). El servidor descarta las respuestas en las
+  que el modelo escribe su razonamiento en vez de la respuesta, y manda solo
+  oraciones completas.
 - **Progreso:** sin cuenta se guarda en el dispositivo; con cuenta se guarda
   en Supabase y se ve desde cualquier lado (`/progreso`). Lo logrado como
   invitado pasa a la cuenta al ingresar.
@@ -102,8 +110,23 @@ Controles:
 | Tutor | Mantener B | Mantener el botón del micrófono |
 | Cancelar al tutor | Mantener B y apretar A | La ✕ junto al micrófono o Esc |
 
-Algunos atajos por URL, útiles para depurar en el dispositivo: `?q=low` o
-`?q=high` fuerzan la calidad gráfica (queda guardada).
+El control ImmersiLab (ESP32) se reconoce solo en el celular y en la
+computadora. En Windows, Chrome no muestra su nombre (aparece como
+"Unknown Gamepad (Vendor: e502 Product: bbab)"), así que se reconoce por esos
+dos códigos. Los sticks y los botones funcionan igual que en el celular.
+
+Algunos atajos por URL, útiles para depurar en el dispositivo:
+
+- `?q=low` o `?q=high` fuerzan la calidad gráfica (queda guardada).
+- `?diagnostico=1` activa el modo diagnóstico: con `npm run dev`, el aparato
+  manda dos veces por segundo lo que lee (control, toques, cámara, fps) y el
+  servidor lo agrega a `.debug/device.log`. Sirve para ver qué pasa en el
+  visor sin poder mirar la pantalla.
+
+En desarrollo, además, cada respuesta del tutor queda en `.debug/tutor.log`:
+la pregunta tal como se entendió, cómo terminó (`STOP` es lo normal,
+`MAX_TOKENS` es que se quedó sin espacio) y lo que se cortó si el modelo
+escribió su razonamiento. La carpeta `.debug/` no se sube al repositorio.
 
 ## Comandos
 

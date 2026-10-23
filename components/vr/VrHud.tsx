@@ -73,6 +73,14 @@ const SHARED_PANEL_SCALE = 1.0;
 /** Hueco entre paneles vecinos, grados. */
 const PANEL_GAP = 3;
 const PANEL_DISTANCE_M = 1.3;
+/**
+ * Los paneles van inclinados hacia arriba (su borde de arriba a 14°, más si
+ * son altos y suben). Un panel plano inclinado ocupa más ángulo a los lados
+ * en su parte alta: calculando el ancho a la altura de los ojos, las
+ * esquinas de arriba de dos paneles anchos vecinos se enciman. Se reparte
+ * como si estuvieran a esta inclinación, que cubre la de casi todos.
+ */
+const LAYOUT_PITCH = 25;
 
 /** El orden de la barra: los paneles abiertos quedan en el mismo orden, de izquierda a derecha. */
 const TAB_ORDER: VrTab[] = ["variables", "retos", "resultado", "tutor", "menu"];
@@ -85,7 +93,8 @@ const TAB_ORDER: VrTab[] = ["variables", "retos", "resultado", "tutor", "menu"];
  */
 function layoutPanels(open: VrTab[], widthOf: (tab: VrTab) => number, scale: number): Map<VrTab, number> {
   const ordered = TAB_ORDER.filter((t) => open.includes(t));
-  const angle = (tab: VrTab) => (2 * Math.atan((widthOf(tab) * scale) / 2 / PANEL_DISTANCE_M) * 180) / Math.PI;
+  const distance = PANEL_DISTANCE_M * Math.cos((LAYOUT_PITCH * Math.PI) / 180);
+  const angle = (tab: VrTab) => (2 * Math.atan((widthOf(tab) * scale) / 2 / distance) * 180) / Math.PI;
   const total = ordered.reduce((sum, t) => sum + angle(t), 0) + PANEL_GAP * Math.max(0, ordered.length - 1);
   const yaws = new Map<VrTab, number>();
   let edge = total / 2;
@@ -95,8 +104,20 @@ function layoutPanels(open: VrTab[], widthOf: (tab: VrTab) => number, scale: num
   }
   return yaws;
 }
-/** Ancho del panel de retos y acciones. */
+/** Ancho de la columna de retos. */
 const CHALLENGES_WIDTH = 1.15;
+/**
+ * Ancho de la columna de acciones, a la derecha de los retos. Antes iban
+ * debajo: con cinco retos y varias acciones el panel medía casi dos metros
+ * de alto y para ver las de abajo había que bajar mucho la cabeza.
+ */
+const ACTIONS_COLUMN_WIDTH = 0.95;
+
+/** Retos y acciones van lado a lado si el experimento tiene acciones. */
+function challengesPanelWidth(props: Pick<Props, "vrActions" | "extraActions">): number {
+  const hasActions = Boolean(props.vrActions) || (props.extraActions?.length ?? 0) > 0;
+  return hasActions ? CHALLENGES_WIDTH + ACTIONS_COLUMN_WIDTH : CHALLENGES_WIDTH;
+}
 
 interface Props {
   engine: ExperimentEngine;
@@ -161,7 +182,7 @@ export function VrHud(props: Props) {
     tab === "variables"
       ? variablesPanelWidth(props.schema)
       : tab === "retos"
-        ? CHALLENGES_WIDTH
+        ? challengesPanelWidth(props)
         : tab === "tutor"
           ? CHAT_WIDTH
           : CENTER_WIDTH;
@@ -613,14 +634,13 @@ function formatNumber(value: number): string {
 }
 
 /**
- * Cuánto mueve cada toque de − o +. El paso del slider es muy fino para esto
- * (0.01 en un rango de 0 a 1 serían cien toques): se usa más o menos un
- * cuarentavo del rango, redondeado a un múltiplo del paso original.
+ * Cuánto mueve cada toque de − o +: el paso mínimo de la variable. Antes era
+ * un cuarentavo del rango (0.25 en una aceleración de 0 a 10 con paso 0.01)
+ * y no había forma de dejar un valor exacto: el stick es para acercarse
+ * rápido y los botones, para el ajuste fino.
  */
 function increment(def: VariableDefinition): number {
-  const step = def.step ?? 0.1;
-  const range = (def.max ?? 100) - (def.min ?? 0);
-  return Math.max(step, Math.round(range / 40 / step) * step);
+  return def.step ?? 0.1;
 }
 
 /** Las filas del panel de variables (con los títulos de grupo) en columnas. */
@@ -632,8 +652,21 @@ function variableColumns(schema: VariablesSchema): Row[][] {
     lastGroup = def.group;
     rows.push({ kind: "variable", key, def });
   });
-  const columns: Row[][] = [];
-  for (let i = 0; i < rows.length; i += ROWS_PER_COLUMN) columns.push(rows.slice(i, i + ROWS_PER_COLUMN));
+  // Un título de grupo nunca queda solo al final de una columna: si sería la
+  // última fila, pasa a la siguiente junto con sus variables. Antes, en la
+  // Ley de la fuerza, "TU PREDICCIÓN" quedaba abajo de la primera columna y
+  // sus dos variables arriba de la segunda.
+  const columns: Row[][] = [[]];
+  for (const row of rows) {
+    let column = columns[columns.length - 1];
+    const full = column.length >= ROWS_PER_COLUMN;
+    const orphanTitle = row.kind === "group" && column.length >= ROWS_PER_COLUMN - 1;
+    if (column.length > 0 && (full || orphanTitle)) {
+      column = [];
+      columns.push(column);
+    }
+    column.push(row);
+  }
   return columns;
 }
 
@@ -884,8 +917,12 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
     return () => window.clearInterval(id);
   }, [engine, vrActions]);
 
-  const width = CHALLENGES_WIDTH;
+  const width = challengesPanelWidth({ vrActions, extraActions });
+  const split = width > CHALLENGES_WIDTH;
+  // Columna de los retos (siempre a la izquierda) y la de las acciones: a la
+  // derecha si hay dos columnas, si no, debajo de los retos.
   const left = -width / 2 + 0.05;
+  const column = CHALLENGES_WIDTH;
   const saved = (id: string) => Boolean(progress.completions[completionKey(experimentSlug, id)]);
   const challenges = snapshot.challenges;
   const done = challenges.filter((c) => c.done || saved(c.id)).length;
@@ -910,21 +947,21 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
             <planeGeometry args={[0.04, 0.04]} />
             <meshBasicMaterial color={isDone ? "#34d399" : "#26344e"} toneMapped={false} />
           </mesh>
-          <VrText position={[left + 0.07, 0, 0]} fontSize={0.04} maxWidth={width - 0.16} color={isDone ? "#e7ecf5" : "#c4cde0"}>
+          <VrText position={[left + 0.07, 0, 0]} fontSize={0.04} maxWidth={column - 0.16} color={isDone ? "#e7ecf5" : "#c4cde0"}>
             {c.title.replace(/ ←$/, "")}
           </VrText>
-          <VrText position={[left + 0.07, -0.05, 0]} fontSize={0.028} maxWidth={width - 0.16} color="#93a1be" anchorY="top">
+          <VrText position={[left + 0.07, -0.05, 0]} fontSize={0.028} maxWidth={column - 0.16} color="#93a1be" anchorY="top">
             {isDone && !c.done ? "Ya lo lograste antes." : c.detail}
           </VrText>
-          <mesh position={[left + 0.07 + (width - 0.16) / 2, -0.135, 0]}>
-            <planeGeometry args={[width - 0.16, 0.012]} />
+          <mesh position={[left + 0.07 + (column - 0.16) / 2, -0.135, 0]}>
+            <planeGeometry args={[column - 0.16, 0.012]} />
             <meshBasicMaterial color="#26344e" toneMapped={false} />
           </mesh>
           <mesh
-            position={[left + 0.07 + ((width - 0.16) * fill) / 2, -0.135, 0.001]}
+            position={[left + 0.07 + ((column - 0.16) * fill) / 2, -0.135, 0.001]}
             scale={[Math.max(0.0001, fill), 1, 1]}
           >
-            <planeGeometry args={[width - 0.16, 0.012]} />
+            <planeGeometry args={[column - 0.16, 0.012]} />
             <meshBasicMaterial color={isDone ? "#34d399" : "#2dd4bf"} toneMapped={false} />
           </mesh>
         </group>,
@@ -942,8 +979,8 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
         key="reiniciar-retos"
         label="Reiniciar los retos"
         onSelect={() => engine.resetChallenges?.()}
-        position={[0, y + 0.02, 0]}
-        width={width - 0.1}
+        position={[-width / 2 + column / 2, y + 0.02, 0]}
+        width={column - 0.1}
         height={0.08}
         fontSize={0.032}
       />,
@@ -956,7 +993,7 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
         key="invitado"
         position={[left, y + 0.02, 0]}
         fontSize={0.026}
-        maxWidth={width - 0.1}
+        maxWidth={column - 0.1}
         color="#93a1be"
       >
         Sin cuenta, tu progreso se guarda solo en este dispositivo. Para ingresar, sal del visor.
@@ -965,10 +1002,16 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
     y -= 0.08;
   }
 
+  const challengesEnd = y;
+  const actionsWidth = split ? ACTIONS_COLUMN_WIDTH : column;
+  const actionsX = split ? width / 2 - ACTIONS_COLUMN_WIDTH / 2 : -width / 2 + column / 2;
+  const actionsLeft = actionsX - actionsWidth / 2 + 0.05;
   if (actions.length > 0) {
-    y -= 0.02;
+    // Con dos columnas, las acciones arrancan arriba, a la altura de los retos.
+    if (split) y = 0;
+    else y -= 0.02;
     items.push(
-      <VrText key="titulo-acciones" position={[left, y, 0]} fontSize={0.045} color="#93a1be">
+      <VrText key="titulo-acciones" position={[actionsLeft, y, 0]} fontSize={0.045} color="#93a1be">
         ACCIONES
       </VrText>,
     );
@@ -976,11 +1019,12 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
     actions.forEach((action) => {
       if (action.info) {
         items.push(
-          <VrText key={`a-${action.id}`} position={[left, y, 0]} fontSize={0.034} maxWidth={width - 0.1} color="#f2a65a">
+          <VrText key={`a-${action.id}`} position={[actionsLeft, y, 0]} fontSize={0.034} maxWidth={actionsWidth - 0.1} color="#f2a65a">
             {action.label}
           </VrText>,
         );
-        y -= 0.09;
+        // Un aviso largo ocupa más de un renglón en la columna angosta.
+        y -= 0.05 + 0.04 * Math.ceil(action.label.length / Math.max(1, (actionsWidth - 0.1) / 0.019));
         return;
       }
       items.push(
@@ -988,10 +1032,10 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
           key={`a-${action.id}`}
           label={action.label}
           onSelect={() => action.onSelect?.()}
-          position={[0, y, 0]}
-          width={width - 0.1}
+          position={[actionsX, y, 0]}
+          width={actionsWidth - 0.1}
           height={0.095}
-          fontSize={0.04}
+          fontSize={0.036}
           disabled={action.disabled}
           primary={action.primary}
         />,
@@ -1001,7 +1045,7 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
   }
 
   if (items.length === 0) return null;
-  const height = -y + 0.1;
+  const height = -Math.min(y, challengesEnd) + 0.1;
 
   return (
     <group>
@@ -1009,6 +1053,13 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial color="#131b2e" transparent opacity={0.95} toneMapped={false} />
       </mesh>
+      {split && actions.length > 0 ? (
+        // Separador entre las dos columnas.
+        <mesh position={[width / 2 - ACTIONS_COLUMN_WIDTH, -height / 2 + 0.05, -0.008]}>
+          <planeGeometry args={[0.004, height - 0.08]} />
+          <meshBasicMaterial color="#2a3550" toneMapped={false} />
+        </mesh>
+      ) : null}
       {items}
     </group>
   );

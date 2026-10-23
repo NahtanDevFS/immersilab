@@ -58,3 +58,25 @@ a {
 html {
   color-scheme: dark;
 }
+/*
+ * Respuesta al apretar cualquier botón: se hunde un poco y se aclara.
+ * Hay acciones que a veces no cambian nada en la escena (Soltar con una caja
+ * que la fricción deja quieta, por ejemplo), y sin esto no había forma de
+ * saber si el toque llegó o si el laboratorio se había trabado.
+ */
+button {
+  transition:
+    transform 0.12s ease-out,
+    filter 0.12s ease-out;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.94);
+  filter: brightness(1.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active {
+    transform: none;
+  }
+}

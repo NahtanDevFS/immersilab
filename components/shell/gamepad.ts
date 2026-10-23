@@ -64,7 +64,7 @@
  * lectura: así se ve si el celular ya tiene el último arreglo o sigue con la
  * página vieja en memoria. Subirla cada vez que cambia la lectura de ejes.
  */
-export const PAD_READER_VERSION = "4 ejes + stick der. invertido (2026-10-21)";
+export const PAD_READER_VERSION = "ESP32 reconocido en la compu por e502/bbab (2026-10-22)";
 
 const DEADZONE = 0.15;
 
@@ -230,8 +230,16 @@ const espPads = new Set<string>();
 function isEsp32(pad: Gamepad): boolean {
   // Por nombre, antes que por mapeo: en Android el firmware v2 llega como
   // mando estándar y hay que reconocerlo igual.
-  if (pad.id.toLowerCase().includes("immersilab")) return true;
+  const id = pad.id.toLowerCase();
+  if (id.includes("immersilab")) return true;
   if (pad.mapping === "standard") return false;
+  // En la compu (Windows) Chrome no muestra el nombre: llega como "Unknown
+  // Gamepad (Vendor: e502 Product: bbab)", los códigos que pone la librería
+  // BLE del firmware. Sin esto se leía como un control genérico: sin la
+  // inversión de ejes (el stick izquierdo iba al revés) y con el derecho en
+  // axes[3] y [4], que no se mueven (el firmware lo manda en Z y Rz, que en
+  // la compu son axes[2] y [5]). Medido con el modo diagnóstico, 2026-10-22.
+  if (id.includes("vendor: e502") && id.includes("product: bbab")) return true;
   if (readOverride("pad") === "esp32") return true;
 
   const key = `${pad.index}:${pad.id}`;
