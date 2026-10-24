@@ -19,6 +19,16 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "ImmersiLab",
   description: "Laboratorios interactivos en 3D — Universidad Mariano Gálvez",
+  // Para "Agregar a inicio" en el iPhone (el resto va en app/manifest.ts):
+  // abre como app, sin la barra de Safari, con su ícono y su nombre.
+  appleWebApp: {
+    capable: true,
+    title: "ImmersiLab",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 /**

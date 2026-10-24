@@ -108,6 +108,14 @@ python scripts/generar_migracion_catalogo.py
 
 ## Probar en el celular con el visor
 
+**Instalarla como app (recomendado para el visor):** en Chrome, menú →
+"Instalar app" (o "Agregar a la pantalla principal"); en el iPhone, Safari →
+Compartir → "Agregar a inicio". Abierta desde el ícono arranca a pantalla
+completa, en horizontal y sin las barras del navegador, que en el iPhone es
+la única forma (Safari no deja poner una página a pantalla completa). Es una
+PWA sencilla (`app/manifest.ts` y los íconos en `public/icons/`): sin
+service worker, así que necesita internet igual que en el navegador.
+
 El navegador solo entrega el giroscopio y el micrófono en **HTTPS** o en
 `localhost`. Para abrir el servidor de desarrollo desde el celular hace falta
 un túnel HTTPS (por ejemplo `npx next dev --experimental-https` en la misma

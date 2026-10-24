@@ -243,6 +243,12 @@ bucle, durante la tormenta, aparece "Apagar los switches".
 
 ## 6. Celular y visor
 
+- [ ] *Como app:* en Chrome (Android o PC) aparece "Instalar app"; en el
+      iPhone, Compartir → "Agregar a inicio". El ícono es el sello de la UMG.
+      Abierta desde el ícono, arranca en el lobby a pantalla completa y en
+      horizontal, sin barras del navegador. Revisar que el giroscopio, el
+      micrófono y la voz del tutor funcionen igual desde el ícono (sobre todo
+      en el iPhone).
 - [ ] Fuerza horizontal: en vertical pide girar el celular.
 - [ ] El giroscopio se activa (en iPhone, con el botón "Activar giroscopio").
 - [ ] El control se detecta (indicador arriba al centro).
