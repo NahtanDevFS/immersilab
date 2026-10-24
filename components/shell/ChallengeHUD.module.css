@@ -31,8 +31,7 @@
   gap: 0.5rem;
 }
 
-.toggle,
-.reset {
+.toggle {
   font-family: var(--font-sans);
   cursor: pointer;
 }
@@ -71,14 +70,6 @@
   color: var(--lab-text-muted);
 }
 
-.reset {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  border: 0.5px solid var(--lab-panel-border);
-  background: transparent;
-  color: var(--lab-text-muted);
-  font-size: 0.68rem;
-}
 
 .list {
   list-style: none;

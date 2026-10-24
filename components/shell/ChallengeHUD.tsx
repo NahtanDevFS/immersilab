@@ -159,19 +159,10 @@ export function ChallengeHUD({ engine, experimentSlug }: Props) {
               {collapsed ? "▴" : "▾"}
             </span>
           </button>
-          {!collapsed && engine.resetChallenges && doneCount > 0 && (
-            <button
-              type="button"
-              className={styles.reset}
-              onClick={() => {
-                engine.resetChallenges!();
-                // Que reiniciar no dispare avisos: la línea base se rehace.
-                doneBefore.current = null;
-              }}
-            >
-              Reiniciar
-            </button>
-          )}
+          {/* Ya no hay botón "Reiniciar": borraba los retos de esta visita en el
+              motor, pero quedaban guardados en el progreso y el panel los
+              seguía mostrando con ✓, así que no se notaba nada. Para empezar
+              de cero de verdad está /progreso ("Borrar estos retos"). */}
         </header>
 
         {!collapsed && (

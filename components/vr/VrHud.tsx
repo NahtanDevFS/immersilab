@@ -972,23 +972,9 @@ function ChallengesAndActions({ engine, experimentSlug, vrActions, extraActions 
     });
   }
 
-  // Lo mismo que el panel de retos de la PC: reiniciarlos (si el
-  // experimento lo permite y hay alguno logrado en esta visita) y el aviso
-  // de que sin cuenta el progreso queda solo en este dispositivo.
-  if (engine.resetChallenges && challenges.some((c) => c.done)) {
-    items.push(
-      <GazeButton
-        key="reiniciar-retos"
-        label="Reiniciar los retos"
-        onSelect={() => engine.resetChallenges?.()}
-        position={[-width / 2 + column / 2, y + 0.02, 0]}
-        width={column - 0.1}
-        height={0.08}
-        fontSize={0.032}
-      />,
-    );
-    y -= 0.1;
-  }
+  // Lo mismo que el panel de retos de la PC: el aviso de que sin cuenta el
+  // progreso queda solo en este dispositivo. (Sin "Reiniciar los retos": lo
+  // logrado quedaba guardado y se seguía viendo logrado; ver ChallengeHUD.)
   if (challenges.length > 0 && progress.owner === GUEST) {
     items.push(
       <VrText
