@@ -313,26 +313,33 @@ export function createVlanEngine(): VlanEngine {
     getState(): AIContext {
       const { config, round } = runtime;
       const plan = config.plan;
+      // En el panel, solo lo corto. Lo que pide cada departamento, la tabla
+      // de subredes y el resultado de cada ping están en el pizarrón de la
+      // escena, y la VLAN de cada PC está escrita sobre ella. Todo eso va
+      // igual al tutor (tutorNotes, no se dibuja).
       const result: Record<string, number | string> = {
         ronda: round.title,
+        direcciones_usadas: `${plan.used} de 256`,
+        se_sale_del_bloque: plan.overflow ? "sí" : "no",
+        enlace_troncal: config.trunk ? "sí" : "no",
+        subinterfaces_en_el_router: config.subinterfaces ? "sí" : "no",
+      };
+      const tutorNotes: Record<string, number | string> = {
         pedido: Object.entries(round.hosts).map(([id, h]) => `${SUBNET_NAMES[id]} ${h} hosts`).join(", "),
         tabla: plan.rows
           .map((r) => `${r.name} /${r.prefix} ${r.outside ? "fuera" : r.network.split("/")[0]} (${r.fits ? `sobran ${r.waste}` : "no alcanza"})`)
           .join("; "),
-        direcciones_usadas: `${plan.used} de 256`,
-        se_sale_del_bloque: plan.overflow ? "sí" : "no",
         puertos: PCS.map((p) => `${p.id.toUpperCase()} ${config.vlans[p.id]}`).join(", "),
-        enlace_troncal: config.trunk ? "sí" : "no",
-        subinterfaces_en_el_router: config.subinterfaces ? "sí" : "no",
       };
       if (runtime.results) {
-        result.ultima_prueba = runtime.results.map((r) => `${r.from.toUpperCase()} a ${r.to.toUpperCase()} (${r.kind}): ${r.why}`).join("; ");
+        tutorNotes.ultima_prueba = runtime.results.map((r) => `${r.from.toUpperCase()} a ${r.to.toUpperCase()} (${r.kind}): ${r.why}`).join("; ");
       }
       return {
         experimentName: "Divide la red",
         disciplineName: "Redes",
         variables: lastVariables,
         result,
+        tutorNotes,
         conceptTags: ["subredes", "VLSM", "máscara de subred", "VLAN", "enlace troncal", "router-on-a-stick", "red jerárquica"],
       };
     },

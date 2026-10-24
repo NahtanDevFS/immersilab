@@ -384,15 +384,21 @@ export function createNewtonEngine(): NewtonEngine {
     getState(): AIContext {
       const { config: c, forces: f, last } = runtime;
       const n = (x: number) => Number(x.toFixed(2));
+      // Un poco más corto: la situación, la superficie y la predicción están
+      // en el panel de variables, y en la rampa la normal vale lo mismo que
+      // el peso contra la rampa (salían dos renglones con el mismo número).
+      // Van igual al tutor (tutorNotes, no se dibuja).
       const result: Record<string, number | string> = {
-        escenario: c.scenario === "plano" ? "plano inclinado" : "polea",
-        superficie: `${c.surface.label} (μs ${c.surface.mus}, μk ${c.surface.muk})`,
         peso_n: n(f.weight),
         normal_n: n(f.normal),
       };
+      const tutorNotes: Record<string, number | string> = {
+        escenario: c.scenario === "plano" ? "plano inclinado" : "polea",
+        superficie: `${c.surface.label} (μs ${c.surface.mus}, μk ${c.surface.muk})`,
+      };
       if (c.scenario === "plano") {
         result.peso_a_lo_largo_n = n(f.weightAlong);
-        result.peso_contra_la_rampa_n = n(f.weightPerp);
+        tutorNotes.peso_contra_la_rampa_n = n(f.weightPerp);
         result.fuerza_aplicada_n = c.force;
         result.friccion_estatica_maxima_n = n(f.staticMax);
       } else {
@@ -410,9 +416,9 @@ export function createNewtonEngine(): NewtonEngine {
         result.ultimo_intento_aceleracion_ms2 = n(last.forces.acceleration);
         result.ultimo_intento_friccion_n = n(Math.abs(last.forces.friction));
         result.ultimo_intento_fuerza_neta_n = n(Math.abs(last.forces.net));
-        result.prediccion_se_mueve = last.predictedMoves ? "sí" : "no";
+        tutorNotes.prediccion_se_mueve = last.predictedMoves ? "sí" : "no";
         result.prediccion_acertada = last.movesRight ? "sí" : "no";
-        result.prediccion_aceleracion_ms2 = last.predictedA;
+        tutorNotes.prediccion_aceleracion_ms2 = last.predictedA;
         if (last.aError !== null) result.error_aceleracion_pct = Number((last.aError * 100).toFixed(1));
       }
       return {
@@ -420,6 +426,7 @@ export function createNewtonEngine(): NewtonEngine {
         disciplineName: "Física",
         variables: lastVariables,
         result,
+        tutorNotes,
         conceptTags: ["segunda ley de Newton", "fricción estática", "fricción cinética", "diagrama de cuerpo libre", "plano inclinado", "tensión"],
       };
     },

@@ -80,7 +80,7 @@ export const coberturaExperiment: ExperimentDefinition = {
   },
   tutorHints:
     "Variables: banda (900, 2400 o 5000 megahercios), potencia de transmisión en dBm (10 a 30) y, para cada una de tres antenas, antena1 a antena3 (el poste, de s1 a s7, o ninguna) y canal1 a canal3 (1, 6 u 11). " +
-    "result: banda, potencia_dbm, antenas, puntos_cubiertos, sin_senal_suficiente, con_interferencia y el estado de los tres retos. " +
+    "result: puntos_cubiertos, con_interferencia, puntos_saturados, hora_pico, demanda_total_mbps, capacidad_por_antena_mbps y carga_por_antena. tutorNotes: banda, potencia_dbm, antenas, sin_senal_suficiente, hora y el estado de los retos. " +
     "Modelo: potencia recibida es la potencia transmitida más cuatro dB de ganancia de antenas, menos la pérdida de trayecto y menos una pérdida por cada edificio atravesado (8 dB en 900 megahercios, 12 en 2.4 gigahercios, 18 en 5 gigahercios). La pérdida de trayecto es la de espacio libre a un metro, que crece con veinte por el logaritmo de la frecuencia, más diez por dos coma cuatro por el logaritmo de la distancia (modelo log-distancia con exponente 2.4). Un punto se cubre con al menos menos setenta y ocho dBm y una relación señal a interferencia de seis dB. " +
     "Lecciones: más frecuencia, más pérdida y peor penetración de muros; 900 megahercios cubre todo con una antena bien ubicada, 2.4 gigahercios necesita al menos dos, y 5 gigahercios no alcanza con tres (por eso el Wi-Fi de 5 gigahercios usa muchos más puntos de acceso). Todas las antenas en el mismo canal nunca funcionan: se interfieren. Con tres antenas y dos canales, las dos que repiten canal deben quedar en extremos opuestos. " +
     "Subir 6 dB de potencia equivale a cuadruplicarla. " +

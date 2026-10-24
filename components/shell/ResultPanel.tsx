@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { ExperimentEngine } from "@/types/module";
+import { usePanelCollapsed } from "@/lib/view/panelCollapse";
+import { PanelHeader } from "./PanelHeader";
 import styles from "./ResultPanel.module.css";
 
 interface Props {
@@ -25,6 +27,8 @@ export function formatLabel(key: string): string {
  * del <Canvas>, no necesita 60 actualizaciones por segundo.
  */
 export function ResultPanel({ engine }: Props) {
+  // Minimizable desde el título, como Retos: en el celular tapaba la escena.
+  const collapsed = usePanelCollapsed("resultado");
   const [result, setResult] = useState<Record<string, number | string>>();
   const [series, setSeries] = useState<Array<{ x: number; y: number }>>([]);
 
@@ -39,17 +43,23 @@ export function ResultPanel({ engine }: Props) {
   if (!result) return null;
 
   return (
-    <div className={styles.panel}>
-      <p className={styles.title}>Resultado</p>
-      <dl className={styles.list}>
-        {Object.entries(result).map(([key, value]) => (
-          <div key={key} className={styles.row}>
-            <dt className={styles.label}>{formatLabel(key)}</dt>
-            <dd className={styles.value}>{value}</dd>
-          </div>
-        ))}
-      </dl>
-      {series.length > 1 && <Sparkline points={series} />}
+    <div className={styles.panel} data-collapsed={collapsed}>
+      <div className={styles.title}>
+        <PanelHeader id="resultado" title="Resultado" collapsed={collapsed} />
+      </div>
+      {!collapsed && (
+        <>
+          <dl className={styles.list}>
+            {Object.entries(result).map(([key, value]) => (
+              <div key={key} className={styles.row}>
+                <dt className={styles.label}>{formatLabel(key)}</dt>
+                <dd className={styles.value}>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {series.length > 1 && <Sparkline points={series} />}
+        </>
+      )}
     </div>
   );
 }

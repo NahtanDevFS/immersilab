@@ -28,6 +28,19 @@ export function GamepadStatus() {
   const [pad, setPad] = useState<PadInfo | null>(null);
   const debug = isPadDebugEnabled();
   const [raw, setRaw] = useState<string>("");
+  // El aviso se ve un rato y se va solo: "Sin control" quedaba fijo arriba
+  // al centro, encima de la escena. Vuelve a aparecer cuando cambia algo
+  // (se conecta o se desconecta un control). Con ?padDebug=1 queda fijo.
+  const [visible, setVisible] = useState(true);
+  const padKey = pad?.id ?? "";
+  useEffect(() => {
+    const show = window.setTimeout(() => setVisible(true), 0);
+    const hide = window.setTimeout(() => setVisible(false), padKey ? CONNECTED_MS : NO_PAD_MS);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(hide);
+    };
+  }, [padKey]);
 
   useEffect(() => {
     // Los eventos gamepadconnected/disconnected cubren enchufar y
@@ -73,6 +86,8 @@ export function GamepadStatus() {
     return () => cancelAnimationFrame(id);
   }, [debug]);
 
+  if (!visible && !debug) return null;
+
   return (
     <div className={styles.badge} data-connected={pad !== null}>
       {pad ? (
@@ -91,6 +106,10 @@ export function GamepadStatus() {
     </div>
   );
 }
+
+/** Cuánto se ve el aviso, ms: sin control, y con un control recién conectado. */
+const NO_PAD_MS = 6000;
+const CONNECTED_MS = 4000;
 
 /**
  * Los ids de la Gamepad API vienen como

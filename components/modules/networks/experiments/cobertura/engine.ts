@@ -238,18 +238,15 @@ export function createCoverageEngine(): CoverageEngine {
         experimentName: "Cubre el campus",
         disciplineName: "Redes",
         variables: lastVariables,
+        // En el panel, solo lo que no se ve en otro lado. La banda, la
+        // potencia, las antenas y la hora están en el panel de variables;
+        // qué punto tiene señal se ve en la escena (cada punto con su nombre,
+        // sus dBm y su color), y los retos en su panel. Todo eso va igual al
+        // tutor (tutorNotes, no se dibuja): eran 16 renglones.
         result: {
-          banda: band.label,
-          potencia_dbm: power,
-          antenas:
-            antennas.map((a) => `${a.site.name} (canal ${a.channel})`).join(", ") ||
-            "ninguna",
           puntos_cubiertos: `${summary.covered} de ${summary.total}`,
-          sin_senal_suficiente: names(
-            (i) => !summary.perPoint[i].covered && !summary.perPoint[i].interfered,
-          ),
           con_interferencia: names((i) => summary.perPoint[i].interfered),
-          hora: `${hour}:00`,
+          puntos_saturados: names((i) => load.saturated[i]),
           hora_pico: `${PEAK_HOUR}:00`,
           demanda_total_mbps: Math.round(load.totalMbps),
           capacidad_por_antena_mbps: band.capacityMbps,
@@ -257,13 +254,23 @@ export function createCoverageEngine(): CoverageEngine {
             antennas
               .map((a, i) => `antena ${i + 1} en ${a.site.name}: ${Math.round(load.perAntenna[i])} de ${band.capacityMbps} Mbps`)
               .join("; ") || "sin antenas",
-          puntos_saturados: names((i) => load.saturated[i]),
+        },
+        tutorNotes: {
+          banda: band.label,
+          potencia_dbm: power,
+          antenas:
+            antennas.map((a) => `${a.site.name} (canal ${a.channel})`).join(", ") ||
+            "ninguna",
+          sin_senal_suficiente: names(
+            (i) => !summary.perPoint[i].covered && !summary.perPoint[i].interfered,
+          ),
+          hora: `${hour}:00`,
           reto_campus: campus.done ? "logrado" : "pendiente",
           reto_wifi_2_4: wifi.done ? "logrado" : "pendiente",
           reto_reutilizar_canales: reutilizar.done ? "logrado" : "pendiente",
           reto_hora_pico: horaPico.done ? "logrado" : "pendiente",
+          ...coverageNotes(antennas, band, power),
         },
-        tutorNotes: coverageNotes(antennas, band, power),
         conceptTags: [
           "pérdida de trayecto",
           "presupuesto de enlace",

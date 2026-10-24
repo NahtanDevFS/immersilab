@@ -8,10 +8,8 @@
 
   position: absolute;
   left: 50%;
-  /* "Activar giroscopio" vive en bottom 1.5rem y mide ~2.5rem de alto
-     (termina en ~4rem): con 3.6rem los dos botones se encimaban en la
-     computadora, donde ese botón queda visible. */
-  bottom: calc(4.6rem + env(safe-area-inset-bottom));
+  /* Pegado al borde de abajo, para tapar lo menos posible de la escena. */
+  bottom: calc(0.7rem + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   /* Por encima de la tarjeta de explicación (z 20): si el alumno le
      pregunta algo con la tarjeta abierta, los subtítulos no pueden quedar
@@ -23,6 +21,12 @@
   align-items: center;
   gap: 0.5rem;
   pointer-events: none;
+}
+
+/* Con "Activar giroscopio" a la vista (vive en bottom 1.5rem y mide
+   ~2.5rem de alto), el tutor va por encima: si no, los dos se encimaban. */
+:global([data-gyro-prompt="true"]) .hud {
+  bottom: calc(4.6rem + env(safe-area-inset-bottom));
 }
 
 .hud[data-status="listening"] {
@@ -163,6 +167,72 @@
 
 .label {
   white-space: nowrap;
+}
+
+.labelShort {
+  display: none;
+  white-space: nowrap;
+}
+
+/*
+ * Pantalla baja, como un celular en horizontal: la ventanita del tutor
+ * ocupaba buena parte de la escena. Textos cortos ("Preguntar", "Chat"),
+ * botones y subtítulos más chicos. Sigue a la misma altura: más abajo se
+ * encimaba con "Activar giroscopio".
+ */
+@media (max-height: 520px) {
+  .hud {
+    width: min(24rem, 58vw);
+    gap: 0.35rem;
+  }
+
+  .label {
+    display: none;
+  }
+
+  .labelShort {
+    display: inline;
+  }
+
+  .talk {
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  .ring {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-width: 2.5px;
+  }
+
+  .chatToggle {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .cancel {
+    width: 1.7rem;
+    height: 1.7rem;
+    font-size: 0.7rem;
+  }
+
+  .subtitles {
+    max-height: 5.2rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .formula {
+    font-size: 0.85rem;
+    margin: 0.2rem 0;
+  }
+
+  .chatList {
+    max-height: min(9rem, 34vh);
+    font-size: 0.78rem;
+  }
 }
 
 /* El botón de hablar y, al lado, el de abrir la conversación. */

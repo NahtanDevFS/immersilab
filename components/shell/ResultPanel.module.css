@@ -17,6 +17,15 @@
   backdrop-filter: blur(6px);
 }
 
+/* Minimizado: queda solo la barra del título. */
+.panel[data-collapsed="true"] {
+  padding: 0.45rem 0.65rem;
+}
+
+.panel[data-collapsed="true"] .title {
+  margin: 0;
+}
+
 .title {
   margin: 0 0 0.4rem 0;
   font-size: 0.68rem;

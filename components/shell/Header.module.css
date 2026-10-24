@@ -47,3 +47,31 @@
      del giroscopio/cursor — este link necesita revertir eso puntualmente. */
   pointer-events: auto;
 }
+/* El "?" de la explicación y la flecha para plegar. Redondos y chicos. */
+.iconButton {
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  border: 0.5px solid var(--lab-panel-border);
+  background: var(--lab-bg);
+  color: var(--lab-accent);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  /* El header entero tiene pointer-events:none (ver .backLink). */
+  pointer-events: auto;
+}
+
+.iconButton[data-quiet] {
+  color: var(--lab-text-muted);
+  font-size: 0.7rem;
+}
+
+/* Plegado: solo el logo, el "?" y la flecha. */
+.header[data-collapsed="true"] {
+  gap: 0.4rem;
+  padding: 0.3rem 0.4rem;
+}

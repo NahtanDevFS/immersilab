@@ -24,6 +24,15 @@
   max-height: calc(100% - 14.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
+/* Minimizado: queda solo la barra del título. */
+.panel[data-collapsed="true"] {
+  padding: 0.45rem 0.65rem;
+}
+
+.panel[data-collapsed="true"] .title {
+  margin: 0;
+}
+
 .title {
   margin: 0 0 0.6rem 0;
   font-size: 0.68rem;

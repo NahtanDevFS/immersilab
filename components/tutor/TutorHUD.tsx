@@ -5,15 +5,36 @@ import type { SpeechInputError } from "./useSpeechInput";
 import type { ChatMessage } from "./useTutorSession";
 import { setChatOpen, useChatOpen } from "@/lib/tutor/chatPreference";
 import { splitFormulas } from "@/lib/tutor/formula";
+import { getActivePad } from "@/components/shell/gamepad";
 import styles from "./TutorHUD.module.css";
 
 export type TutorStatus = "idle" | "listening" | "thinking" | "speaking";
+
+/**
+ * Lo que dice el botón. La mención a B va solo con un control conectado
+ * (`withPad`): en la compu, sin control, decía "botón B" y no había ningún
+ * botón B que apretar.
+ */
+function statusLabel(status: TutorStatus, withPad: boolean): string {
+  if (withPad) return STATUS_LABEL[status];
+  if (status === "idle") return "Mantén presionado para preguntar";
+  if (status === "speaking") return "Hablando · toca para cortar";
+  return STATUS_LABEL[status];
+}
 
 const STATUS_LABEL: Record<TutorStatus, string> = {
   idle: "Mantén presionado para preguntar · botón B",
   listening: "Te escucho… · toca para terminar",
   thinking: "Pensando…",
   speaking: "Hablando · B para cortar",
+};
+
+/** Lo mismo que STATUS_LABEL, corto, para el celular. */
+const STATUS_SHORT: Record<TutorStatus, string> = {
+  idle: "Preguntar",
+  listening: "Te escucho…",
+  thinking: "Pensando…",
+  speaking: "Hablando",
 };
 
 const CANCEL_LABEL: Record<Exclude<TutorStatus, "idle">, string> = {
@@ -73,6 +94,21 @@ interface Props {
  * Antes solo había subtítulos: al cerrarlos o al pasar unos segundos, lo que
  * había dicho el tutor no se podía volver a leer.
  */
+/**
+ * ¿Hay un control conectado? Se mira una vez por segundo: el navegador no
+ * avisa del primer botón de un control que todavía no reveló.
+ */
+function usePadConnected(): boolean {
+  const [connected, setConnected] = useState(false);
+  useEffect(() => {
+    const check = () => setConnected(getActivePad() !== null);
+    check();
+    const id = window.setInterval(check, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return connected;
+}
+
 export function TutorHUD({
   status,
   heard,
@@ -87,6 +123,7 @@ export function TutorHUD({
   log,
 }: Props) {
   const open = useChatOpen();
+  const withPad = usePadConnected();
 
   // Subtítulos (solo con la conversación minimizada): se ocultan solos un
   // rato después de terminar, o con la ✕. Se recuerda QUÉ texto se ocultó:
@@ -115,7 +152,7 @@ export function TutorHUD({
   return (
     <div className={styles.hud} data-status={status} data-open={open}>
       {open ? (
-        <Conversation log={log} heard={status === "listening" ? heard : ""} onMinimize={() => setChatOpen(false)} />
+        <Conversation log={log} heard={status === "listening" ? heard : ""} withPad={withPad} onMinimize={() => setChatOpen(false)} />
       ) : (
         <>
           {subtitlesVisible && (
@@ -174,7 +211,10 @@ export function TutorHUD({
           }}
         >
           <span className={styles.ring} aria-hidden />
-          <span className={styles.label}>{STATUS_LABEL[status]}</span>
+          <span className={styles.label}>{statusLabel(status, withPad)}</span>
+          {/* En una pantalla baja (un celular en horizontal) va esta, corta:
+              la larga hacía que la ventanita del tutor ocupara media escena. */}
+          <span className={styles.labelShort}>{STATUS_SHORT[status]}</span>
         </button>
 
         {/* Solo mientras el tutor está en algo. Con el botón de hablar
@@ -198,7 +238,8 @@ export function TutorHUD({
             onClick={() => setChatOpen(true)}
             aria-label="Ver la conversación con el tutor"
           >
-            Conversación{log.length > 0 ? ` (${countTurns(log)})` : ""}
+            <span className={styles.label}>Conversación{log.length > 0 ? ` (${countTurns(log)})` : ""}</span>
+            <span className={styles.labelShort}>Chat{log.length > 0 ? ` (${countTurns(log)})` : ""}</span>
           </button>
         )}
       </div>
@@ -241,9 +282,12 @@ const STATE_NOTE: Partial<Record<NonNullable<ChatMessage["state"]>, string>> = {
 function Conversation({
   log,
   heard,
+  withPad,
   onMinimize,
 }: {
   log: ChatMessage[];
+  /** Hay un control conectado: entonces sí se menciona el botón B. */
+  withPad: boolean;
   /** Lo que se está diciendo ahora (mientras escucha), como un mensaje más. */
   heard: string;
   onMinimize: () => void;
@@ -268,7 +312,7 @@ function Conversation({
       <ol className={styles.chatList} ref={list} aria-live="polite">
         {log.length === 0 && !heard && (
           <li className={styles.chatEmpty}>
-            Todavía no le has preguntado nada. Mantén presionado este botón (o B en el control), pregunta en voz alta
+            Todavía no le has preguntado nada. Mantén presionado este botón{withPad ? " (o B en el control)" : ""}, pregunta en voz alta
             y suelta: la conversación queda aquí.
           </li>
         )}

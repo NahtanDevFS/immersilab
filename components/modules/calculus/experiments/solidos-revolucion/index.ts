@@ -57,6 +57,28 @@ export const solidosRevolucionExperiment: ExperimentDefinition = {
     "Método de discos (el del experimento): el volumen es pi por la integral del radio al cuadrado a lo largo del eje. Si preguntan por el método de capas (cascarones): es la integral de dos pi por radio por altura por el espesor, y da exactamente el mismo volumen; aquí no se dibuja, pero puedes explicarlo. " +
     "Como el radio va al cuadrado, los radios grandes pesan mucho más en el volumen que los chicos: para corregir el volumen conviene tocar primero la parte ancha. " +
     "Para guiar, compara cada radio con la silueta objetivo y di cuál está más lejos, sin dar los cinco valores de una vez.",
+  // Al fondo y al centro de la vista inicial (la cámara mira a [5, 1, 0]),
+  // de frente al jugador: es lo primero que se ve al entrar, también en el
+  // visor, que arranca mirando hacia ahí. Más ancho que los demás porque
+  // queda a unos 11 m.
+  whiteboard: {
+    title: "Volumen por discos",
+    formulas: [
+      "V = π · ∫ r(h)² dh   (de 0 a H)",
+      "Un disco: ΔV = π · r² · Δh",
+      "V ≈ ∑ π · rᵢ² · Δh   (los discos naranjas)",
+    ],
+    terms: [
+      { symbol: "V", meaning: "volumen de la pieza, m³" },
+      { symbol: "r(h)", meaning: "radio de la pieza a la altura h, m" },
+      { symbol: "h", meaning: "altura sobre la base, m" },
+      { symbol: "H", meaning: "alto de la pieza, 2.4 m" },
+      { symbol: "Δh", meaning: "espesor de cada disco, m" },
+    ],
+    position: [6.1, 2.7, -1.6],
+    rotationY: 0.22,
+    width: 4.2,
+  },
   SceneComponent: LatheScene,
   createEngine: createLatheEngine,
 };

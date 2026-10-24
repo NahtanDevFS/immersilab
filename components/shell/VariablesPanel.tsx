@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import type { VariableDefinition, VariablesSchema, VariablesState } from "@/types/module";
+import { usePanelCollapsed } from "@/lib/view/panelCollapse";
+import { PanelHeader } from "./PanelHeader";
 import styles from "./VariablesPanel.module.css";
 
 interface Props {
@@ -26,11 +28,15 @@ export function VariablesPanel({
   onChange,
   selectedKey,
 }: Props) {
+  // Minimizable desde el título, como Retos: en el celular tapaba la escena.
+  const collapsed = usePanelCollapsed("variables");
   return (
-    <div className={styles.panel}>
-      <h2 className={styles.title}>{title}</h2>
+    <div className={styles.panel} data-collapsed={collapsed}>
+      <h2 className={styles.title}>
+        <PanelHeader id="variables" title={title} collapsed={collapsed} />
+      </h2>
 
-      {Object.entries(schema).map(([key, def], index, entries) => {
+      {!collapsed && Object.entries(schema).map(([key, def], index, entries) => {
         const value = values[key];
         // Subtítulo al empezar un grupo nuevo de variables.
         const groupStart =

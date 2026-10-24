@@ -149,13 +149,22 @@ export function ExperimentShell({
 
   return (
     <OrientationGate>
-      <div className={styles.container} data-view={view}>
+      {/* data-gyro-prompt: con el botón "Activar giroscopio" a la vista, el
+          tutor sube para no encimarse con él (TutorHUD.module.css). */}
+      <div className={styles.container} data-view={view} data-gyro-prompt={permission === "prompt"}>
         <Header
           actions={
             <VrButton onBeforeEnter={permission === "prompt" ? requestPermission : undefined} />
           }
           subtitle={`${disciplineName} / ${moduleName} / ${experiment.name}`}
           showBackLink
+          // El "?" de la explicación, en la esquina del encabezado. Antes
+          // flotaba arriba al centro, encima de la escena.
+          onHelp={
+            experiment.briefing && !touring && !(briefingOpen ?? !touring)
+              ? () => setBriefingOpen(true)
+              : undefined
+          }
         />
 
         {/* Fuera del visor, el panel en la esquina, con mouse o con el dedo.
@@ -183,7 +192,8 @@ export function ExperimentShell({
             // reemplaza la tarjeta corta de la parada.
             open={briefingOpen ?? !touring}
             onOpenChange={setBriefingOpen}
-            hideReopen={touring}
+            // El "?" para volver a abrirla está en el encabezado.
+            hideReopen
           />
         )}
 

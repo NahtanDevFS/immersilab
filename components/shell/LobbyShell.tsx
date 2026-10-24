@@ -78,7 +78,9 @@ export function LobbyShell() {
 
   return (
     <OrientationGate>
-      <div className={styles.container} data-view={view}>
+      {/* data-gyro-prompt: con el botón "Activar giroscopio" a la vista, el
+          tutor sube para no encimarse con él (TutorHUD.module.css). */}
+      <div className={styles.container} data-view={view} data-gyro-prompt={permission === "prompt"}>
         <Header
           subtitle="Elige un experimento — camina hacia una puerta"
           showAccount

@@ -547,8 +547,12 @@ export function createStpEngine(): StpEngine {
         experimentName: "Rompe el bucle",
         disciplineName: "Redes",
         variables: lastVariables,
+        // En el panel, solo lo que no se ve en otro lado. Si STP está activo
+        // y el EtherChannel salen del panel de variables; el ID de cada
+        // switch (prioridad y MAC) está escrito sobre él en la escena, y los
+        // roles de cada puerto se ven con su color. Todo eso va igual al
+        // tutor (tutorNotes, no se dibuja).
         result: {
-          stp: runtime.stpOn ? "activo" : "apagado",
           estado:
             runtime.phase === "storm"
               ? `tormenta de broadcast, ${runtime.frames} tramas por segundo`
@@ -557,25 +561,13 @@ export function createStpEngine(): StpEngine {
                 : runtime.phase === "broadcast"
                   ? "broadcast en curso"
                   : "en reposo",
-          ids_de_puente: SWITCHES.map(
-            (s) =>
-              `${s.name} ${priorities[s.id]}:${String(s.mac).padStart(2, "0")}`,
-          ).join(", "),
           puente_raiz: name(stp.root),
           costo_a_la_raiz: SWITCHES.map(
             (s) =>
               `${s.name} ${Number.isFinite(stp.cost[s.id]) ? stp.cost[s.id] : "sin camino"}`,
           ).join(", "),
-          ...(runtime.stpOn
-            ? {
-                roles: roleText,
-                enlaces_bloqueados: stp.blocked.join(", ") || "ninguno",
-              }
-            : {}),
+          ...(runtime.stpOn ? { enlaces_bloqueados: stp.blocked.join(", ") || "ninguno" } : {}),
           enlaces_caidos: [...runtime.down].join(", ") || "ninguno",
-          etherchannel: runtime.etherchannel
-            ? "sí (N–D como un enlace de 2 Gbps)"
-            : "no",
           ...(runtime.lastBroadcast
             ? {
                 ultimo_broadcast: runtime.lastBroadcast.storm
@@ -588,6 +580,17 @@ export function createStpEngine(): StpEngine {
                 prediccion: `marcaste ${runtime.lastPrediction.predicted.join(", ") || "ninguno"}; ${runtime.lastPrediction.ok ? "coincide" : "no coincide"}`,
               }
             : {}),
+        },
+        tutorNotes: {
+          stp: runtime.stpOn ? "activo" : "apagado",
+          ids_de_puente: SWITCHES.map(
+            (s) =>
+              `${s.name} ${priorities[s.id]}:${String(s.mac).padStart(2, "0")}`,
+          ).join(", "),
+          ...(runtime.stpOn ? { roles: roleText } : {}),
+          etherchannel: runtime.etherchannel
+            ? "sí (N–D como un enlace de 2 Gbps)"
+            : "no",
         },
         conceptTags: [
           "bucle de capa 2",

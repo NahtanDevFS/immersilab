@@ -413,7 +413,6 @@ export function createRatesEngine(): RatesEngine {
       const tank = runtime.scenario !== "escalera";
       const result: Record<string, number | string> = {
         escenario: runtime.scenario,
-        situacion: situation(lastVariables),
         estado: runtime.phase === "idle" ? "sin empezar" : runtime.phase === "running" ? "en curso" : "llegó a la meta",
         tiempo_s: Number(runtime.time.toFixed(1)),
       };
@@ -434,7 +433,8 @@ export function createRatesEngine(): RatesEngine {
       }
       result.mejor_puntaje = bestScore;
       return {
-        tutorNotes: rateNotes(lastVariables),
+        // El enunciado está en el cartel de la escena: en el panel se repetía.
+        tutorNotes: { situacion: situation(lastVariables), ...rateNotes(lastVariables) },
         experimentName: "Llena el tanque",
         disciplineName: "Cálculo",
         variables: lastVariables,

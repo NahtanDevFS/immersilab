@@ -32,6 +32,22 @@ limpio, en la consola del navegador: `localStorage.clear()`.
 - [ ] *Celular en la mano (giroscopio, sin visor):* los toques van directo a
       lo que hay bajo el dedo; el panel de variables es el normal (no medio
       transparente). El cursor azul aparece solo con un control conectado.
+- [ ] *Fuera del visor:* Variables y Resultado se minimizan tocando su
+      título (▾/▴), como Retos; minimizados quedan como una barra. Al entrar
+      a otro experimento siguen como se dejaron.
+- [ ] *Celular en horizontal:* la ventanita del tutor es chica: "Preguntar"
+      y "Chat (n)" en vez de los textos largos, y los subtítulos más bajos.
+      En la computadora sigue con los textos completos.
+- [ ] La ventana de ImmersiLab (arriba a la izquierda) se pliega con su
+      flecha: plegada quedan el logo, el "?" y la flecha, y se recuerda.
+- [ ] El "?" de la explicación está dentro de esa ventana, en la esquina; ya
+      no flota arriba al centro. No aparece en el recorrido guiado.
+- [ ] Los botones del tutor van casi pegados al borde de abajo; con
+      "Activar giroscopio" a la vista, van justo encima, sin encimarse.
+- [ ] Sin control conectado, el botón del tutor y la conversación vacía no
+      mencionan el botón B; con un control, sí.
+- [ ] *Con giroscopio:* el aviso "Sin control" arriba al centro se va solo a
+      los ~6 s; al conectar un control se ve su nombre ~4 s y se va.
 - [ ] Los pasos del tutor y de las puertas avanzan solos (9 s y 7 s) o con
       Enter / botón A.
 - [ ] "Saltar tutorial" (o Escape / botón B) lo cierra. Al recargar, ya no
@@ -135,7 +151,16 @@ Pistas de los experimentos nuevos:
   carga o hay sobrevoltaje).
 - **Tornea la pieza:** ya no hay selector de discos o capas; la pieza se ve
   rebanada en discos. Preguntarle al tutor por el método de capas: lo explica
-  igual.
+  igual. Al entrar se ve enseguida el pizarrón "Volumen por discos", a la
+  derecha de la pieza objetivo, con las fórmulas y qué es cada letra.
+- **Paneles de resultados más cortos** (Cobertura, Rompe el bucle, Divide la
+  red, Llena el tanque, Ley de la fuerza, Defiende el borde): muestran solo
+  lo que no se ve en otro lado. Comprobar que lo que salió del panel sigue a
+  la vista: en Cobertura, cada punto con su nombre, sus dBm y su color; en
+  Rompe el bucle, la prioridad y la MAC sobre cada switch y los roles de los
+  puertos; en Divide la red, la tabla y los pings en el pizarrón y la VLAN
+  sobre cada PC; en Llena el tanque, el enunciado en el cartel. Y que el
+  tutor siga respondiendo con esos datos.
 - **Compuertas:** alarma AND; portón OR, NOT, AND; jueces tres AND y dos OR.
 
 *Visor:* abajo al frente, la barra de pestañas (Variables · Retos ·

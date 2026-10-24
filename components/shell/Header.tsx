@@ -1,7 +1,10 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AccountChip } from "@/components/progress/AccountChip";
+import { setPanelCollapsed, usePanelCollapsed } from "@/lib/view/panelCollapse";
 import styles from "./Header.module.css";
 
 interface Props {
@@ -13,16 +16,25 @@ interface Props {
   showAccount?: boolean;
   /** Botones extra al final (el del visor). */
   actions?: ReactNode;
+  /**
+   * Botón "?" para volver a abrir la explicación del experimento. Va aquí,
+   * en la esquina, y no flotando arriba al centro, donde tapaba la escena.
+   */
+  onHelp?: () => void;
 }
 
 /**
  * Encabezado compartido por el lobby y todos los experimentos. Muestra el
  * logo de la universidad, el nombre del laboratorio, y opcionalmente un
  * subtítulo y un link de vuelta al lobby.
+ *
+ * Se pliega con la flecha del final, como los paneles: en el celular ocupaba
+ * buena parte del ancho. Plegado quedan el logo, el "?" y la flecha.
  */
-export function Header({ subtitle, showBackLink, showAccount, actions }: Props) {
+export function Header({ subtitle, showBackLink, showAccount, actions, onHelp }: Props) {
+  const collapsed = usePanelCollapsed("encabezado");
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-collapsed={collapsed}>
       <Image
         src="/brand/logo-umg.png"
         alt="Universidad Mariano Gálvez de Guatemala"
@@ -30,17 +42,41 @@ export function Header({ subtitle, showBackLink, showAccount, actions }: Props) 
         height={28}
         className={styles.logo}
       />
-      <div>
-        <p className={styles.wordmark}>ImmersiLab</p>
-        {subtitle && <p className={styles.breadcrumb}>{subtitle}</p>}
-      </div>
-      {showBackLink && (
-        <Link href="/lab" className={styles.backLink}>
-          ← Lobby
-        </Link>
+      {!collapsed && (
+        <>
+          <div>
+            <p className={styles.wordmark}>ImmersiLab</p>
+            {subtitle && <p className={styles.breadcrumb}>{subtitle}</p>}
+          </div>
+          {showBackLink && (
+            <Link href="/lab" className={styles.backLink}>
+              ← Lobby
+            </Link>
+          )}
+          {showAccount && <AccountChip />}
+          {actions}
+        </>
       )}
-      {showAccount && <AccountChip />}
-      {actions}
+      {onHelp && (
+        <button
+          type="button"
+          className={styles.iconButton}
+          onClick={onHelp}
+          aria-label="Ver la explicación del experimento"
+        >
+          ?
+        </button>
+      )}
+      <button
+        type="button"
+        className={styles.iconButton}
+        data-quiet
+        onClick={() => setPanelCollapsed("encabezado", !collapsed)}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "Mostrar el encabezado" : "Plegar el encabezado"}
+      >
+        {collapsed ? "▸" : "◂"}
+      </button>
     </header>
   );
 }
