@@ -345,8 +345,15 @@ export function createFirewallEngine(): FirewallEngine {
     getState(): AIContext {
       const rack = rackOf(lastVariables);
       const l = runtime.launch;
+      // En el panel, solo lo corto. El enunciado, la lista de reglas y el
+      // detalle de cada paquete van al tutor (tutorNotes, no se dibujan):
+      // en el panel de resultados eran tres párrafos largos que lo estiraban
+      // casi el doble de alto que la pantalla, y repetían lo que ya se ve en
+      // la escena (las tarjetas del rack y los paquetes que pasan o rebotan).
       const result: Record<string, number | string> = {
         ronda: runtime.round.title,
+      };
+      const tutorNotes: Record<string, number | string> = {
         situacion: runtime.round.story,
         rack:
           runtime.round.id === "3"
@@ -358,7 +365,7 @@ export function createFirewallEngine(): FirewallEngine {
       }
       if (l) {
         result.ultimo_lanzamiento = lastSummary;
-        result.detalle = l.results
+        tutorNotes.detalle_del_ultimo_lanzamiento = l.results
           .map((r) => `${r.label}: ${OUTCOME_TEXT[r.outcome]}${r.slot >= 0 ? ` (regla ${r.slot + 1})` : r.slot === -1 ? " (bloqueo implícito)" : ""}`)
           .join("; ");
       }
@@ -367,6 +374,7 @@ export function createFirewallEngine(): FirewallEngine {
         disciplineName: "Redes",
         variables: lastVariables,
         result,
+        tutorNotes,
         conceptTags: ["firewall", "listas de control de acceso", "deny implícito", "inspección de estado", "NAT", "PAT", "reenvío de puertos"],
       };
     },
