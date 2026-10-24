@@ -14,7 +14,7 @@ import type { MetadataRoute } from "next";
  * versión vieja guardada da errores raros), y el tutor y las cuentas
  * necesitan internet igual. Chrome ya no lo pide para instalarla.
  *
- * Los íconos (y app/favicon.ico) salen del logo de ImmersiLab
+ * Los íconos salen del logo de ImmersiLab
  * (public/brand/immersilab-logo.jpg): solo el matraz, porque el texto no se
  * leería en un ícono chico. El fondo de la pantalla de carga es el morado
  * del logo, para que el ícono no quede con un recuadro de otro color.
