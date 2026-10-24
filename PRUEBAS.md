@@ -244,7 +244,8 @@ bucle, durante la tormenta, aparece "Apagar los switches".
 ## 6. Celular y visor
 
 - [ ] *Como app:* en Chrome (Android o PC) aparece "Instalar app"; en el
-      iPhone, Compartir → "Agregar a inicio". El ícono es el sello de la UMG.
+      iPhone, Compartir → "Agregar a inicio". El ícono es el matraz de ImmersiLab (el mismo de la pestaña del
+      navegador).
       Abierta desde el ícono, arranca en el lobby a pantalla completa y en
       horizontal, sin barras del navegador. Revisar que el giroscopio, el
       micrófono y la voz del tutor funcionen igual desde el ícono (sobre todo

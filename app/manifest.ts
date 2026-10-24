@@ -14,8 +14,10 @@ import type { MetadataRoute } from "next";
  * versión vieja guardada da errores raros), y el tutor y las cuentas
  * necesitan internet igual. Chrome ya no lo pide para instalarla.
  *
- * Los íconos salen del logo de la UMG (public/brand/logo-umg.png), recortado
- * en círculo sobre el fondo de la app.
+ * Los íconos (y app/favicon.ico) salen del logo de ImmersiLab
+ * (public/brand/immersilab-logo.jpg): solo el matraz, porque el texto no se
+ * leería en un ícono chico. El fondo de la pantalla de carga es el morado
+ * del logo, para que el ícono no quede con un recuadro de otro color.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -27,7 +29,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "fullscreen",
     orientation: "landscape",
-    background_color: "#0b1220",
+    background_color: "#101431",
     theme_color: "#0b1220",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
